@@ -1,0 +1,46 @@
+Synthetic Proof Theory, Part I: Ordinal Geometry, a self-contained Agda
+development
+
+Copyright (C) 2026 Mikael Phoenix
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free
+Software Foundation, version 3.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+more details.
+
+You should have received a copy of the GNU General Public License along
+with this program, in the file LICENSE.  If not, see
+<https://www.gnu.org/licenses/>.
+
+
+Files copied from TypeTopology
+------------------------------
+
+The 81 files under TypeTopology/ are copies of files from TypeTopology, by
+Martín Escardó and contributors:
+
+  https://github.com/martinescardo/TypeTopology
+  commit 677877ee0a3b0f587023fcb20936a64eecde7b8b (18 August 2026)
+
+TypeTopology is licensed under the GNU General Public License, version 3.
+
+The copies were modified on 8 October 2026, in these ways only:
+
+  * every module name is prefixed with SPT.Cubical.TypeTopology, in module
+    headers, in imports, and where prose mentions a module name;
+  * --cubical-compatible is added to the OPTIONS pragma of every file that
+    did not already have it;
+  * a second OPTIONS pragma, -WnoUnsupportedIndexedMatch, is added to the
+    nine files for which Agda reports that warning: MGS/Solved-Exercises,
+    MLTT/Plus-Properties, MLTT/Two-Properties, UF/Embeddings, UF/Equiv,
+    UF/EquivalenceExamples, UF/ImageAndSurjection, UF/PairFun and
+    UF/Subsingletons;
+  * a few import lines that became too long after the renaming are split
+    over two lines.
+
+No definition or proof was changed.  The authorship notices in the files
+are unchanged.

@@ -1,0 +1,4 @@
+name: SPT
+include: src
+depend: standard-library cubical-0.9
+flags: --safe
