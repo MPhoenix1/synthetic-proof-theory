@@ -79,6 +79,15 @@ Asked of all presentations at once, without its datum, each of the rows
 2, 5, 6, 8, 13 and 15–18 is equivalent to LPO, and rows 9 and 14 give LPO
 (§5). The datum is exactly what the row costs.
 
+The same approach works one level up (§4.7, §4.8). The ordinal of
+ordinals of a universe is itself a geometric object: a height whose
+children are all the heights of the universe. Its rank is Cubical's
+ordinal of ordinals. Reflections of the universe, given by the Mahlo rule,
+give its inaccessible points. They are compared with the classical notions
+as ω₁ is compared with the ℕ-Hartogs well-order. Under excluded middle and
+choice they are inaccessible cardinals, and the ordinal of ordinals is a
+Mahlo cardinal.
+
 ### 1.2 Synthetic Proof Theory
 
 *Synthetic Proof Theory* is the program of carrying out ordinal analysis as
@@ -93,7 +102,7 @@ collapsing function. §8 states the ID₁ result as it stands.
 ### 1.3 Reading paths
 
 - **Type theorists:** §2, §4, §6, then §5.
-- **Proof theorists:** §2, §3, §4.3, §5, then §8.
+- **Proof theorists:** §2, §3, §4.3, §4.8, §5, then §8.
 
 §7 collects the relations used throughout; most misreadings come from
 conflating two of them.
@@ -331,6 +340,165 @@ Whether regularity needs choice beyond LPO is open. For sequences given by
 presentations, bounding by ≺𝒫 is free (the diagonal), while bounding by
 segments costs exactly LPO.
 
+### 4.6 Size, and the ordinal of ordinals
+
+The carrier of ω₁^G lies one universe above the presentations, because
+ω₁^G is a supremum indexed by all of them. Up to equivalence ω₁ is small,
+and it does not depend on the universe level
+([OmegaOne/Small](src/SPT/Cubical/OrdinalGeometry/Cubical/OmegaOne/Small.agda)). This is a
+statement about the well-order. The geometry stays large: its points are
+presentations, structures on arbitrary carriers, and those of the single
+order type 1 already contain the pointed universe (§6.2). What makes ω₁
+small is that `ord` sees presentations only up to equivalence.
+
+- **Boolean orders.** A Boolean order
+  ([ExactOrder/Boolean](src/SPT/Cubical/OrdinalGeometry/ExactOrder/Boolean.agda)) is a
+  decidable set of natural numbers with a Boolean strict order that is
+  transitive, well founded and trichotomous. Boolean orders form a small
+  type. Every presentation, at every level, is equivalent to the
+  presentation of one, whose points are the least enumeration indices of
+  its classes
+  ([Presentation/Normalization/Boolean](src/SPT/Cubical/OrdinalGeometry/Presentation/Normalization/Boolean.agda):
+  `normal`, `equivalence`).
+- **ω₁ is small.** Let Ω be the supremum of the order types of all Boolean
+  orders, a well-order in the lowest universe. Then ω₁(ℓ) ≃ Ω for every ℓ
+  (`small`), so ω₁(ℓ) ≃ ω₁(ℓ′) (`level`). Raised to level ℓ, Ω lies above
+  every presentation of that level and each of its principal segments is
+  presented, so leastness and the cut place it on both sides of ω₁(ℓ).
+- **The ordinal of ordinals.** Ord(ℓ) is the well-order of the
+  well-orders of level ℓ under ≺: the cubical library's `isWoset≺`, the
+  ordinal of ordinals of the HoTT book (§10.3) and OO of TypeTopology.
+  Every W in Ord(ℓ) is equivalent to Ord(ℓ) ↓ W
+  ([Reflection/Ordinals](src/SPT/Cubical/OrdinalGeometry/Cubical/Reflection/Ordinals.agda):
+  `lowerset`). So ω₁(ℓ) is a principal segment of Ord(ℓ) (`principal`).
+  The well-orders below its point are exactly the merely presented ones
+  (`below`), and the type of points of Ord(ℓ) with that property is
+  contractible (`cutPoint-isContr`).
+
+Cubical's ordinal of ordinals is TypeTopology's OO
+([TypeTopology/OrdinalOfOrdinals](src/SPT/Cubical/OrdinalGeometry/Cubical/TypeTopology/OrdinalOfOrdinals.agda)).
+`Ordinals.OrdinalOfOrdinals` is instantiated with TypeTopology's
+univalence, which holds in Cubical Agda (§6.1).
+
+- **The same ordinal.** toOrdinal is an equivalence of types from the
+  well-orders of level ℓ to TypeTopology's ordinals (`ordinals`). It sends
+  ≺ to ⊲ and back (`preserves`, `reflects`), so it is an order equivalence
+  Ord(ℓ) ≃ₒ OO ℓ (`equivalence`). Hence Ord(ℓ) = OO ℓ as TypeTopology
+  ordinals (`identity`), and segments of Ord(ℓ) are segments of OO ℓ
+  (`segment-OO`).
+- **ω₁ in OO.** ω₁(ℓ) is the segment of OO ℓ below the ordinal of Ω′
+  (`omega-one`), so ω₁(ℓ) ⊲ OO ℓ (`principal`). The TypeTopology ordinals
+  below that point are exactly the merely presented ones (`below`).
+
+### 4.7 Heights, and the rank of their ordinal of ordinals
+
+The ω₁ geometry has an analogue one level up, built from heights instead
+of presentations. A closed height of level ℓ is a closed Core tree whose
+nodes are labelled by types of level ℓ and branch over their labels. These
+closed heights are not the heights with stage nodes of §8.
+
+- **Geometry.** [Height/Simulation](src/SPT/Cubical/OrdinalGeometry/Height/Simulation.agda)
+  compares closed trees: ancestry ◃ and <, the simulation order ⊑ and ⊏,
+  and the shape equivalence ≅. [Height/Ordinals](src/SPT/Cubical/OrdinalGeometry/Height/Ordinals.agda)
+  defines Ord(ℓ), the height of level ℓ + 1 whose children are exactly
+  the heights of level ℓ.
+  - Every height is a child of Ord(ℓ) (`upper`), and Ord(ℓ) is least
+    among heights above all of them (`least`).
+  - No small family of heights is cofinal (`not-cofinal`), so Ord(ℓ) lies
+    below no height of level ℓ (`not-small`). This is Burali-Forti for
+    heights, and it is constructive.
+  - Every small well-founded relation has a canonical height (`whole`).
+- **Rank.** [Cubical/Height/Rank](src/SPT/Cubical/OrdinalGeometry/Cubical/Height/Rank.agda)
+  sends a height to a well-order of its level,
+  rank (node A f) = sup (a : A). rank (f a) + 1, using the supremum of
+  [Reflection/Supremum/Family](src/SPT/Cubical/OrdinalGeometry/Cubical/Reflection/Supremum/Family.agda).
+  - A child's rank lies below its parent's (`child`). The rank of a node
+    lies below every well-order, of any level, that lies strictly above
+    the ranks of its children (`least`).
+  - Every well-order is the rank of its canonical height (`canonical`).
+  - A height and its lift one level up have equivalent ranks (`lifted`).
+  - Shape-equivalent heights have equivalent ranks (`rank-≅`).
+- **The ordinal of ordinals.** The rank of the geometric Ord(ℓ) is
+  Cubical's Ord(ℓ) of §4.6
+  ([Cubical/Height/Ordinals](src/SPT/Cubical/OrdinalGeometry/Cubical/Height/Ordinals.agda):
+  `ordinals`). Hence it is also TypeTopology's OO ℓ (`identity`).
+  - The rank of each child is a small well-order, the point of Ord(ℓ) of
+    which it is the segment.
+  - Each small well-order is the rank of a child: its canonical height.
+  - Both inequalities come from `segments→simulation`
+    ([Reflection/Ordinals](src/SPT/Cubical/OrdinalGeometry/Cubical/Reflection/Ordinals.agda)),
+    which builds a simulation between well-orders of any two levels from
+    principal segments. Antisymmetry of ≼ gives the equivalence.
+
+As for ω₁, the well-order of the geometry is reached only through
+reflection. Unlike ω₁, both the geometry and its well-order are large.
+No height of level ℓ bounds Ord(ℓ) (`not-small`). By the Burali-Forti
+argument of the HoTT book (§10.3), which is not formalized here, Cubical's
+Ord(ℓ) is not equivalent to a well-order of level ℓ. Rank forgets the
+labels: its fibers over successors contain the merely inhabited types
+(§6.2).
+
+### 4.8 Inaccessible points, and the comparison with Mahlo cardinals
+
+The universe of level ℓ is a parent whose codes are its own types
+([Core/Mahlo/Ambient](src/SPT/Cubical/Core/Mahlo/Ambient.agda)). A *reflection* of an
+operator Ψ on families of types is a type of codes with a decoding into
+types. Its codes are closed under the type formers (empty, unit, 𝟐, ℕ, Σ,
+Π, W, identity) and under Ψ
+([Core/Mahlo/Specification](src/SPT/Cubical/Core/Mahlo/Specification.agda),
+[Core/Mahlo/Decoding](src/SPT/Cubical/Core/Mahlo/Decoding.agda)). A *reflector* reflects
+every operator; this is the Mahlo rule. Agda provides a reflector by
+induction–recursion. This release takes it as a parameter and uses no
+induction–recursion.
+
+- **Geometry.** [Height/Reflection](src/SPT/Cubical/OrdinalGeometry/Height/Reflection.agda):
+  the *child trees* of a reflection R are the trees whose nodes are
+  labelled by child codes. Its boundary Ω_R is the node whose children
+  are the child trees. Ω_R lies above every child tree, is regular for
+  families indexed by child types, and is closed under Ψ.
+  [Height/Ordinals/Mahlo](src/SPT/Cubical/OrdinalGeometry/Height/Ordinals/Mahlo.agda):
+  reflecting Ψ paired with the labels of a height t gives a point closed
+  under Ψ and above t, strictly below Ord(ℓ) (`mahlo`, `between`).
+- **Ranks.** [Cubical/Height/Reflection](src/SPT/Cubical/OrdinalGeometry/Cubical/Height/Reflection.agda):
+  λ_R, the rank of Ω_R, has a constructive cut: α ≺ λ_R exactly when α
+  is, merely, the rank of a child tree (`cut`).
+- **The classical side.**
+  [Reflection/Ordinals/Lower](src/SPT/Cubical/OrdinalGeometry/Cubical/Reflection/Ordinals/Lower.agda)
+  takes a property of small well-orders closed downward and gives the
+  initial segment of Ord(ℓ) of its members, with its cut and uniqueness.
+  [Hartogs/Universe](src/SPT/Cubical/OrdinalGeometry/Cubical/Hartogs/Universe.agda)
+  applies it to a family of types D to obtain the Hartogs well-order
+  H(D) = Σ α. ‖Σ c. |α| ↪ D c‖ (`Hartogs`, `cut`, `unique`). For the
+  single type ℕ this is H_ℕ of §4.4.
+  [Hartogs/Cardinal](src/SPT/Cubical/OrdinalGeometry/Cubical/Hartogs/Cardinal.agda) states
+  the classical notions for small well-orders: cardinal, uncountable,
+  regular, strong limit (with power sets |α| → 𝟐) and inaccessible. It
+  also states Mahlo in the function form for Ord(ℓ) (`MahloOrdinals`).
+- **The comparison.** [Cubical/Height/Hartogs](src/SPT/Cubical/OrdinalGeometry/Cubical/Height/Hartogs.agda):
+  under excluded middle, α ≺ λ_R exactly when |α| merely embeds into a
+  child type (`cut`). Hence λ_R ≃ H(U_R) for the child universe U_R
+  (`equivalence`), as ω₁ ≃ H_ℕ in §4.4. The rank of a child tree embeds
+  into a power code, by induction on the tree. Conversely, a well-order
+  that embeds into a child type is the rank of a child tree labelled by
+  subset codes. With choice λ_R is regular, and so inaccessible
+  (`inaccessible`).
+- **Mahlo.** [Cubical/Height/Mahlo](src/SPT/Cubical/OrdinalGeometry/Cubical/Height/Mahlo.agda):
+  given a reflector, excluded middle and choice, every f : Ord ℓ → Ord ℓ
+  has an inaccessible λ_R above every β with α ≺ λ_R → f α ≺ λ_R
+  (`mahlo`). The reflected operator lists, for every member of its
+  argument and every Boolean-coded well-order W on a subset of it
+  ([Hartogs/Coded](src/SPT/Cubical/OrdinalGeometry/Cubical/Hartogs/Coded.agda)), the
+  carrier of f W. Classically, inaccessible closure points of every f
+  characterize the Mahlo cardinals among the regular ones.
+
+| Hypotheses | Conclusion |
+|---|---|
+| none | the cut of λ_R by child trees; the cut and uniqueness of H(D) |
+| a reflector | closed inaccessible points of the geometry above every height, strictly below Ord(ℓ) |
+| excluded middle at ℓ | λ_R ≃ H(U_R), and λ_R is an uncountable strong limit cardinal |
+| excluded middle and choice at ℓ | λ_R is regular, hence inaccessible |
+| a reflector, excluded middle and choice at ℓ | Ord(ℓ) is Mahlo in the function form |
+
 ## 5. The KNFX table by boundary
 
 ### 5.1 Where the rows live
@@ -462,14 +630,23 @@ boundary. On top of it:
   [Exponential](src/SPT/Cubical/OrdinalGeometry/Cubical/TypeTopology/Arithmetic/Exponential.agda)
   and [Remainder](src/SPT/Cubical/OrdinalGeometry/Cubical/TypeTopology/Arithmetic/Remainder.agda).
 
-Function extensionality comes from Cubical
-([TypeTopology/FunExt](src/SPT/Cubical/OrdinalGeometry/Cubical/TypeTopology/FunExt.agda)).
-TypeTopology's `Ordinals.Arithmetic` cannot be imported next to the
-standard library, because its dependency `Naturals.Addition` rebinds the
-natural-number addition builtin. So +ₒ, ×ₒ and 𝟙ₒ are built from
-`Ordinals.WellOrderArithmetic`, as `Ordinals.Arithmetic` builds them. The
-TypeTopology files used are copied into [TypeTopology/](src/SPT/Cubical/TypeTopology/);
-[NOTICE](NOTICE) lists the changes.
+Function extensionality and univalence come from Cubical
+([TypeTopology/FunExt](src/SPT/Cubical/OrdinalGeometry/Cubical/TypeTopology/FunExt.agda),
+[TypeTopology/Univalence](src/SPT/Cubical/OrdinalGeometry/Cubical/TypeTopology/Univalence.agda)).
+TypeTopology's `idtoeq` is inverted by sending an equivalence to its
+Cubical `ua`, read in TypeTopology's identity type, so `Univalence` holds
+and TypeTopology's univalent ordinal theory can be instantiated; §4.6
+uses it for OO.
+
+TypeTopology's `Ordinals.Arithmetic` cannot be checked with Agda 2.8.0:
+its dependency `Naturals.Addition` binds the builtin NATPLUS a second
+time, after `Agda.Builtin.Nat`, whose natural numbers TypeTopology uses.
+So +ₒ, ×ₒ and 𝟙ₒ are built from `Ordinals.WellOrderArithmetic`, as
+`Ordinals.Arithmetic` builds them. The TypeTopology files used are copied
+into [TypeTopology/](src/SPT/Cubical/TypeTopology/). Two of them are shortened so that
+nothing imports `Naturals.Addition`: `Ordinals.OrdinalOfOrdinals` loses
+one lemma, and `UF.SIP-Examples` one example. [NOTICE](NOTICE) lists every
+change.
 
 ### 6.2 What reflection forgets
 
@@ -514,18 +691,39 @@ it forgets.
   ([Fiber/Principal/Loop](src/SPT/Cubical/OrdinalGeometry/Cubical/Fiber/Principal/Loop.agda):
   `not-set`, `merelyPresented-isContr`, `truncation-not-embedding`).
   Truncating is exactly the step that loses this data.
+- **Heights.** Rank (§4.7) forgets in the same way, with labels in place
+  of presentations ([Fiber/Height](src/SPT/Cubical/OrdinalGeometry/Cubical/Fiber/Height.agda)).
+  For every well-order α, the fiber of rank over α + 1 contains the merely
+  inhabited types Σ A. ∥A∥ as a split retract. A merely inhabited type A
+  goes to the node labelled A whose children are all the canonical height
+  of α, which has rank α + 1 (`copies-rank`). Recovery reads the root
+  label, which is merely inhabited because the path places the top point
+  of α + 1 in the rank of the root. No base point is needed, so negation
+  on 𝟐 already gives a nontrivial loop: the fiber is not a set and rank is
+  not an embedding, at every level (`fiber-not-set`, `not-embedding`).
+  Translations of Πₙ K(ℤ, n) give cells in every dimension, so the fiber
+  has no finite h-level, and neither has rank as a map
+  ([Fiber/Height/Unbounded](src/SPT/Cubical/OrdinalGeometry/Cubical/Fiber/Height/Unbounded.agda):
+  `fiber-not-finite-hlevel`, `rank-not-finite-hlevel`). Over an empty
+  well-order, by contrast, the fiber is contractible: the leaf is the only
+  height of rank 0 (`empty-fiber`).
 - **In TypeTopology's own terms.**
   [OmegaOneLoss](src/SPT/Cubical/OrdinalGeometry/Cubical/TypeTopology/OmegaOneLoss.agda),
   [PositionLoss](src/SPT/Cubical/OrdinalGeometry/Cubical/TypeTopology/PositionLoss.agda),
-  [IdentityFiberLoss](src/SPT/Cubical/OrdinalGeometry/Cubical/TypeTopology/IdentityFiberLoss.agda)
+  [IdentityFiberLoss](src/SPT/Cubical/OrdinalGeometry/Cubical/TypeTopology/IdentityFiberLoss.agda),
+  [HeightLoss](src/SPT/Cubical/OrdinalGeometry/Cubical/TypeTopology/HeightLoss.agda)
   and [Loss](src/SPT/Cubical/OrdinalGeometry/Cubical/TypeTopology/Loss.agda):
-  the projection into TypeTopology's ordinals fails TypeTopology's own
-  embedding predicate, measured in its own identity fibers.
+  the projections into TypeTopology's ordinals, from geometries, positions
+  and heights, fail TypeTopology's own embedding predicate, measured in its
+  own identity fibers. For heights the map is rank′(t) = toOrdinal(rank t).
+  Since toOrdinal keeps the carrier, the retraction above carries over
+  (`rankIdentityFiber-not-finite-TT-hlevel`, `rank′-not-TT-embedding`).
 
 The reflected ordinal is a set. All of this higher structure lives in
-spaces of presentations: they contain pointed types with their
-automorphisms and, since presentations are not required to be sets, cells
-of every dimension. These theorems measure how much reflection forgets.
+spaces of presentations and in the labels of heights. They contain
+pointed, or merely inhabited, types with their automorphisms and, since
+neither presentations nor labels are required to be sets, cells of every
+dimension. These theorems measure how much reflection and rank forget.
 That the forgotten data matters is shown elsewhere: by the LPO boundaries
 of §5, and by its use in the ID₁ bound of §8.
 
@@ -638,9 +836,9 @@ import it, and the calibration is proved after the bound.
 
 - Presentations are not required to be sets, and no claim is made that two
   presentations of one order type are identified (§6.2).
-- ω₁ is universe-relative. Its carrier lies one level above the
-  presentations, and its uniqueness concerns the well-order, not the
-  geometry producing it.
+- As constructed, the carrier of ω₁ lies one level above the presentations;
+  up to equivalence ω₁ is small and the same at every level (§4.6). Its
+  uniqueness concerns the well-order, not the geometry producing it.
 - The diagonal of §3 is a strict upper bound, not a least one.
 - Regularity of ω₁ is not constructive: it gives LPO, and LPO with
   countable choice gives it (§4.5).
@@ -650,6 +848,14 @@ import it, and the calibration is proved after the bound.
   is not addressed. The exact strength of stability at ω + 1 is not
   determined (§5.2).
 - The ID₁ results are † and cover only the upper half (§8.5).
+- For closed heights (§4.7) the release proves that rank sends children
+  strictly below their parents, that the rank of Ord(ℓ) is Ord(ℓ), and
+  what rank forgets over 0 and over successors (§6.2). It does not state
+  how rank treats ⊑ and ⊏, nor what its fibers over limits contain.
+- The inaccessible points of Ord(ℓ) take the reflector as a parameter
+  (§4.8). Agda gives one by induction–recursion, which this release does
+  not contain. Degrees of Mahloness beyond the first, and clubs other
+  than those given by functions, are not addressed.
 
 ## 10. Related work
 

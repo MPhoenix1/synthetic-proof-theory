@@ -4,8 +4,10 @@
 module SPT.Cubical.OrdinalGeometry.ExactOrder.Maps where
 
 -- Embeddings, initial maps and order isomorphisms of exact orders.  An
--- isomorphism stores TypeTopology's equivalence predicate; maps with
--- pointwise inverse laws convert to it (`from-inverses`).
+-- order isomorphism stores an isomorphism of carriers A ≅ B
+-- (Core.Equality.Isomorphism) whose forward map is strictly monotone;
+-- `from-inverses` builds the carrier isomorphism from maps with pointwise
+-- inverse laws.
 
 open import Agda.Primitive using (Level; lsuc)
 open import Data.Empty using (⊥; ⊥-elim)
@@ -13,10 +15,6 @@ open import Data.Product using (Σ; _,_; proj₁; proj₂)
 open import Data.Sum using (inj₁; inj₂)
 open import Relation.Binary.PropositionalEquality using
   (_≡_; refl; cong; sym; trans; subst; subst₂)
-import SPT.Cubical.TypeTopology.MLTT.Identity-Type as Identity
-open import SPT.Cubical.TypeTopology.MLTT.Sigma-Type
-  using () renaming (_,_ to pair)
-import SPT.Cubical.TypeTopology.UF.Equiv as Equiv
 
 open import SPT.Cubical.Core.WellFounded using (Acc; acc)
 open import SPT.Cubical.Core.Equality using (MapΠExt)
@@ -25,19 +23,16 @@ import SPT.Cubical.OrdinalGeometry.ExactOrder.Base as Order
 open import SPT.Cubical.OrdinalGeometry.ExactOrder.Exponential.Embedding
   using (Segment)
 
-private
-  ≡→＝ : ∀ {ℓ} {A : Set ℓ} {x y : A} → x ≡ y → Identity._＝_ x y
-  ≡→＝ refl = Identity.refl
-
-  ＝→≡ : ∀ {ℓ} {A : Set ℓ} {x y : A} → Identity._＝_ x y → x ≡ y
-  ＝→≡ Identity.refl = refl
-
 from-inverses : ∀ {ℓ κ} {A : Set ℓ} {B : Set κ}
   → (f : A → B) → (g : B → A)
   → ((x : A) → g (f x) ≡ x) → ((y : B) → f (g y) ≡ y)
-  → A Equiv.≃ B
-from-inverses f g η ε = Equiv.qinveq f
-  (pair g (pair (λ x → ≡→＝ (η x)) (λ y → ≡→＝ (ε y))))
+  → A ≅ B
+from-inverses f g η ε = record
+  { forward = f
+  ; backward = g
+  ; backward-forward = η
+  ; forward-backward = ε
+  }
 
 module Strict {ℓ : Level} {A B : Set ℓ}
   (P : Order.Order A) (Q : Order.Order B) (f : A → B)
@@ -62,7 +57,8 @@ module Strict {ℓ : Level} {A B : Set ℓ}
 
   module Onto (covers : (y : B) → Σ A (λ x → f x ≡ y)) where
 
-    -- The same inverse, as maps with pointwise inverse laws.
+    -- A strictly monotone surjection is an isomorphism of carriers: its
+    -- inverse picks the covering point, and injectivity gives the laws.
     exact : A ≅ B
     exact = record
       { forward = f
@@ -70,10 +66,6 @@ module Strict {ℓ : Level} {A B : Set ℓ}
       ; backward-forward = λ x → injective (proj₂ (covers (f x)))
       ; forward-backward = λ y → proj₂ (covers y)
       }
-
-    equivalence : A Equiv.≃ B
-    equivalence = from-inverses f (λ y → proj₁ (covers y))
-      (λ x → injective (proj₂ (covers (f x)))) (λ y → proj₂ (covers y))
 
 -- A strictly increasing map of exact orders. It need not be initial: its
 -- image may skip points, so it records no predecessor coverage or ceiling.
@@ -142,23 +134,21 @@ record Iso {ℓ : Level} {A B : Set ℓ}
   module P = Order.Order P
   module Q = Order.Order Q
   field
-    equivalence : A Equiv.≃ B
+    equivalence : A ≅ B
     strict : ∀ {x y} → x P.< y
-      → Equiv.⌜ equivalence ⌝ x Q.< Equiv.⌜ equivalence ⌝ y
+      → _≅_.forward equivalence x Q.< _≅_.forward equivalence y
 
   forward : A → B
-  forward = Equiv.⌜ equivalence ⌝
+  forward = _≅_.forward equivalence
 
   backward : B → A
-  backward = Equiv.⌜ equivalence ⌝⁻¹
+  backward = _≅_.backward equivalence
 
   backward-forward : (x : A) → backward (forward x) ≡ x
-  backward-forward x = ＝→≡
-    (Equiv.inverses-are-retractions' equivalence x)
+  backward-forward = _≅_.backward-forward equivalence
 
   forward-backward : (y : B) → forward (backward y) ≡ y
-  forward-backward y = ＝→≡
-    (Equiv.inverses-are-sections' equivalence y)
+  forward-backward = _≅_.forward-backward equivalence
 
   open Strict P Q forward (λ {x} {y} → strict {x} {y}) public
     using (reflect; injective)

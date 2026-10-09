@@ -167,7 +167,7 @@ congruence : (P Q : Ordinal ℓ) (e : Maps.Iso (order P) (order Q))
       (order (R x)) (order (S (Maps.Iso.forward e x))))
   → Maps.Iso (order (sum P R)) (order (sum Q S))
 congruence P Q e R S d = record
-  { equivalence = Increasing.Onto.equivalence covers
+  { equivalence = Increasing.Onto.exact covers
   ; strict = strict
   }
   where

@@ -16,6 +16,8 @@ import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import SPT.Cubical.OrdinalGeometry.Cubical.Reflection.OrderType as Reflection
 import SPT.Cubical.OrdinalGeometry.Cubical.OmegaOne.Base as Omega
 import SPT.Cubical.OrdinalGeometry.Cubical.OmegaOne.Cut as Cut
+open import SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Ordinals using
+  (segments→simulation)
 
 import Cubical.Data.Empty as Empty
 import Cubical.Data.Sigma.Base as Sigma
@@ -127,114 +129,6 @@ cut-strict-equivalence
 ------------------------------------------------------------------------
 -- Leastness among well-orders of any level
 
--- (Π h. (H ↓ h) ≺ K) → H ≼ K: send h to the point of K bounding H ↓ h.
--- H and K may have different carrier levels.
-
-segments→simulation :
-    {H : Woset.Woset source-level ℓ}
-    {K : Woset.Woset target-level ℓ}
-  → ((point : Cubical.fst H) →
-      Simulation._≺_ (Simulation._↓_ H point) K)
-  → Simulation._≼_ H K
-segments→simulation {H = H} {K = K} strict =
-  point-map Cubical., (point-map-monotone Cubical., point-map-lifting)
-  where
-    point-map : Cubical.fst H → Cubical.fst K
-    point-map point = Cubical.fst (strict point)
-
-    principal-equivalence :
-        (point : Cubical.fst H)
-      → Woset.WosetEquiv
-          (Simulation._↓_ K (point-map point))
-          (Simulation._↓_ H point)
-    principal-equivalence point = Cubical.snd (strict point)
-
-    point-map-monotone :
-        (left right : Cubical.fst H)
-      → Woset.WosetStr._≺_ (Cubical.snd H) left right
-      → Woset.WosetStr._≺_ (Cubical.snd K)
-          (point-map left)
-          (point-map right)
-    point-map-monotone left right left<right =
-      Simulation.↓Respects≺⁻ K
-        (point-map left)
-        (point-map right)
-        (Simulation.≺RespectsEquiv
-          (Woset.invWosetEquiv (principal-equivalence left))
-          (Woset.invWosetEquiv (principal-equivalence right))
-          (Simulation.↓Respects≺ H left right left<right))
-
-    point-map-lifting :
-        (point : Cubical.fst H)
-        (below : Cubical.fst K)
-      → Woset.WosetStr._≺_ (Cubical.snd K) below (point-map point)
-      → Cubical.Σ
-          (Cubical.Σ (Cubical.fst H) λ predecessor →
-            Woset.WosetStr._≺_ (Cubical.snd H) predecessor point)
-          (λ predecessor → point-map (Cubical.fst predecessor) Cubical.≡ below)
-    point-map-lifting point below below<image =
-      (predecessor Cubical., predecessor<point)
-      Cubical., image-predecessor≡below
-      where
-        below-segment-strict-point-segment :
-          Simulation._≺_
-            (Simulation._↓_ K below)
-            (Simulation._↓_ H point)
-        below-segment-strict-point-segment =
-          Simulation.≺RespectsEquivR
-            (Simulation._↓_ K below)
-            (principal-equivalence point)
-            (Simulation.↓Respects≺ K below (point-map point) below<image)
-
-        predecessor-with-strict-witness :
-          Cubical.fst (Simulation._↓_ H point)
-        predecessor-with-strict-witness =
-          Cubical.fst below-segment-strict-point-segment
-
-        predecessor : Cubical.fst H
-        predecessor = Cubical.fst predecessor-with-strict-witness
-
-        predecessor<point :
-          Woset.WosetStr._≺_ (Cubical.snd H) predecessor point
-        predecessor<point = Cubical.snd predecessor-with-strict-witness
-
-        predecessor-segment-to-nested-segment :
-          Woset.WosetEquiv
-            (Simulation._↓_ H predecessor)
-            (Simulation._↓_ (Simulation._↓_ H point)
-              predecessor-with-strict-witness)
-        predecessor-segment-to-nested-segment =
-          Equiv.invEq
-            (Woset.WosetPath
-              (Simulation._↓_ H predecessor)
-              (Simulation._↓_ (Simulation._↓_ H point)
-                predecessor-with-strict-witness))
-            (Cubical.sym
-              (Simulation.↓Absorb H point predecessor predecessor<point))
-
-        image-segment→below :
-          Woset.WosetEquiv
-            (Simulation._↓_ K (point-map predecessor))
-            (Simulation._↓_ K below)
-        image-segment→below =
-          Woset.compWosetEquiv
-            (principal-equivalence predecessor)
-            (Woset.compWosetEquiv
-              predecessor-segment-to-nested-segment
-              (Cubical.snd below-segment-strict-point-segment))
-
-        image-predecessor≡below : point-map predecessor Cubical.≡ below
-        image-predecessor≡below =
-          Embedding.isEmbedding→Inj
-            (Simulation.isEmbedding↓ K)
-            (point-map predecessor)
-            below
-            (Equiv.equivFun
-              (Woset.WosetPath
-                (Simulation._↓_ K (point-map predecessor))
-                (Simulation._↓_ K below))
-              image-segment→below)
-
 -- IsOmegaOneCut(H) → (Π P. ord(P) ≺ K) → H ≼ K, for K at any carrier
 -- level: each segment of H is presented, so lies below K.
 
@@ -250,12 +144,7 @@ cut-least :
 cut-least
     {ℓ = ℓ} {target-level = target-level} {H = H}
     H-cut K presented<K =
-  segments→simulation
-    {ℓ = ℓ}
-    {target-level = target-level}
-    {H = H}
-    {K = K}
-    (strict-principal-in-K H-cut)
+  segments→simulation {H = H} {K = K} (strict-principal-in-K H-cut)
   where
     strict-principal-in-K :
         IsOmegaOneCut H

@@ -24,9 +24,9 @@ open import Data.Unit using (⊤; tt)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Binary.PropositionalEquality using
   (_≡_; refl; cong; sym; trans; subst)
-import SPT.Cubical.TypeTopology.UF.Equiv as Equiv
 
 open import SPT.Cubical.Core.WellFounded using (acc)
+open import SPT.Cubical.Core.Equality.Isomorphism using (_≅_)
 open import SPT.Cubical.Core.Nat.WellFounded using (wfℕˢ)
 open import SPT.Cubical.Core.WellFounded.Pullback using (pullback-wf)
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
@@ -147,8 +147,8 @@ singleton : (s : ℕ → Bool) → boundary s Presented.≃𝒫 one
 singleton s = Limit.exhaustion (chain s) one (members s)
   (λ _ → suc zero , tt , tt)
 
--- This is UF's type equivalence of the actual normalized carrier.
-equivalence : (s : ℕ → Bool) → 𝒫.X (boundary s) Equiv.≃ ⊤
+-- The carrier of the boundary itself is isomorphic to ⊤.
+equivalence : (s : ℕ → Bool) → 𝒫.X (boundary s) ≅ ⊤
 equivalence s = Orders.from-inverses
   (Presented._≃𝒫_.to (singleton s)) (Presented._≃𝒫_.from (singleton s))
   (λ x → Limit.equal (chain s) (Presented._≃𝒫_.from-to-≈ (singleton s) x))

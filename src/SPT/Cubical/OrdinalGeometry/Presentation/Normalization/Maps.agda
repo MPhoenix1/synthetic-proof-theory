@@ -12,7 +12,7 @@ open import Agda.Primitive using (Level)
 open import Data.Product using (Σ; _,_)
 open import Relation.Binary.PropositionalEquality using
   (_≡_; trans)
-import SPT.Cubical.TypeTopology.UF.Equiv as Equiv
+open import SPT.Cubical.Core.Equality.Isomorphism using (_≅_)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -128,8 +128,8 @@ iso {P = P} {Q} e = record
   ; strict = λ {x} {y} → strict (Maps.equivalence e) {x} {y}
   }
 
--- A presentation comparison becomes a type equivalence after normalization.
-equivalence : P Presented.≃𝒫 Q → Point P Equiv.≃ Point Q
+-- A presentation comparison becomes an isomorphism of normalized points.
+equivalence : P Presented.≃𝒫 Q → Point P ≅ Point Q
 equivalence e = Orders.Iso.equivalence (iso e)
 
 iso-β : (e : P Presented.≃𝒫 Q) (x : 𝒫.X P)

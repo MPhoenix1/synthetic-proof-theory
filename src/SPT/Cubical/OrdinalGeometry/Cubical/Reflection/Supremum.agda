@@ -8,7 +8,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Supremum where
 -- and Xu, where Ord has suprema of small families (their Lemma 60).
 --
 -- The supremum of F : I → 𝒫 ℓ is the supremum of the order types
--- ord(F i), the library's quotient (Σ i. |F i|)/∼ of
+-- ord(F i) (Supremum.Family), the library's quotient (Σ i. |F i|)/∼ of
 -- HoTT book Lemma 10.3.22. It is least among Woset upper bounds, hence
 -- among presented ones: initial maps F i → Q bound it by Q. No
 -- omniscience principle is used.
@@ -22,8 +22,11 @@ open import SPT.Cubical.OrdinalGeometry.Cubical.Reflection.OrderType using
   (orderType)
 open import SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Simulation using
   (initial)
+import SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Supremum.Family
+  as Family
 
 import Cubical.Foundations.Prelude as Cubical
+import Cubical.HITs.PropositionalTruncation as Truncation
 import Cubical.Relation.Binary.Order.Woset.Base as Woset
 import Cubical.Relation.Binary.Order.Woset.Simulation as Simulation
 
@@ -38,26 +41,34 @@ private
 --   (∀ i. ord(F i) ≼ W) → sup F ≼ W   for W : Woset(ℓ, ℓ).
 --
 -- A small index, I : Set ℓ, gives a small supremum, Woset(ℓ, ℓ). The
--- construction is sealed; only these three laws are exported.
+-- construction is sealed; only these three laws are exported, with
+-- `covered`: every principal segment of sup F is one of a member.
 -- Nonclaim: sup F need not be presented. OmegaOne.Cut
 -- characterizes the presented ordinals below ω₁.
 abstract
   supremum : {I : Set ℓ′} (F : I → 𝒫 ℓ) → Woset.Woset (ℓ′ ⊔ ℓ) ℓ
-  supremum F =
-    Cubical.fst (Simulation.sup λ i → orderType (F i))
+  supremum F = Family.supremum λ i → orderType (F i)
 
   upper : {I : Set ℓ′} (F : I → 𝒫 ℓ) (i : I)
     → orderType (F i) Simulation.≼ supremum F
-  upper F =
-    Cubical.fst
-      (Cubical.snd (Simulation.sup λ i → orderType (F i)))
+  upper F = Family.upper λ i → orderType (F i)
 
   least : {I : Set ℓ′} (F : I → 𝒫 ℓ) (W : Woset.Woset ℓ ℓ)
     → ((i : I) → orderType (F i) Simulation.≼ W)
     → supremum F Simulation.≼ W
-  least F =
-    Cubical.snd
-      (Cubical.snd (Simulation.sup λ i → orderType (F i)))
+  least F = Family.least λ i → orderType (F i)
+
+  -- Every principal segment of sup F is a principal segment of a member
+  -- (Family.covered).
+  covered : {I : Set ℓ′} (F : I → 𝒫 ℓ) (point : Cubical.fst (supremum F))
+    → Truncation.∥
+        Cubical.Σ I (λ i →
+          Cubical.Σ (Cubical.fst (orderType (F i))) λ x →
+            Woset.WosetEquiv
+              (Simulation._↓_ (supremum F) point)
+              (Simulation._↓_ (orderType (F i)) x))
+      ∥₁
+  covered F = Family.covered λ i → orderType (F i)
 
 -- Mathematical shape:
 --

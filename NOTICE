@@ -20,7 +20,7 @@ with this program, in the file LICENSE.  If not, see
 Files copied from TypeTopology
 ------------------------------
 
-The 81 files under TypeTopology/ are copies of files from TypeTopology, by
+The 100 files under TypeTopology/ are copies of files from TypeTopology, by
 Martín Escardó and contributors:
 
   https://github.com/martinescardo/TypeTopology
@@ -28,19 +28,35 @@ Martín Escardó and contributors:
 
 TypeTopology is licensed under the GNU General Public License, version 3.
 
-The copies were modified on 8 October 2026, in these ways only:
+The copies were made on 8 October 2026 (81 files) and 9 October 2026 (19
+files, those that Ordinals/OrdinalOfOrdinals needs in addition).  They
+were modified in these ways only:
 
   * every module name is prefixed with SPT.Cubical.TypeTopology, in module
     headers, in imports, and where prose mentions a module name;
   * --cubical-compatible is added to the OPTIONS pragma of every file that
     did not already have it;
   * a second OPTIONS pragma, -WnoUnsupportedIndexedMatch, is added to the
-    nine files for which Agda reports that warning: MGS/Solved-Exercises,
-    MLTT/Plus-Properties, MLTT/Two-Properties, UF/Embeddings, UF/Equiv,
-    UF/EquivalenceExamples, UF/ImageAndSurjection, UF/PairFun and
-    UF/Subsingletons;
+    thirteen files for which Agda reports that warning:
+    MGS/Solved-Exercises, MLTT/Plus-Properties, MLTT/Two-Properties,
+    UF/Embeddings, UF/Equiv, UF/EquivalenceExamples, UF/ImageAndSurjection,
+    UF/PairFun, UF/PreSIP, UF/SIP, UF/SIP-Examples, UF/Subsingletons and
+    W/Properties;
   * a few import lines that became too long after the renaming are split
-    over two lines.
+    over two lines;
+  * two files are shortened, so that no copy imports Naturals.Addition.
+    With Agda 2.8.0 its pragma BUILTIN NATPLUS clashes with the binding in
+    Agda.Builtin.Nat, whose natural numbers TypeTopology uses
+    (DuplicatePrimitiveBinding), so no module that imports it can be
+    checked:
+      - Ordinals/OrdinalOfOrdinals omits its import of Ordinals.Arithmetic
+        and the lemma order-preserving-gives-≼-implies-EM, added on 19
+        November 2024, which alone uses it (lines 42-43 and 887-934 of the
+        original);
+      - UF/SIP-Examples omits, in its examples of rings, the module of
+        noetherian and of commutative noetherian local rings, with the
+        import of UF.PropTrunc before it, which alone import Naturals.Order
+        (lines 1026-1154 of the original).
 
-No definition or proof was changed.  The authorship notices in the files
-are unchanged.
+No other definition or proof was changed or removed.  The authorship
+notices in the files are unchanged.
