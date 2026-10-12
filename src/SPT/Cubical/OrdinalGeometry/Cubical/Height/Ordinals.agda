@@ -6,10 +6,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Height.Ordinals where
 -- The rank of the ordinal of ordinals.  Ord(ℓ) of Height.Ordinals is the
 -- height of level ℓ + 1 whose children are the heights of level ℓ.  Its
 -- rank is Cubical's Ord(ℓ), the well-order of the well-orders of level ℓ
--- (ordinals): the rank of every child is a small well-order, below Ord(ℓ)
--- at its own point, and every small well-order is the rank of a child, its
--- canonical height.  Through TypeTopology.OrdinalOfOrdinals, the rank of
--- Ord(ℓ) is TypeTopology's OO ℓ (identity).
+-- (ordinals), and so TypeTopology's OO ℓ (identity).
 
 open import Agda.Primitive using (Level; lsuc)
 open import Level using (lift; lower)

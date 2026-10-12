@@ -66,12 +66,14 @@ import SPT.Cubical.OrdinalGeometry.Arithmetic.Classification.Local
 import SPT.Cubical.OrdinalGeometry.Arithmetic.Classification.Pointwise
 import SPT.Cubical.OrdinalGeometry.Arithmetic.Comparison
 import SPT.Cubical.OrdinalGeometry.Arithmetic.Comparison.Discriminator
+import SPT.Cubical.OrdinalGeometry.Arithmetic.Comparison.Representatives
 import SPT.Cubical.OrdinalGeometry.Arithmetic.Comparison.Strength
 import SPT.Cubical.OrdinalGeometry.Arithmetic.Cone
 import SPT.Cubical.OrdinalGeometry.Arithmetic.Division
 import SPT.Cubical.OrdinalGeometry.Arithmetic.Division.Discriminator
 import SPT.Cubical.OrdinalGeometry.Arithmetic.Exponential
 import SPT.Cubical.OrdinalGeometry.Arithmetic.Multiplication
+import SPT.Cubical.OrdinalGeometry.Arithmetic.Multiplication.Left
 import SPT.Cubical.OrdinalGeometry.Arithmetic.Subtraction
 import SPT.Cubical.OrdinalGeometry.Arithmetic.Subtraction.Discriminator
 import SPT.Cubical.OrdinalGeometry.Arithmetic.Successor
@@ -197,9 +199,11 @@ import SPT.Cubical.OrdinalGeometry.Presentation.Normalization.Maps
 import SPT.Cubical.OrdinalGeometry.Presentation.Normalization.Ordinal
 import SPT.Cubical.OrdinalGeometry.Presentation.Normalization.Presentation
 import SPT.Cubical.OrdinalGeometry.Presentation.Principal
+import SPT.Cubical.OrdinalGeometry.Presentation.Propositional
 import SPT.Cubical.OrdinalGeometry.Presentation.Successor
 import SPT.Cubical.OrdinalGeometry.Presentation.Sum
 import SPT.Cubical.OrdinalGeometry.Presentation.Sum.Indexed
+import SPT.Cubical.OrdinalGeometry.Presentation.Sum.Indexed.Equivalence
 
 ------------------------------------------------------------------------
 -- TypeTopology

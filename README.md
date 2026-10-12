@@ -26,7 +26,9 @@ The development constructs ω₁ from presentations with a constructive
 characterization. It places each property in the table of Kraus, Nordvall
 Forsberg and Xu (*Type-Theoretic Approaches to Ordinals*) on the object
 that carries its datum, and proves that removing the datum costs exactly
-LPO. It also measures what the reflection into ordinary ordinals forgets.
+LPO, except for rows 9 and 14, where it costs at least LPO. None of these
+strengths depends on relations with several witnesses. It also measures
+what the reflection into ordinary ordinals forgets.
 
 One level up, the ordinal of ordinals is itself a height: a tree whose
 children are all the heights of a universe. Its rank is Cubical's ordinal
@@ -34,8 +36,8 @@ of ordinals, which is TypeTopology's OO. Given the Mahlo rule, reflections
 of the universe give its inaccessible points. Compared with the classical
 notions as ω₁ is compared with the ℕ-Hartogs well-order, they are
 inaccessible cardinals under excluded middle and choice, and the ordinal of
-ordinals is a Mahlo cardinal. Everything is checked with `--safe` and no
-postulates.
+ordinals is Mahlo in the function form. Everything is checked with `--safe`
+and no postulates.
 
 ### Main results
 
@@ -48,6 +50,7 @@ postulates.
 | Comparison with the ℕ-Hartogs well-order, under explicit hypotheses | [Hartogs/Base](src/SPT/Cubical/OrdinalGeometry/Cubical/Hartogs/Base.agda), [OmegaOne/Hartogs](src/SPT/Cubical/OrdinalGeometry/Cubical/OmegaOne/Hartogs.agda) |
 | Regularity of ω₁ gives LPO; LPO and countable choice give regularity | [Regularity](src/SPT/Cubical/OrdinalGeometry/Cubical/OmegaOne/Regularity.agda) |
 | Each row of the KNFX table holds with its datum; rows 2, 5, 6, 8, 13 and 15–18, asked of all presentations, are equivalent to LPO, and rows 9 and 14 give LPO | [Arithmetic.agda](src/SPT/Cubical/OrdinalGeometry/Arithmetic.agda), [Arithmetic/](src/SPT/Cubical/OrdinalGeometry/Arithmetic/), [ExactOrder/Comparison](src/SPT/Cubical/OrdinalGeometry/ExactOrder/Comparison.agda), [Reflection/Supremum](src/SPT/Cubical/OrdinalGeometry/Cubical/Reflection/Supremum.agda) |
+| The strengths do not depend on relations with several witnesses: every row has the same strength over Boolean orders and over propositional presentations | [Comparison/Representatives](src/SPT/Cubical/OrdinalGeometry/Arithmetic/Comparison/Representatives.agda), [Presentation/Propositional](src/SPT/Cubical/OrdinalGeometry/Presentation/Propositional.agda) |
 | A faithful bridge to TypeTopology's ordinals, and fibers of the projection with no finite h-level | [TypeTopology/Bridge](src/SPT/Cubical/OrdinalGeometry/Cubical/TypeTopology/Bridge.agda), [Fiber/Position](src/SPT/Cubical/OrdinalGeometry/Cubical/Fiber/Position.agda), [Fiber/Principal/Unbounded](src/SPT/Cubical/OrdinalGeometry/Cubical/Fiber/Principal/Unbounded.agda) |
 | TypeTopology's univalence holds in Cubical Agda; Cubical's ordinal of ordinals is TypeTopology's OO, and ω₁ is the segment of OO below the ordinal of Ω | [TypeTopology/Univalence](src/SPT/Cubical/OrdinalGeometry/Cubical/TypeTopology/Univalence.agda), [TypeTopology/OrdinalOfOrdinals](src/SPT/Cubical/OrdinalGeometry/Cubical/TypeTopology/OrdinalOfOrdinals.agda) |
 | The ordinal of ordinals as a height: Ord(ℓ) lies above every height of level ℓ and below none (Burali-Forti); its rank is Cubical's ordinal of ordinals, so TypeTopology's OO | [Height/Ordinals](src/SPT/Cubical/OrdinalGeometry/Height/Ordinals.agda), [Cubical/Height/Rank](src/SPT/Cubical/OrdinalGeometry/Cubical/Height/Rank.agda), [Cubical/Height/Ordinals](src/SPT/Cubical/OrdinalGeometry/Cubical/Height/Ordinals.agda) |
@@ -68,7 +71,7 @@ Every module is under `src/SPT/Cubical`, and its name follows its path, as
 in `SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal`.
 
 - `OrdinalGeometry/Presentation`: presentations, maps, sums, limits of
-  chains, normalization.
+  chains, normalization, propositional presentations.
 - `OrdinalGeometry/ExactOrder`: exact countable orders, Boolean orders,
   their comparison under LPO, and ω^.
 - `OrdinalGeometry/Operation`: operations on initial maps, normal
@@ -78,8 +81,9 @@ in `SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal`.
   inaccessible points of the ordinal of ordinals.
 - `OrdinalGeometry/Arithmetic`: the KNFX table, with ambients,
   characterizations, +, ·, ω^, subtraction, division, discriminators and
-  their exact strengths; `OrdinalGeometry/Arithmetic.agda` restates the
-  whole table as two records, `Rows` and `Strength`.
+  their strengths, also over classes of representatives;
+  `OrdinalGeometry/Arithmetic.agda` restates the whole table as two
+  records, `Rows` and `Strength`.
 - `OrdinalGeometry/Cubical`: the Cubical modules. `Reflection`: order
   types, maps, suprema, classification, countability, the ordinal of
   ordinals; `OmegaOne`: ω₁, its cut, specification, size and regularity,

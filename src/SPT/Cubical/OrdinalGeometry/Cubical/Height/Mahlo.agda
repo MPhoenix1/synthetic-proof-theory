@@ -3,18 +3,12 @@
 
 module SPT.Cubical.OrdinalGeometry.Cubical.Height.Mahlo where
 
--- Ord(ℓ) is a Mahlo cardinal in the function form, under excluded middle
--- and choice, given the Mahlo rule: a reflector of the universe of level
--- ℓ.  For f : Ord ℓ → Ord ℓ, the operator Ψ_f lists, for every member of
--- its argument and every Boolean-coded well-order W on a subset of it,
--- the carrier of f W (operator).  Reflect Ψ_f paired with the labels of
--- the canonical height of β (Height.Ordinals.Mahlo); the rank κ of the
--- reflection (Height.Hartogs) lies above β (above), is closed under f,
---
---   α ≺ κ → f α ≺ κ                                         (closed),
---
--- and is inaccessible.  The child names β's carrier and every f W, and
--- under excluded middle every α ≺ κ is some coded W up to equivalence.
+-- Ord(ℓ) is Mahlo in the function form (Hartogs.Cardinal.MahloOrdinals):
+-- under excluded middle and choice, given the Mahlo rule, a reflector of
+-- the universe of level ℓ, every f : Ord ℓ → Ord ℓ has inaccessible
+-- closure points above every β (mahlo).  The point is the rank of the
+-- reflection of an operator built from f (operator), paired with the
+-- labels of the canonical height of β (Height.Ordinals.Mahlo).
 
 open import Agda.Primitive using (Level)
 open import Data.Sum using (inj₁; inj₂)
@@ -121,8 +115,6 @@ module _ (lem : ExcludedMiddle ℓ) (M : Mahlo.Mahlo (Ambient.formers ℓ))
              fW<κ)
       (embeds (reflection M (operator f) (canonical-height β)) lem α α<κ)
 
--- Mathematical shape: excluded middle, choice and a reflector make Ord(ℓ)
--- Mahlo: every f has inaccessible closure points above every β.
 mahlo : ExcludedMiddle ℓ → Choice ℓ → Mahlo.Mahlo (Ambient.formers ℓ)
   → MahloOrdinals ℓ
 mahlo lem choice M f β =

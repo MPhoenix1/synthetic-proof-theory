@@ -5,18 +5,9 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Height.Reflection where
 
 -- The ranks of boundaries over the universe of level ℓ.  For a family P of
 -- types, the positions of the boundary Ω_P (Height.Reflection) are the
--- P-trees, so its rank
---
---   rank Ω_P = sup (w : W P). rank w + 1
---
--- lies above the rank of every P-tree (tree-below), and every principal
--- segment of it is, merely, the rank of a P-tree (subtree, cut):
---
---   α ≺ rank Ω_P ⇔ ‖Σ w. α ≃ rank w‖.
---
--- For a reflection R the family is that of the child codes, so the points
--- of reflection-rank R are the ranks of the child trees.  All of this is
--- constructive.
+-- P-trees, and the points of its rank are, merely, the ranks of P-trees
+-- (cut).  For a reflection the family is that of its child codes
+-- (reflection-rank).  All of this is constructive.
 
 open import Agda.Primitive using (Level; lsuc)
 

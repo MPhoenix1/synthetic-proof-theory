@@ -13,9 +13,11 @@ next to it. The whole directory checks with `--safe` and contains no
 postulates; see the [README](README.md) for how to check it. Results marked
 **†**, all in §8, are checked in the main development from which this
 release was extracted, but their modules are not part of this release; they
-are named without links. LPO, WLPO, excluded middle, countable choice and
-propositional resizing occur only as explicit hypotheses of the theorems
-that name them, or as conclusions of discriminators.
+are named without links. LPO, WLPO, excluded middle, countable choice,
+choice for set-indexed families and propositional resizing occur only as
+explicit hypotheses of the theorems that name them, or as conclusions of
+discriminators. The reflector of §4.8, the Mahlo rule, is a parameter of
+the theorems that use it.
 
 ## Contents
 
@@ -58,12 +60,12 @@ into Cubical well-orders (§4). At the reflected level ∂ₚx is exactly the
 initial segment that the HoTT book writes `A_{/x}` (§10.3); this guide
 claims nothing new there.
 
-The difference lies before that level. In the HoTT book y < x is a
-proposition, so `A_{/x}` is a subset of the carrier, and extensionality
-says that a point is determined by that subset. Here y <ₚ x is a type and
-≈ₚ is part of the structure, so ∂ₚx is a total space whose fibers are data.
-`A_{/x}` is what the reflection makes of it (§4.1), and §6.2 measures what
-that step forgets.
+The difference lies before that level: in the comparison and enumeration
+a presentation keeps, and in reading the ordinals of one presentation W
+inside it, as the domains ∂x of its points. The relations y <ₚ x need not
+be propositions, but the strengths in §5 do not depend on that (§5.2).
+`A_{/x}` is what the reflection makes of ∂ₚx (§4.1), and §6.2 measures
+what that step forgets.
 
 What the retained data provides is that every row of the KNFX table holds
 where its datum lives:
@@ -77,7 +79,8 @@ where its datum lives:
 
 Asked of all presentations at once, without its datum, each of the rows
 2, 5, 6, 8, 13 and 15–18 is equivalent to LPO, and rows 9 and 14 give LPO
-(§5). The datum is exactly what the row costs.
+(§5). Removing the datum costs exactly LPO for the first group, and at
+least LPO for rows 9 and 14.
 
 The same approach works one level up (§4.7, §4.8). The ordinal of
 ordinals of a universe is itself a geometric object: a height whose
@@ -85,8 +88,9 @@ children are all the heights of the universe. Its rank is Cubical's
 ordinal of ordinals. Reflections of the universe, given by the Mahlo rule,
 give its inaccessible points. They are compared with the classical notions
 as ω₁ is compared with the ℕ-Hartogs well-order. Under excluded middle and
-choice they are inaccessible cardinals, and the ordinal of ordinals is a
-Mahlo cardinal.
+choice they are inaccessible cardinals, and the ordinal of ordinals is
+Mahlo in the function form: every function on it has inaccessible closure
+points above every point (§4.8).
 
 ### 1.2 Synthetic Proof Theory
 
@@ -122,11 +126,12 @@ record `CountableOrdinal𝒫`) has the data shape
   × Σ (e : ℕ → Maybe X) Π x. Σ n. Σ r. (e n ≡ just r) × (r ≈ x)  -- enum
 ```
 
-Four features matter throughout.
+The record has four features worth noting.
 
 - **Relations are type-valued.** Neither ≈ nor < is required to be
-  proposition-valued, and distinct witnesses at the same endpoints remain
-  distinct.
+  proposition-valued. The table does not depend on this: every
+  presentation is equivalent to a Boolean order, whose relations are
+  propositions, and every row has the same strength there (§5.2).
 - **Comparison is a field.** `compare` returns one of x < y, x ≈ y, y < x,
   with its witness. Comparison inside one presentation is part of the data,
   not derived from the other fields.
@@ -565,6 +570,25 @@ stated at level zero, where the discriminators are; the positive direction
 holds at every level. Rows 9 and 14 give LPO without their data, and their
 converses are not addressed.
 
+[Comparison/Representatives](src/SPT/Cubical/OrdinalGeometry/Arithmetic/Comparison/Representatives.agda)
+asks the same statements, and the decisions below of whether P is zero
+and whether P ≃𝒫 ω, of a class of representatives: a type of presentations
+that meets every
+≃𝒫-class. Every row moves across ≃𝒫, so none of the strengths changes. Two
+classes are given:
+- Boolean orders, decidable sets of numbers with a decidable order
+  (`boolean-orders`);
+- propositional presentations, with at most one witness of ≈ and of <
+  between two points (`propositional-presentations`,
+  [Presentation/Propositional](src/SPT/Cubical/OrdinalGeometry/Presentation/Propositional.agda)).
+
+Rows 9 and 14 still give LPO when asked of a class of representatives
+(`inhabited`, `classified`, `shaped`, `division`). Classifications, local
+shapes and divisions move across ≃𝒫, the last because − · Q respects ≃𝒫
+([Multiplication/Left](src/SPT/Cubical/OrdinalGeometry/Arithmetic/Multiplication/Left.agda)).
+So these strengths do not depend on relations with several witnesses. The
+data the rows use are comparison, enumeration and the maps.
+
 [Characterization/Strength](src/SPT/Cubical/OrdinalGeometry/Arithmetic/Characterization/Strength.agda)
 gives the weaker principles. Deciding whether P is zero is exactly WLPO
 (`zero-strength`); deciding P ≃𝒫 ω is exactly LPO (`omega-strength`), and
@@ -724,8 +748,9 @@ spaces of presentations and in the labels of heights. They contain
 pointed, or merely inhabited, types with their automorphisms and, since
 neither presentations nor labels are required to be sets, cells of every
 dimension. These theorems measure how much reflection and rank forget.
-That the forgotten data matters is shown elsewhere: by the LPO boundaries
-of §5, and by its use in the ID₁ bound of §8.
+The results of §5 do not use this higher structure: their strengths are
+the same over Boolean orders (§5.2). What they use is comparison,
+enumeration and the maps.
 
 ## 7. Relation dictionary
 
@@ -804,11 +829,13 @@ the stages that level contains. The bound for an evaluated derivation is the
 reading of its retained heights at the stage where its actual evidence
 lies.
 
-Every analysis of ID₁ must evaluate premises indexed by all stages at the
-stages a derivation actually uses: Bachmann does this with fundamental
-sequences of length Ω, and Buchholz's Ω-rule method with collapsing
-functions. Here it is done by reading retained heights at levels, with no
-notation for Ω.
+Analyses of ID₁ evaluate premises indexed by all stages at the stages a
+derivation actually uses: Bachmann with fundamental sequences of length Ω,
+Buchholz's Ω-rule method with collapsing functions, and Howard by
+evaluating infinite terms indexed by the tree ordinals of the second
+number class at their actual arguments, with lengths measured by a
+collapsing function (§10). Here it is done by reading retained heights at
+levels, with no notation for Ω.
 
 ### 8.4 Calibration
 
@@ -879,8 +906,12 @@ import it, and the calibration is proved after the bound.
   and dependent choice. It is a close precedent for building the
   intensional object first and recovering extensional identity afterwards.
   Here that order is applied to ordinals, the reflection is a separate step
-  (§4), and what each kept datum is worth is measured row by row (§5) and
-  by what the reflection forgets (§6.2).
+  (§4), and what each kept datum is worth is measured row by row (§5).
 - H. Bachmann, *Die Normalfunktionen und das Problem der ausgezeichneten
   Folgen von Ordnungszahlen*, 1950: fundamental sequences of length Ω.
+- W. A. Howard, *A system of abstract constructive ordinals*, Journal of
+  Symbolic Logic 37 (1972): infinite terms indexed by the tree ordinals of
+  the second number class, evaluated at their actual arguments, with
+  lengths measured by Gerber's collapsing function. The evaluation of §8
+  has its closest precedent here.
 - W. Buchholz, the Ω-rule method for ID₁, with collapsing functions.

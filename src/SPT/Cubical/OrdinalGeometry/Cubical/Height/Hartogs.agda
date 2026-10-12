@@ -3,20 +3,11 @@
 
 module SPT.Cubical.OrdinalGeometry.Cubical.Height.Hartogs where
 
--- The rank of a reflection compared with the Hartogs well-order of its
--- child.  Let R reflect an operator over the universe of level ℓ; its
--- child codes decode to the child types, and λ_R = reflection-rank R.
--- Under excluded middle
---
---   α ≺ λ_R ⇔ ‖Σ c. |α| ↪ Decode c‖                          (cut),
---
--- so λ_R ≃ H(Decode) (equivalence), as ω₁ ≃ H_ℕ.  One direction embeds the
--- rank of a child tree into a power code, by induction on the tree
--- (cover, embedding).  The other builds, for a well-order embedding into a
--- child type, a child tree of the same rank whose labels are subset codes
--- (whole-tree).  With choice λ_R is regular: the chosen child trees of a
--- family indexed by a child type are the children of one child tree.  So
--- λ_R is inaccessible (inaccessible).
+-- The rank λ_R = reflection-rank R of a reflection R, compared with the
+-- Hartogs well-order of its child types, as ω₁ is compared with H_ℕ.
+-- Under excluded middle λ_R is that Hartogs well-order (cut,
+-- equivalence); with choice it is regular, hence inaccessible
+-- (inaccessible).
 
 open import Agda.Primitive using (Level)
 open import Data.Empty using (⊥-elim)

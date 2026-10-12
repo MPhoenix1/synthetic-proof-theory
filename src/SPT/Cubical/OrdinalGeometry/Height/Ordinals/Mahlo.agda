@@ -3,20 +3,12 @@
 
 module SPT.Cubical.OrdinalGeometry.Height.Ordinals.Mahlo where
 
--- Inaccessible points of Ord(ℓ).  The universe of level ℓ is a parent
--- whose codes are the types of level ℓ, with the ambient formers
--- (Core.Mahlo.Ambient).  The boundary Ω of a reflection (Height.Reflection)
--- is a height of level ℓ, hence below Ord(ℓ); it is regular for families
--- of child types, and closed under its operator and the formers.
--- Reflecting Ψ paired with the labels of a height t gives a point closed
--- under Ψ and above t (mahlo), so closed inaccessible points are unbounded
--- below Ord(ℓ) (between).  Every member of the paired image of a child
--- family is named in the child (member).  Closure alone is cheap: Ord(ℓ)
--- itself is closed under every operator and lies above every height
--- (Ord-closed).  The content of between is residence: the carrier of a
--- reflection is a type of level ℓ, so its point lies strictly below
--- Ord(ℓ).  The reflector is a parameter, the Mahlo rule; in Agda one is
--- given by induction–recursion, which this release does not use.
+-- Inaccessible points of Ord(ℓ), from the Mahlo rule.  The universe of
+-- level ℓ is a parent whose codes are its types (Core.Mahlo.Ambient), and
+-- the reflector of the Mahlo rule is a parameter; in Agda one is given by
+-- induction–recursion, which this release does not use.  The main
+-- results are mahlo, a point closed under an operator and above a height,
+-- and between, which places that point strictly below Ord(ℓ).
 
 open import Agda.Primitive using (Level; lsuc)
 open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
@@ -205,10 +197,11 @@ not-closed : (M : Mahlo.Mahlo (Ambient.formers ℓ)) (Ψ : Operator ℓ)
         ⊏ point M Ψ t)
 not-closed M Ψ t closed = ⊏-irrefl (point M Ψ t) (closed (seed M Ψ t))
 
--- Discriminator: closure alone is cheap.  Ord(ℓ) itself lies above the
--- boundary of every operator's output and above every height, as a parent
--- is its own closure.  What between adds is residence: its closed points
--- lie strictly below Ord(ℓ).
+-- Discriminator: closure does not single out these points.  Ord(ℓ)
+-- itself lies above the boundary of every operator's output and above
+-- every height, as a parent is its own closure.  What between adds is that
+-- the closed points lie strictly below Ord(ℓ), because the carrier of a
+-- reflection is a type of level ℓ.
 Ord-closed : (Ψ : Operator ℓ)
   → ((F : Family ℓ) → lift-height (boundary (Ψ F)) ◃ Ord ℓ)
     × ((t : Height ℓ) → lift-height t ◃ Ord ℓ)

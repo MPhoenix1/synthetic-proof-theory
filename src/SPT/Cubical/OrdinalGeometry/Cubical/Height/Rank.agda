@@ -3,18 +3,12 @@
 
 module SPT.Cubical.OrdinalGeometry.Cubical.Height.Rank where
 
--- The rank of a height among the Cubical well-orders of its level:
---
---   rank (node A f) = sup (a : A). rank (f a) + 1   (Supremum.Family).
---
--- A child's rank lies strictly below its parent's (child), and the rank of
--- a node lies below every well-order, of any level, strictly above the
--- ranks of its children (least).  Every well-order W is the rank of its
--- canonical height, Height.Ordinals.whole of its relation (canonical), and
--- a height and its lift one universe up have equivalent ranks (lifted).
--- Shape-equivalent heights have equivalent ranks (rank-≅).  Each
--- equivalence is antisymmetry of ≼: one side from least, the other from
--- a simulation built on principal segments, or from least again.
+-- The rank of a height among the Cubical well-orders of its level, built
+-- from the suprema of Supremum.Family, with its laws: children lie below,
+-- the rank is least, and every well-order is the rank of its canonical
+-- height.  Each equivalence below is antisymmetry of ≼: one side from
+-- least, the other from a simulation built on principal segments, or from
+-- least again.
 
 open import Agda.Primitive using (Level; lsuc)
 open import Level using (Lift; lift; lower)
