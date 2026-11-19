@@ -6,8 +6,9 @@ module SPT.Foundation.Modalities.Biconditional where
 -- biconditional of two of them is one (`biconditional`), and toggling by Q,
 -- P ↦ (Q ⇔ P), undoes itself: Q ⇔ (Q ⇔ P) has maps both ways with P
 -- (`toggled-twice`, `untoggled`), and Q ⇔ ⊤ with Q (`toggled-truth`,
--- `truth-toggled`). Under univalence at the level, ¬¬-stable propositions
--- with maps both ways are identified (`stable-propositions-are-identified`),
+-- `truth-toggled`). Under propositional extensionality at the level,
+-- ¬¬-stable propositions with maps both ways are identified
+-- (`stable-propositions-are-identified`),
 -- so toggling is an involution (`toggling-is-an-involution`) and the
 -- ¬¬-stable propositions form a set (`stable-propositions-form-a-set`).
 
@@ -18,8 +19,9 @@ open import SPT.Foundation.Modalities using
 open import SPT.Foundation.Propositions using
   (is-proposition; is-set; Σ-is-proposition)
 open import SPT.Foundation.Sets using (being-a-proposition-is-a-proposition)
+open import SPT.Foundation.Propositions.Extensionality using
+  (Propositional-Extensionality)
 open import SPT.Foundation.Sets.Uniqueness using (identifications-from)
-open import SPT.Foundation.Univalence using (is-univalent; isotoid)
 
 ------------------------------------------------------------------------
 -- The true proposition
@@ -111,14 +113,13 @@ module _ {ℓ : Level} (dn : (X : Set ℓ) → FunExt (¬ X) (λ _ → 𝟘))
       (Π-is-proposition (extensionality (¬ ¬ X) (λ _ → X)) (λ _ → h) s s′)
 
 ------------------------------------------------------------------------
--- Under univalence
+-- Under propositional extensionality
 
--- Maps both ways between two propositions are an isomorphism, which
--- univalence turns into an identification of the carriers.
+-- Maps both ways between the carriers, two propositions, identify them.
 
 module _ {ℓ : Level} (dn : (X : Set ℓ) → FunExt (¬ X) (λ _ → 𝟘))
   (extensionality : (X : Set ℓ) (Y : X → Set ℓ) → FunExt X Y)
-  (u : is-univalent ℓ) where
+  (propositional-extensionality : Propositional-Extensionality ℓ) where
 
   stable-propositions-are-identified :
     (P Q : Stable-Proposition (double-negation-modality dn)) →
@@ -126,15 +127,10 @@ module _ {ℓ : Level} (dn : (X : Set ℓ) → FunExt (¬ X) (λ _ → 𝟘))
     (Stable-Proposition.carrier Q → Stable-Proposition.carrier P) → P ＝ Q
   stable-propositions-are-identified P Q to from =
     identified-by-carriers dn extensionality P Q
-      (isotoid (u (Stable-Proposition.carrier P) (Stable-Proposition.carrier Q))
-        (record
-          { forward = to
-          ; backward = from
-          ; backward-forward = λ p →
-              Stable-Proposition.carrier-is-proposition P (from (to p)) p
-          ; forward-backward = λ q →
-              Stable-Proposition.carrier-is-proposition Q (to (from q)) q
-          }))
+      (propositional-extensionality (Stable-Proposition.carrier P)
+        (Stable-Proposition.carrier Q)
+        (Stable-Proposition.carrier-is-proposition P)
+        (Stable-Proposition.carrier-is-proposition Q) to from)
 
   -- Mathematical shape: Q ⇔ (Q ⇔ P) ＝ P.
   toggling-is-an-involution :

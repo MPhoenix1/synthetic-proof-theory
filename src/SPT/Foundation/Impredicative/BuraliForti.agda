@@ -10,12 +10,13 @@ module SPT.Foundation.Impredicative.BuraliForti where
 -- (`order-types-are-stably-well-founded`). Under propositional resizing they
 -- are not small (`order-types-are-not-small`): a small presentation of them
 -- is an order, whose segments have types increasing strictly and below its
--- own. So under univalence small identifications give a large separated set
--- (`separated-largeness`) and are contradictory
--- (`small-identifications-are-contradictory`).
+-- own. So under propositional extensionality at ℓ and univalence at ℓ + 1,
+-- small identifications give a large separated set (`separated-largeness`)
+-- and are contradictory (`small-identifications-are-contradictory`).
 
 open import SPT.Base
 open import SPT.Foundation.Extensionality using (FunExt; Π-is-proposition)
+open import SPT.Foundation.Extensionality.Levels using (funext-below)
 open import SPT.Foundation.Impredicative.PropositionalResizing using
   (Propositional-Resizing)
 open import SPT.Foundation.Impredicative.SmallIdentifications using
@@ -32,6 +33,8 @@ open import SPT.Foundation.Propositions using
   (is-proposition; is-set; 𝟘-is-proposition; propositions-are-sets)
 open import SPT.Foundation.Propositions.Closure using
   (isomorphic-to-a-proposition)
+open import SPT.Foundation.Propositions.Extensionality using
+  (Propositional-Extensionality)
 open import SPT.Foundation.Sets using
   (products-of-sets-are-sets; sums-of-sets-are-sets)
 open import SPT.Foundation.Size using (is-small)
@@ -46,9 +49,9 @@ open import SPT.Foundation.WellFounded.Stable using
 ------------------------------------------------------------------------
 -- Hypotheses
 
--- Function extensionality at ℓ and ℓ + 1, univalence at ℓ and propositional
--- resizing. Univalence at both levels with resizing gives them
--- (`hypotheses`).
+-- Function extensionality at ℓ and ℓ + 1, propositional extensionality at ℓ
+-- and propositional resizing. Univalence at ℓ + 1 gives the function
+-- extensionality at both levels (`hypotheses`).
 
 record Hypotheses (ℓ : Level) : Set (lsuc (lsuc ℓ)) where
   field
@@ -56,17 +59,20 @@ record Hypotheses (ℓ : Level) : Set (lsuc (lsuc ℓ)) where
     extensionality₀ : (X : Set ℓ) (Y : X → Set ℓ) → FunExt X Y
     extensionality₁ : (X : Set (lsuc ℓ)) (Y : X → Set (lsuc ℓ)) → FunExt X Y
     negation₁ : (X : Set (lsuc ℓ)) → FunExt X (λ _ → 𝟘)
-    univalence₀ : is-univalent ℓ
+    pe₀ : Propositional-Extensionality ℓ
     resize : Propositional-Resizing ℓ
 
-hypotheses : {ℓ : Level} → is-univalent ℓ → is-univalent (lsuc ℓ) →
-  Propositional-Resizing ℓ → Hypotheses ℓ
-hypotheses u₀ u₁ r = record
-  { dn = λ X → funext-from-univalence (¬ X) (λ _ → 𝟘) u₀ u₀
-  ; extensionality₀ = λ X Y → funext-from-univalence X Y u₀ u₀
+hypotheses : {ℓ : Level} → Propositional-Extensionality ℓ →
+  is-univalent (lsuc ℓ) → Propositional-Resizing ℓ → Hypotheses ℓ
+hypotheses {ℓ} pe u₁ r = record
+  { dn = λ X →
+      funext-below (lsuc ℓ) (λ A B → funext-from-univalence A B u₁ u₁)
+        (¬ X) (λ _ → 𝟘)
+  ; extensionality₀ = λ X Y →
+      funext-below (lsuc ℓ) (λ A B → funext-from-univalence A B u₁ u₁) X Y
   ; extensionality₁ = λ X Y → funext-from-univalence X Y u₁ u₁
   ; negation₁ = λ X → funext-from-univalence X (λ _ → 𝟘) u₁ u₁
-  ; univalence₀ = u₀
+  ; pe₀ = pe
   ; resize = r
   }
 
@@ -93,7 +99,7 @@ module _ {ℓ : Level} (H : Hypotheses ℓ) where
     extensionality₁ (Stably-Well-Founded-Order ℓ)
       (λ _ → Stable-Proposition (double-negation-modality dn))
       (isomorphism-class α) (isomorphism-class β)
-      (λ γ → stable-propositions-are-identified dn extensionality₀ univalence₀
+      (λ γ → stable-propositions-are-identified dn extensionality₀ pe₀
         (isomorphism-class α γ) (isomorphism-class β γ)
         (λ k n → k (λ χ → n (composite-isomorphism χ φ)))
         (λ k n → k (λ χ → n (composite-isomorphism χ (inverse-isomorphism φ)))))
@@ -164,7 +170,7 @@ module _ {ℓ : Level} (H : Hypotheses ℓ) where
       (products-of-sets-are-sets extensionality₁
         (Stably-Well-Founded-Order ℓ)
         (λ _ → Stable-Proposition (double-negation-modality dn))
-        (λ _ → stable-propositions-form-a-set dn extensionality₀ univalence₀))
+        (λ _ → stable-propositions-form-a-set dn extensionality₀ pe₀))
       (λ P → propositions-are-sets (being-an-order-type-is-a-proposition P))
 
   order-types-are-separated : (q r : Order-Types) → ¬ ¬ (q ＝ r) → q ＝ r
@@ -174,7 +180,7 @@ module _ {ℓ : Level} (H : Hypotheses ℓ) where
         (λ _ → Stable-Proposition (double-negation-modality dn))
         (pr₁ q) (pr₁ r)
         (λ γ → stable-propositions-are-identified dn extensionality₀
-          univalence₀ (pr₁ q γ) (pr₁ r γ)
+          pe₀ (pr₁ q γ) (pr₁ r γ)
           (λ x → Stable-Proposition.carrier-is-stable (pr₁ r γ)
             (λ n → k (λ e → n
               (transport (λ s → Stable-Proposition.carrier (pr₁ s γ)) e x))))
@@ -534,16 +540,20 @@ module _ {ℓ : Level} (H : Hypotheses ℓ) where
 
 -- The specification of SmallIdentifications, inhabited.
 separated-largeness : {ℓ : Level} → Separated-Largeness ℓ
-separated-largeness u₀ u₁ s =
+separated-largeness pe u₁ s =
   order-types-form-a-large-separated-set
-    (hypotheses u₀ u₁ (small-identifications-give-resizing u₁ s))
+    (hypotheses pe u₁ (small-identifications-give-resizing u₁ s))
 
--- Mathematical shape: univalence at ℓ and ℓ + 1 refutes small
--- identifications.
+-- Mathematical shape: propositional extensionality at ℓ and univalence at
+-- ℓ + 1 refute small identifications; univalence at ℓ gives the first
+-- (`univalence-gives-propositional-extensionality`).
 small-identifications-are-contradictory : {ℓ : Level} →
-  is-univalent ℓ → is-univalent (lsuc ℓ) → Small-Identifications ℓ → 𝟘
-small-identifications-are-contradictory u₀ u₁ =
+  Propositional-Extensionality ℓ → is-univalent (lsuc ℓ) →
+  Small-Identifications ℓ → 𝟘
+small-identifications-are-contradictory {ℓ} pe u₁ =
   separated-largeness-refutes-small-identifications
-    (λ X → funext-from-univalence (¬ X) (λ _ → 𝟘) u₀ u₀)
-    (λ X Y → funext-from-univalence X Y u₀ u₀)
-    (λ X Y → funext-from-univalence X Y u₁ u₁) u₀ u₁ separated-largeness
+    (λ X → funext-below (lsuc ℓ) (λ A B → funext-from-univalence A B u₁ u₁)
+      (¬ X) (λ _ → 𝟘))
+    (λ X Y →
+      funext-below (lsuc ℓ) (λ A B → funext-from-univalence A B u₁ u₁) X Y)
+    (λ X Y → funext-from-univalence X Y u₁ u₁) pe u₁ separated-largeness

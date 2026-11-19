@@ -8,8 +8,9 @@ module SPT.Foundation.Impredicative.SmallIdentifications where
 -- a proposition P being equivalent to P ＝ 1
 -- (`small-identifications-give-resizing`), and a type represented faithfully
 -- by automorphisms of a set of level ℓ + 1 is small
--- (`faithfully-represented-types-are-small`). With univalence at ℓ every
--- ¬¬-separated set of level ℓ + 1 is so represented, so small
+-- (`faithfully-represented-types-are-small`). With propositional
+-- extensionality at ℓ, every ¬¬-separated set of level ℓ + 1 is so
+-- represented, so small
 -- (`separated-sets-are-small`): toggling the ¬¬-stable proposition beside
 -- each x by x ＝ a is an automorphism of A × Ω¬¬ that determines a. So a
 -- large ¬¬-separated set refutes small identifications; that they give one
@@ -35,6 +36,8 @@ open import SPT.Foundation.Modalities.Biconditional using
 open import SPT.Foundation.Propositions using (is-proposition; is-set)
 open import SPT.Foundation.Propositions.Closure using
   (isomorphic-to-a-proposition)
+open import SPT.Foundation.Propositions.Extensionality using
+  (Propositional-Extensionality)
 open import SPT.Foundation.Sets using (sums-of-sets-are-sets)
 open import SPT.Foundation.Size using (is-small)
 open import SPT.Foundation.Univalence using
@@ -217,7 +220,7 @@ module _ {ℓ : Level} (dn : (X : Set ℓ) → FunExt (¬ X) (λ _ → 𝟘))
 
 module _ {ℓ : Level} (dn : (X : Set ℓ) → FunExt (¬ X) (λ _ → 𝟘))
   (extensionality : (X : Set ℓ) (Y : X → Set ℓ) → FunExt X Y)
-  (u : is-univalent ℓ) (resize : Propositional-Resizing ℓ)
+  (pe : Propositional-Extensionality ℓ) (resize : Propositional-Resizing ℓ)
   (S : Separated-Set (lsuc ℓ)) where
 
   open Separated-Set S
@@ -236,7 +239,7 @@ module _ {ℓ : Level} (dn : (X : Set ℓ) → FunExt (¬ X) (λ _ → 𝟘))
     toggle-at a (toggle-at a w) ＝ w
   toggling-at-twice a w =
     ap (λ P → pr₁ w , P)
-      (toggling-is-an-involution dn extensionality u
+      (toggling-is-an-involution dn extensionality pe
         (identity-proposition dn resize S (pr₁ w) a) (pr₂ w))
 
   toggle : points →
@@ -259,16 +262,16 @@ module _ {ℓ : Level} (dn : (X : Set ℓ) → FunExt (¬ X) (λ _ → 𝟘))
 module _ {ℓ : Level} (dn : (X : Set ℓ) → FunExt (¬ X) (λ _ → 𝟘))
   (extensionality₀ : (X : Set ℓ) (Y : X → Set ℓ) → FunExt X Y)
   (extensionality₁ : (X : Set (lsuc ℓ)) (Y : X → Set (lsuc ℓ)) → FunExt X Y)
-  (u₀ : is-univalent ℓ) (u₁ : is-univalent (lsuc ℓ))
+  (pe₀ : Propositional-Extensionality ℓ) (u₁ : is-univalent (lsuc ℓ))
   (s : Small-Identifications ℓ) (S : Separated-Set (lsuc ℓ)) where
 
   open Separated-Set S
 
   toggles-determine-their-point : (a b : points) →
     ((w : points × Stable-Proposition (double-negation-modality dn)) →
-      toggle-at dn extensionality₀ u₀
+      toggle-at dn extensionality₀ pe₀
         (small-identifications-give-resizing u₁ s) S a w
-      ＝ toggle-at dn extensionality₀ u₀
+      ＝ toggle-at dn extensionality₀ pe₀
           (small-identifications-give-resizing u₁ s) S b w) →
     a ＝ b
   toggles-determine-their-point a b agree =
@@ -286,8 +289,8 @@ module _ {ℓ : Level} (dn : (X : Set ℓ) → FunExt (¬ X) (λ _ → 𝟘))
     faithfully-represented-types-are-small extensionality₁ u₁ s
       (points × Stable-Proposition (double-negation-modality dn))
       (sums-of-sets-are-sets points-form-a-set
-        (λ _ → stable-propositions-form-a-set dn extensionality₀ u₀))
-      (toggle dn extensionality₀ u₀
+        (λ _ → stable-propositions-form-a-set dn extensionality₀ pe₀))
+      (toggle dn extensionality₀ pe₀
         (small-identifications-give-resizing u₁ s) S)
       toggles-determine-their-point
 
@@ -301,26 +304,26 @@ module _ {ℓ : Level} (dn : (X : Set ℓ) → FunExt (¬ X) (λ _ → 𝟘))
 -- excluded middle, the order types of stably well-founded orders are one
 -- (`separated-largeness` of SPT.Foundation.Impredicative.BuraliForti).
 
--- Specification: under univalence, small identifications give a large
--- separated set.
+-- Specification: under propositional extensionality at ℓ and univalence at
+-- ℓ + 1, small identifications give a large separated set.
 Separated-Largeness : (ℓ : Level) → Set (lsuc (lsuc ℓ))
 Separated-Largeness ℓ =
-  is-univalent ℓ → is-univalent (lsuc ℓ) → Small-Identifications ℓ →
-  Large-Separated-Set ℓ
+  Propositional-Extensionality ℓ → is-univalent (lsuc ℓ) →
+  Small-Identifications ℓ → Large-Separated-Set ℓ
 
 module _ {ℓ : Level} (dn : (X : Set ℓ) → FunExt (¬ X) (λ _ → 𝟘))
   (extensionality₀ : (X : Set ℓ) (Y : X → Set ℓ) → FunExt X Y)
   (extensionality₁ : (X : Set (lsuc ℓ)) (Y : X → Set (lsuc ℓ)) → FunExt X Y)
-  (u₀ : is-univalent ℓ) (u₁ : is-univalent (lsuc ℓ)) where
+  (pe₀ : Propositional-Extensionality ℓ) (u₁ : is-univalent (lsuc ℓ)) where
 
   large-separated-sets-refute-small-identifications :
     Large-Separated-Set ℓ → Small-Identifications ℓ → 𝟘
   large-separated-sets-refute-small-identifications L s =
     Large-Separated-Set.not-small L
-      (separated-sets-are-small dn extensionality₀ extensionality₁ u₀ u₁ s
+      (separated-sets-are-small dn extensionality₀ extensionality₁ pe₀ u₁ s
         (Large-Separated-Set.separated-set L))
 
   separated-largeness-refutes-small-identifications :
     Separated-Largeness ℓ → Small-Identifications ℓ → 𝟘
   separated-largeness-refutes-small-identifications largeness s =
-    large-separated-sets-refute-small-identifications (largeness u₀ u₁ s) s
+    large-separated-sets-refute-small-identifications (largeness pe₀ u₁ s) s
