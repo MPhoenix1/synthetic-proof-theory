@@ -29,13 +29,9 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Comparison.Representatives where
 -- divisions also move across ≃𝒫 (Classification.respect, Local.image and
 -- moved, division-across, through Multiplication.Left).
 
-open import Agda.Primitive using (Level; lzero; lsuc)
-open import Data.Nat using (ℕ; zero; suc)
-open import Data.Product using (Σ; _,_; proj₁)
-open import Data.Sum using (_⊎_) renaming (map to ⊎-map)
-open import Function.Bundles using (_⇔_; mk⇔)
-open import Relation.Nullary using (Dec)
-open import Relation.Nullary.Decidable using (map′)
+open import SPT.Cubical.Base hiding (_+_)
+open import SPT.Cubical.Foundation.LogicalEquivalence using
+  (_⇔_; decidable-iff)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -173,49 +169,50 @@ module _ {κ : Level} (R : Representatives κ) where
     ⇔ ((P Q : Representative)
         → Maps.Initial (present P) (present Q)
           ⊎ Maps.Segment (present Q) (present P))
-  comparable = mk⇔
-    (λ lpo P Q → Comparison.comparable lpo (present P) (present Q))
+  comparable =
+    ((λ lpo P Q → Comparison.comparable lpo (present P) (present Q)) ,
     (λ row → ComparisonDiscriminator.comparable λ P Q →
       ⊎-map (initial-across (presents P) (presents Q))
         (segment-across (presents Q) (presents P))
-        (row (choose P) (choose Q)))
+        (row (choose P) (choose Q))))
 
   -- Mathematical shape: LPO ⇔ Π P Q. Dec (P ≤ Q).
   initial : Stream.LPO
-    ⇔ ((P Q : Representative) → Dec (Maps.Initial (present P) (present Q)))
-  initial = mk⇔
-    (λ lpo P Q → Comparison.initial lpo (present P) (present Q))
+    ⇔ ((P Q : Representative)
+        → is-decidable (Maps.Initial (present P) (present Q)))
+  initial =
+    ((λ lpo P Q → Comparison.initial lpo (present P) (present Q)) ,
     (λ row → ComparisonDiscriminator.initial λ P Q →
-      map′ (initial-across (presents P) (presents Q))
-        (initial-across (toward P) (toward Q))
-        (row (choose P) (choose Q)))
+      pr₁ (decidable-iff (initial-across (presents P) (presents Q) ,
+        initial-across (toward P) (toward Q)))
+        (row (choose P) (choose Q))))
 
   -- Mathematical shape: LPO ⇔ Π P Q. Dec (P ≃ Q).
   equivalent : Stream.LPO
     ⇔ ((P Q : Representative)
-        → Dec (present P Presented.≃𝒫 present Q))
-  equivalent = mk⇔
-    (λ lpo P Q → Comparison.equivalent lpo (present P) (present Q))
+        → is-decidable (present P Presented.≃𝒫 present Q))
+  equivalent =
+    ((λ lpo P Q → Comparison.equivalent lpo (present P) (present Q)) ,
     (λ row → ComparisonDiscriminator.equivalent λ P Q →
-      map′ (equivalence-across (presents P) (presents Q))
-        (equivalence-across (toward P) (toward Q))
-        (row (choose P) (choose Q)))
+      pr₁ (decidable-iff (equivalence-across (presents P) (presents Q) ,
+        equivalence-across (toward P) (toward Q)))
+        (row (choose P) (choose Q))))
 
   -- Mathematical shape: LPO ⇔ Π F : ℕ → A. Σ S. Π n. F n < S.
   bound : Stream.LPO
     ⇔ ((F : ℕ → Representative)
         → Σ Representative λ S →
             (n : ℕ) → Maps.Segment (present (F n)) (present S))
-  bound = mk⇔
-    (λ lpo F →
+  bound =
+    ((λ lpo F →
       let S , s = Comparison.bound lpo (λ n → present (F n))
       in choose S , λ n →
-        segment-across (Presented.≃𝒫-refl (present (F n))) (toward S) (s n))
+        segment-across (Presented.≃𝒫-refl (present (F n))) (toward S) (s n)) ,
     (λ row → ComparisonDiscriminator.bound λ F →
       let S , s = row (λ n → choose (F n))
       in present S , λ n →
         segment-across (presents (F n)) (Presented.≃𝒫-refl (present S))
-          (s n))
+          (s n)))
 
   -- Row 2. Mathematical shape: LPO ⇔ Π P Q S. P ≤ Q → Q < S → P < S.
   along : Stream.LPO
@@ -223,13 +220,13 @@ module _ {κ : Level} (R : Representatives κ) where
         → Maps.Initial (present P) (present Q)
         → Maps.Segment (present Q) (present S)
         → Maps.Segment (present P) (present S))
-  along = mk⇔
-    (λ lpo P Q S → Comparison.along lpo)
+  along =
+    ((λ lpo P Q S → Comparison.along lpo) ,
     (λ row → AmbientDiscriminator.along λ P Q S f s →
       segment-across (presents P) (presents S)
         (row (choose P) (choose Q) (choose S)
           (initial-across (toward P) (toward Q) f)
-          (segment-across (toward Q) (toward S) s)))
+          (segment-across (toward Q) (toward S) s))))
 
   -- Row 5. Mathematical shape: LPO ⇔ Π P Q. P ≤ Q → P + 1 ≤ Q + 1.
   successor-initial : Stream.LPO
@@ -237,12 +234,12 @@ module _ {κ : Level} (R : Representatives κ) where
         → Maps.Initial (present P) (present Q)
         → Maps.Initial (Maps.Successor.next (present P))
             (Maps.Successor.next (present Q)))
-  successor-initial = mk⇔
-    (λ lpo P Q → Comparison.successor-initial lpo)
+  successor-initial =
+    ((λ lpo P Q → Comparison.successor-initial lpo) ,
     (λ row → SuccessorDiscriminator.initial λ P Q f →
       initial-across (Successor.respect (presents P))
         (Successor.respect (presents Q))
-        (row (choose P) (choose Q) (initial-across (toward P) (toward Q) f)))
+        (row (choose P) (choose Q) (initial-across (toward P) (toward Q) f))))
 
   -- Row 5. Mathematical shape: LPO ⇔ Π P Q. P < Q → P + 1 < Q + 1.
   successor-segment : Stream.LPO
@@ -250,43 +247,43 @@ module _ {κ : Level} (R : Representatives κ) where
         → Maps.Segment (present P) (present Q)
         → Maps.Segment (Maps.Successor.next (present P))
             (Maps.Successor.next (present Q)))
-  successor-segment = mk⇔
-    (λ lpo P Q → Comparison.successor-segment lpo)
+  successor-segment =
+    ((λ lpo P Q → Comparison.successor-segment lpo) ,
     (λ row → SuccessorDiscriminator.segment λ P Q s →
       segment-across (Successor.respect (presents P))
         (Successor.respect (presents Q))
-        (row (choose P) (choose Q) (segment-across (toward P) (toward Q) s)))
+        (row (choose P) (choose Q) (segment-across (toward P) (toward Q) s))))
 
   -- Row 6. Mathematical shape: LPO ⇔ Π P Q. Σ S. S = sup (P, Q, Q, …).
   join : Stream.LPO
     ⇔ ((P Q : Representative)
         → Σ Representative λ S →
             Supremum (pair (present P) (present Q)) (present S))
-  join = mk⇔
-    (λ lpo P Q →
+  join =
+    ((λ lpo P Q →
       let S , s = Comparison.join lpo (present P) (present Q)
       in choose S , supremum-across
         (λ n → Presented.≃𝒫-refl (pair (present P) (present Q) n))
-        (toward S) s)
+        (toward S) s) ,
     (λ row → AmbientDiscriminator.join λ P Q →
       let S , s = row (choose P) (choose Q)
       in present S , supremum-across (pair-across (presents P) (presents Q))
-        (Presented.≃𝒫-refl (present S)) s)
+        (Presented.≃𝒫-refl (present S)) s))
 
   -- Row 8. Mathematical shape: LPO ⇔ Π F : ℕ → A. Σ S. S = sup F.
   supremum : Stream.LPO
     ⇔ ((F : ℕ → Representative)
         → Σ Representative λ S →
             Supremum (λ n → present (F n)) (present S))
-  supremum = mk⇔
-    (λ lpo F →
+  supremum =
+    ((λ lpo F →
       let S , s = Comparison.supremum lpo (λ n → present (F n))
       in choose S , supremum-across
-        (λ n → Presented.≃𝒫-refl (present (F n))) (toward S) s)
+        (λ n → Presented.≃𝒫-refl (present (F n))) (toward S) s) ,
     (λ row → AmbientDiscriminator.supremum λ F →
       let S , s = row (λ n → choose (F n))
       in present S , supremum-across (λ n → presents (F n))
-        (Presented.≃𝒫-refl (present S)) s)
+        (Presented.≃𝒫-refl (present S)) s))
 
   -- Row 13. Mathematical shape: LPO ⇔ Π P Q. P ≤ Q → Σ S. P + S ≃ Q.
   remainder : Stream.LPO
@@ -294,84 +291,87 @@ module _ {κ : Level} (R : Representatives κ) where
         → Maps.Initial (present P) (present Q)
         → Σ Representative λ S →
             (present P + present S) Presented.≃𝒫 present Q)
-  remainder = mk⇔
-    (λ lpo P Q f →
+  remainder =
+    ((λ lpo P Q f →
       let S , d = Comparison.subtract lpo f
       in choose S , Presented.≃𝒫-trans
         (Addition.equivalence (Presented.≃𝒫-refl (present P)) (presents S))
-        d)
+        d) ,
     (λ row → SubtractionDiscriminator.remainder λ P Q f →
       let S , d = row (choose P) (choose Q)
             (initial-across (toward P) (toward Q) f)
       in present S , Presented.≃𝒫-trans
         (Addition.equivalence (toward P) (Presented.≃𝒫-refl (present S)))
-        (Presented.≃𝒫-trans d (presents Q)))
+        (Presented.≃𝒫-trans d (presents Q))))
 
   -- Row 15. Mathematical shape: LPO ⇔ Π P. Dec (P < ω).
   finite : Stream.LPO
-    ⇔ ((P : Representative) → Dec (Maps.Segment (present P) omega))
-  finite = mk⇔
-    (λ lpo P → Comparison.finite lpo (present P))
+    ⇔ ((P : Representative) → is-decidable (Maps.Segment (present P) omega))
+  finite =
+    ((λ lpo P → Comparison.finite lpo (present P)) ,
     (λ row → AmbientDiscriminator.finite λ P →
-      map′ (segment-across (presents P) (Presented.≃𝒫-refl omega))
-        (segment-across (toward P) (Presented.≃𝒫-refl omega))
-        (row (choose P)))
+      pr₁ (decidable-iff
+        (segment-across (presents P) (Presented.≃𝒫-refl omega) ,
+          segment-across (toward P) (Presented.≃𝒫-refl omega)))
+        (row (choose P))))
 
   -- Row 16. Mathematical shape: LPO ⇔ Π P Q. Dec (P < Q).
   decidable : Stream.LPO
-    ⇔ ((P Q : Representative) → Dec (Maps.Segment (present P) (present Q)))
-  decidable = mk⇔
-    (λ lpo P Q → Comparison.decidable lpo (present P) (present Q))
+    ⇔ ((P Q : Representative)
+        → is-decidable (Maps.Segment (present P) (present Q)))
+  decidable =
+    ((λ lpo P Q → Comparison.decidable lpo (present P) (present Q)) ,
     (λ row → AmbientDiscriminator.decidable λ P Q →
-      map′ (segment-across (presents P) (presents Q))
-        (segment-across (toward P) (toward Q))
-        (row (choose P) (choose Q)))
+      pr₁ (decidable-iff (segment-across (presents P) (presents Q) ,
+        segment-across (toward P) (toward Q)))
+        (row (choose P) (choose Q))))
 
   -- Row 17. Mathematical shape: LPO ⇔ Π P Q. P ≤ Q → P < Q ⊎ P ≃ Q.
   split : Stream.LPO
     ⇔ ((P Q : Representative)
         → Maps.Initial (present P) (present Q)
         → Maps.Segment (present P) (present Q)
-          ⊎ present P Presented.≃𝒫 present Q)
-  split = mk⇔
-    (λ lpo P Q → Comparison.split lpo)
+          ⊎ (present P Presented.≃𝒫 present Q))
+  split =
+    ((λ lpo P Q → Comparison.split lpo) ,
     (λ row → AmbientDiscriminator.split λ P Q f →
       ⊎-map (segment-across (presents P) (presents Q))
         (equivalence-across (presents P) (presents Q))
-        (row (choose P) (choose Q) (initial-across (toward P) (toward Q) f)))
+        (row (choose P) (choose Q) (initial-across (toward P) (toward Q) f))))
 
   -- Row 18. Mathematical shape: LPO ⇔ Π P Q. P < Q ⊎ P ≃ Q ⊎ Q < P.
   trichotomy : Stream.LPO
     ⇔ ((P Q : Representative)
         → Maps.Segment (present P) (present Q)
-          ⊎ (present P Presented.≃𝒫 present Q
+          ⊎ ((present P Presented.≃𝒫 present Q)
             ⊎ Maps.Segment (present Q) (present P)))
-  trichotomy = mk⇔
-    (λ lpo P Q → Comparison.trichotomy lpo (present P) (present Q))
+  trichotomy =
+    ((λ lpo P Q → Comparison.trichotomy lpo (present P) (present Q)) ,
     (λ row → AmbientDiscriminator.trichotomy λ P Q →
       ⊎-map (segment-across (presents P) (presents Q))
         (⊎-map (equivalence-across (presents P) (presents Q))
           (segment-across (presents Q) (presents P)))
-        (row (choose P) (choose Q)))
+        (row (choose P) (choose Q))))
 
   -- Mathematical shape: WLPO ⇔ Π P. Dec (Zero P).
   zero-strength : WLPO
-    ⇔ ((P : Representative) → Dec (Zero (present P)))
-  zero-strength = mk⇔
-    (λ wlpo P → decide-zero wlpo (present P))
+    ⇔ ((P : Representative) → is-decidable (Zero (present P)))
+  zero-strength =
+    ((λ wlpo P → decide-zero wlpo (present P)) ,
     (λ row → CharacterizationDiscriminator.zero λ P →
-      map′ (zero-across (presents P)) (zero-across (toward P))
-        (row (choose P)))
+      pr₁ (decidable-iff (zero-across (presents P) , zero-across (toward P)))
+        (row (choose P))))
 
   -- Mathematical shape: LPO ⇔ Π P. Dec (P ≃ ω).
   omega-strength : Stream.LPO
-    ⇔ ((P : Representative) → Dec (present P Presented.≃𝒫 omega))
-  omega-strength = mk⇔
-    (λ lpo P → Comparison.equivalent lpo (present P) omega)
+    ⇔ ((P : Representative) → is-decidable (present P Presented.≃𝒫 omega))
+  omega-strength =
+    ((λ lpo P → Comparison.equivalent lpo (present P) omega) ,
     (λ row → omega-lpo λ P →
-      map′ (equivalence-across (presents P) (Presented.≃𝒫-refl omega))
-        (equivalence-across (toward P) (Presented.≃𝒫-refl omega))
-        (row (choose P)))
+      pr₁ (decidable-iff
+        (equivalence-across (presents P) (Presented.≃𝒫-refl omega) ,
+          equivalence-across (toward P) (Presented.≃𝒫-refl omega)))
+        (row (choose P))))
 
   -- Row 9. Mathematical shape: (Π P. X P → Classified P) → LPO.
   inhabited : ((P : Representative) → 𝒫.X (present P)
@@ -422,7 +422,7 @@ boolean-orders = record
 propositional-presentations : Representatives (lsuc lzero)
 propositional-presentations = record
   { Representative = Σ (𝒫 lzero) Propositional
-  ; present = proj₁
+  ; present = pr₁
   ; choose = λ P →
       boolean (Boolean.normal P) , boolean-propositional (Boolean.normal P)
   ; presents = λ P → Presented.≃𝒫-sym (Boolean.equivalence P)

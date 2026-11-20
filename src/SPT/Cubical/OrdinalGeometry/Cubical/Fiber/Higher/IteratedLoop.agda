@@ -11,9 +11,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Higher.IteratedLoop
 -- and pointed split embeddings, which lift through every iterated loop
 -- space without a separate reassociation proof.
 
-open import Agda.Primitive using (Level; _⊔_)
-open import Data.Empty using (⊥)
-import Data.Nat.Base as Nat
+open import SPT.Cubical.Base using (Level; _⊔_; suc; zero; ℕ; 𝟘)
 
 import
   SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Higher.SplitEmbedding
@@ -38,21 +36,21 @@ Loop A point = point Cubical.≡ point
 --   L(0,A,a) = A,   L(suc n,A,a) = L(n, a = a, refl).
 
 IteratedLoop :
-    (height : Nat.ℕ)
+    (height : ℕ)
     (A : Set ℓ-A)
     (point : A)
   → Set ℓ-A
-IteratedLoop Nat.zero A point = A
-IteratedLoop (Nat.suc height) A point =
+IteratedLoop zero A point = A
+IteratedLoop (suc height) A point =
   IteratedLoop height (Loop A point) Cubical.refl
 
 iteratedLoopPoint :
-    (height : Nat.ℕ)
+    (height : ℕ)
     (A : Set ℓ-A)
     (point : A)
   → IteratedLoop height A point
-iteratedLoopPoint Nat.zero A point = point
-iteratedLoopPoint (Nat.suc height) A point =
+iteratedLoopPoint zero A point = point
+iteratedLoopPoint (suc height) A point =
   iteratedLoopPoint height (Loop A point) Cubical.refl
 
 ------------------------------------------------------------------------
@@ -103,10 +101,10 @@ preserves-nonbase :
     {target-point : B}
     (embedding : PointedSplitEmbedding A source-point B target-point)
     (point : A)
-  → (point Cubical.≡ source-point → ⊥)
+  → (point Cubical.≡ source-point → 𝟘)
   → Split.include (splitEmbedding embedding) point
       Cubical.≡ target-point
-  → ⊥
+  → 𝟘
 preserves-nonbase
     embedding point point-not-base image-is-base =
   point-not-base
@@ -143,22 +141,22 @@ liftPointedSplitEmbedding embedding =
 iteratePointedSplitEmbedding :
     {source-point : A}
     {target-point : B}
-    (height : Nat.ℕ)
+    (height : ℕ)
   → PointedSplitEmbedding A source-point B target-point
   → PointedSplitEmbedding
       (IteratedLoop height A source-point)
       (iteratedLoopPoint height A source-point)
       (IteratedLoop height B target-point)
       (iteratedLoopPoint height B target-point)
-iteratePointedSplitEmbedding Nat.zero embedding = embedding
-iteratePointedSplitEmbedding (Nat.suc height) embedding =
+iteratePointedSplitEmbedding zero embedding = embedding
+iteratePointedSplitEmbedding (suc height) embedding =
   iteratePointedSplitEmbedding height
     (liftPointedSplitEmbedding embedding)
 
 iteratedLoopEmbedding :
     {source-point : A}
     {target-point : B}
-    (height : Nat.ℕ)
+    (height : ℕ)
   → PointedSplitEmbedding A source-point B target-point
   → Split.SplitEmbedding
       (IteratedLoop height A source-point)
@@ -169,7 +167,7 @@ iteratedLoopEmbedding height embedding =
 iteratedLoopEmbedding-point-computes :
     {source-point : A}
     {target-point : B}
-    (height : Nat.ℕ)
+    (height : ℕ)
     (embedding : PointedSplitEmbedding A source-point B target-point)
   → Split.include (iteratedLoopEmbedding height embedding)
       (iteratedLoopPoint height A source-point)
@@ -181,13 +179,13 @@ iteratedLoopEmbedding-point-computes height embedding =
 iteratedLoopEmbedding-nonbase :
     {source-point : A}
     {target-point : B}
-    (height : Nat.ℕ)
+    (height : ℕ)
     (embedding : PointedSplitEmbedding A source-point B target-point)
     (cell : IteratedLoop height A source-point)
-  → (cell Cubical.≡ iteratedLoopPoint height A source-point → ⊥)
+  → (cell Cubical.≡ iteratedLoopPoint height A source-point → 𝟘)
   → Split.include (iteratedLoopEmbedding height embedding) cell
       Cubical.≡ iteratedLoopPoint height B target-point
-  → ⊥
+  → 𝟘
 iteratedLoopEmbedding-nonbase height embedding cell =
   preserves-nonbase
     (iteratePointedSplitEmbedding height embedding)
@@ -197,14 +195,14 @@ iteratedLoopEmbedding-nonbase height embedding cell =
 -- h-levels and iterated loops
 
 iteratedLoop-isProp :
-    (height : Nat.ℕ)
+    (height : ℕ)
     (point : A)
-  → HLevels.isOfHLevel (Nat.suc (Nat.suc height)) A
+  → HLevels.isOfHLevel (suc (suc height)) A
   → Cubical.isProp
-      (IteratedLoop (Nat.suc height) A point)
-iteratedLoop-isProp Nat.zero point hlevel =
+      (IteratedLoop (suc height) A point)
+iteratedLoop-isProp zero point hlevel =
   hlevel point point
 iteratedLoop-isProp
-    (Nat.suc height) point hlevel =
+    (suc height) point hlevel =
   iteratedLoop-isProp
     height Cubical.refl (hlevel point point)

@@ -9,16 +9,9 @@ module SPT.Cubical.OrdinalGeometry.Presentation.CountablyPresented where
 -- cone.  Every presentation gives one, by filtering its enumeration below
 -- b (`from𝒫`).
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Empty using (⊥-elim)
-open import Data.Maybe using (Maybe; just; nothing)
-open import Data.Maybe.Properties using (just-injective)
-open import Data.Nat using (ℕ)
-open import Data.Product using (_×_; Σ; _,_)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; subst)
+open import SPT.Cubical.Base
+open import SPT.Cubical.Foundation.Accessibility using (is-well-founded)
 
-open import SPT.Cubical.Core.WellFounded using (WellFounded)
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as 𝒫
 
 ------------------------------------------------------------------------
@@ -78,13 +71,13 @@ record Geometry (ℓ : Level) : Set (lsuc ℓ) where
       → x < y′
 
     <-wf :
-      WellFounded _<_
+      is-well-founded _<_
 
     compare↓ :
         (b x y : X)
       → x < b
       → y < b
-      → x < y ⊎ (x ≈ y ⊎ y < x)
+      → x < y ⊎ ((x ≈ y) ⊎ y < x)
 
     enum↓ :
       X → ℕ → Maybe X
@@ -93,7 +86,7 @@ record Geometry (ℓ : Level) : Set (lsuc ℓ) where
         (b : X)
       → (n : ℕ)
       → (x : X)
-      → enum↓ b n ≡ just x
+      → enum↓ b n ＝ just x
       → x < b
 
     enum↓-covers :
@@ -101,7 +94,7 @@ record Geometry (ℓ : Level) : Set (lsuc ℓ) where
       → x < b
       → Σ ℕ λ n →
           Σ X λ r →
-            (enum↓ b n ≡ just r)
+            (enum↓ b n ＝ just r)
             × (r ≈ x)
 
 ------------------------------------------------------------------------
@@ -110,7 +103,7 @@ record Geometry (ℓ : Level) : Set (lsuc ℓ) where
 private
   nothing≢just :
       ∀ {ℓ} {A : Set ℓ} {x : A}
-    → nothing ≢ just x
+    → nothing ≠ just x
   nothing≢just ()
 
 module From𝒫 {ℓ : Level} (P : 𝒫.CountableOrdinal𝒫 ℓ) where
@@ -124,44 +117,44 @@ module From𝒫 {ℓ : Level} (P : 𝒫.CountableOrdinal𝒫 ℓ) where
   filter b nothing =
     nothing
   filter b (just x) with compare x b
-  ... | inj₁ x<b =
+  ... | inl x<b =
     just x
-  ... | inj₂ _ =
+  ... | inr _ =
     nothing
 
   filter-sound :
       (b : X)
     → (entry : Maybe X)
     → (x : X)
-    → filter b entry ≡ just x
+    → filter b entry ＝ just x
     → x < b
   filter-sound b nothing x selected =
-    ⊥-elim (nothing≢just selected)
+    𝟘-elim (nothing≢just selected)
   filter-sound b (just y) x selected with compare y b
-  ... | inj₁ y<b =
-    subst
+  ... | inl y<b =
+    transport
       (λ z → z < b)
-      (just-injective selected)
+      (just-is-injective selected)
       y<b
-  ... | inj₂ _ =
-    ⊥-elim (nothing≢just selected)
+  ... | inr _ =
+    𝟘-elim (nothing≢just selected)
 
   filter-< :
       (b : X)
     → (entry : Maybe X)
     → (x : X)
-    → entry ≡ just x
+    → entry ＝ just x
     → x < b
-    → filter b entry ≡ just x
+    → filter b entry ＝ just x
   filter-< b nothing x selected x<b =
-    ⊥-elim (nothing≢just selected)
+    𝟘-elim (nothing≢just selected)
   filter-< b (just .x) x refl x<b with compare x b
-  ... | inj₁ x<b′ =
+  ... | inl x<b′ =
     refl
-  ... | inj₂ (inj₁ x≈b) =
-    ⊥-elim (𝒫.Presentation.≈↛< P x≈b x<b)
-  ... | inj₂ (inj₂ b<x) =
-    ⊥-elim (𝒫.Presentation.<-asym P x<b b<x)
+  ... | inr (inl x≈b) =
+    𝟘-elim (𝒫.Presentation.≈↛< P x≈b x<b)
+  ... | inr (inr b<x) =
+    𝟘-elim (𝒫.Presentation.<-asym P x<b b<x)
 
   enum↓ :
       X
@@ -174,7 +167,7 @@ module From𝒫 {ℓ : Level} (P : 𝒫.CountableOrdinal𝒫 ℓ) where
       (b : X)
     → (n : ℕ)
     → (x : X)
-    → enum↓ b n ≡ just x
+    → enum↓ b n ＝ just x
     → x < b
   enum↓-sound b n x =
     filter-sound b (enum n) x
@@ -184,7 +177,7 @@ module From𝒫 {ℓ : Level} (P : 𝒫.CountableOrdinal𝒫 ℓ) where
     → x < b
     → Σ ℕ λ n →
         Σ X λ r →
-          (enum↓ b n ≡ just r)
+          (enum↓ b n ＝ just r)
           × (r ≈ x)
   enum↓-covers b x x<b with covers x
   ... | n , r , selected , r≈x =

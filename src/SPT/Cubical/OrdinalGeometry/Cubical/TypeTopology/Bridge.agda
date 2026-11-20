@@ -8,10 +8,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.TypeTopology.Bridge where
 -- only the laws, which mention equality and accessibility, are converted
 -- between the two libraries.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Level using (Lift; lift; lower)
+open import SPT.Cubical.Base using (Level; Lift; _＝_; lift; lower; lsuc; refl)
 
-import Agda.Builtin.Equality as AgdaEquality
 import Cubical.Data.Equality.Conversion as EqualityConversion
 import Cubical.Foundations.Equiv as CubicalEquiv
 import Cubical.Foundations.Prelude as Cubical
@@ -40,27 +38,27 @@ private
 
 ≡→＝ :
     {x y : A}
-  → AgdaEquality._≡_ x y
+  → _＝_ x y
   → TypeTopologyIdentity._＝_ x y
-≡→＝ AgdaEquality.refl =
+≡→＝ refl =
   TypeTopologyIdentity.refl
 
 ＝→≡ :
     {x y : A}
   → TypeTopologyIdentity._＝_ x y
-  → AgdaEquality._≡_ x y
+  → _＝_ x y
 ＝→≡ TypeTopologyIdentity.refl =
-  AgdaEquality.refl
+  refl
 
 ≡→＝→≡ :
     {x y : A}
-    (identification : AgdaEquality._≡_ x y)
-  → AgdaEquality._≡_
+    (identification : _＝_ x y)
+  → _＝_
       (＝→≡
         (≡→＝ identification))
       identification
 ≡→＝→≡
-    AgdaEquality.refl = AgdaEquality.refl
+    refl = refl
 
 path→＝ :
     {x y : A}

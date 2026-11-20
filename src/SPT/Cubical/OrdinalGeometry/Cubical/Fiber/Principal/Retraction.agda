@@ -8,10 +8,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Principal.Retraction
 -- retain(T , base) is the collapsed presentation with its calibration, and
 -- recovery reads the carrier and the entry at index 0.
 
-open import Agda.Primitive using (Level)
-open import Data.Maybe using (just; nothing)
-open import Data.Nat using (ℕ; zero)
-open import Data.Unit.Polymorphic as PolyUnit using ()
+open import SPT.Cubical.Base using
+  ( Level; Lift; just; lift; nothing; zero; ℕ; ⋆; 𝟙 )
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import
@@ -52,9 +50,9 @@ recover :
     (geometry : Presented.𝒫ω₁𝒢 ℓ)
   → Principal.UnitPresentations geometry
   → Position.PointedType ℓ
-recover geometry represented
+recover {ℓ} geometry represented
     with Presented.CountableOrdinal𝒫.enum (Cubical.fst represented) zero
-... | nothing = PolyUnit.⊤ Cubical., PolyUnit.tt
+... | nothing = Lift ℓ 𝟙 Cubical., lift ⋆
 ... | just point =
   Presented.CountableOrdinal𝒫.X (Cubical.fst represented) Cubical., point
 

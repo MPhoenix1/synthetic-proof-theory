@@ -6,8 +6,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Principal.UnitOrder
 
 -- The order of UnitOrderType is empty.
 
-open import Agda.Primitive using (Level)
-open import Data.Empty using (⊥)
+open import SPT.Cubical.Base using (Level; 𝟘)
 
 import
   SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Position
@@ -23,7 +22,7 @@ private
   variable
     ℓ : Level
 
-  ordinary-empty-is-prop : Cubical.isProp ⊥
+  ordinary-empty-is-prop : Cubical.isProp 𝟘
   ordinary-empty-is-prop ()
 
 -- No [x] < [y] in ord(unitPresentation): after eliminating the quotient
@@ -35,7 +34,7 @@ unitOrderType-strict-empty :
         (Position.unitPresentation {ℓ}))
   → Reflection.Less
       (Position.unitPresentation {ℓ}) left right
-  → ⊥
+  → 𝟘
 unitOrderType-strict-empty {ℓ} =
   Quotient.elimProp2
     (λ left right →

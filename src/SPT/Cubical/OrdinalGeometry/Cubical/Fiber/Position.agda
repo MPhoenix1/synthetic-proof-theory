@@ -13,24 +13,19 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Position
 -- is not an embedding.  Similarly, T is a retract of a fiber of the map
 -- from the points of one presentation on ℕ × T to ω₁ᴳ(G).
 
-open import Agda.Primitive using (Level; lzero)
-open import Data.Bool using (Bool; false; true)
-open import Data.Empty using (⊥)
-open import Data.Empty.Polymorphic as PolyEmpty using ()
-open import Data.Maybe using (just; nothing)
-open import Data.Nat using (ℕ; zero)
-open import Data.Product using (_×_; _,_; proj₁; proj₂)
-open import Data.Sum using (inj₁; inj₂)
-open import Data.Unit.Polymorphic as PolyUnit using ()
-open import Level using (Lift; lift)
-import Relation.Binary.PropositionalEquality as Ordinary
+open import SPT.Cubical.Base using
+  ( Level; Lift; _,_; _×_; _⁻¹; _∙_; _⊎_; inl; inr; just; lift; lzero; nothing
+  ; pr₁; pr₂; zero; ₀; ₁; ℕ; ⋆; 𝟘; 𝟙; 𝟚 )
+import SPT.Cubical.Base as Ordinary
+open import SPT.Cubical.Foundation.Accessibility using (acc)
+open import SPT.Cubical.Foundation.Nat.Order using (<ℕᶜ-trans; _<ℕᶜ_; cmpℕᶜ)
+open import SPT.Cubical.Foundation.Nat.WellFounded using (wfℕᶜ)
+open import SPT.Cubical.Foundation.Propositions using (Loop; is-set)
+open import SPT.Cubical.Foundation.WellFounded.Pullback using
+  ( pullback-is-well-founded )
+open import SPT.Cubical.Foundation.WellFounded.Subrelation using
+  ( subrelations-are-well-founded )
 
-open import SPT.Cubical.Core.WellFounded using (acc)
-import SPT.Cubical.Core.Equality as CoreEquality
-open import SPT.Cubical.Core.Nat.Order using (_<ℕᶜ_; <ℕᶜ-trans; cmpℕᶜ)
-open import SPT.Cubical.Core.Nat.WellFounded using (wfℕᶜ)
-open import SPT.Cubical.Core.WellFounded.Pullback using (pullback-wf)
-open import SPT.Cubical.Core.WellFounded.Subrelation using (subrel-wf)
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import SPT.Cubical.OrdinalGeometry.Cubical.Reflection.OrderType as Reflection
 import SPT.Cubical.OrdinalGeometry.Cubical.OmegaOne.Base as Omega
@@ -67,51 +62,50 @@ rankPresentation :
 rankPresentation {ℓ} T base = record
   { X = ℕ × T
   ; _≈_ = λ left right →
-      Lift ℓ (proj₁ left Ordinary.≡ proj₁ right)
+      Lift ℓ (pr₁ left Ordinary.＝ pr₁ right)
   ; _<_ = λ left right →
-      Lift ℓ (proj₁ left <ℕᶜ proj₁ right)
+      Lift ℓ (pr₁ left <ℕᶜ pr₁ right)
   ; ≈-refl = λ point → lift Ordinary.refl
   ; ≈-sym = λ where
-      (lift equality) → lift (Ordinary.sym equality)
+      (lift equality) → lift (equality ⁻¹)
   ; ≈-trans = λ where
       (lift first) (lift second) →
-        lift (Ordinary.trans first second)
+        lift (first ∙ second)
   ; <-trans = λ {x} {y} {z} → λ where
       (lift x<y) (lift y<z) →
-        lift (<ℕᶜ-trans
-          {a = proj₁ x} {b = proj₁ y} {c = proj₁ z} x<y y<z)
+        lift (<ℕᶜ-trans (pr₁ x) (pr₁ y) (pr₁ z) x<y y<z)
   ; <-respˡ-≈ = λ {x} {x′} {y} → λ where
       (lift x=x′) (lift x<y) →
-        lift (Ordinary.subst (λ rank → rank <ℕᶜ proj₁ y) x=x′ x<y)
+        lift (Ordinary.transport (λ rank → rank <ℕᶜ pr₁ y) x=x′ x<y)
   ; <-respʳ-≈ = λ {x} {y} {y′} → λ where
       (lift y=y′) (lift x<y) →
-        lift (Ordinary.subst (λ rank → proj₁ x <ℕᶜ rank) y=y′ x<y)
+        lift (Ordinary.transport (λ rank → pr₁ x <ℕᶜ rank) y=y′ x<y)
   ; <-wf =
-      subrel-wf
+      subrelations-are-well-founded
         (λ { (lift strict) → strict })
-        (pullback-wf {rank = proj₁} {_<_ = _<ℕᶜ_} wfℕᶜ)
+        (pullback-is-well-founded pr₁ _<ℕᶜ_ wfℕᶜ)
   ; compare = rank-trichotomy
   ; enum = λ rank → just (rank , base)
   ; covers = λ occurrence →
-      proj₁ occurrence
-      , (proj₁ occurrence , base)
+      pr₁ occurrence
+      , (pr₁ occurrence , base)
       , Ordinary.refl
       , lift Ordinary.refl
   }
   where
   rank-trichotomy :
       (left right : ℕ × T)
-    → Lift ℓ (proj₁ left <ℕᶜ proj₁ right)
-      Data.Sum.⊎
-      ( Lift ℓ (proj₁ left Ordinary.≡ proj₁ right)
-        Data.Sum.⊎
-        Lift ℓ (proj₁ right <ℕᶜ proj₁ left)
+    → Lift ℓ (pr₁ left <ℕᶜ pr₁ right)
+      ⊎
+      ( Lift ℓ (pr₁ left Ordinary.＝ pr₁ right)
+        ⊎
+        Lift ℓ (pr₁ right <ℕᶜ pr₁ left)
       )
   rank-trichotomy left right
-      with cmpℕᶜ (proj₁ left) (proj₁ right)
-  ... | inj₁ left<right = inj₁ (lift left<right)
-  ... | inj₂ (inj₁ left=right) = inj₂ (inj₁ (lift left=right))
-  ... | inj₂ (inj₂ right<left) = inj₂ (inj₂ (lift right<left))
+      with cmpℕᶜ (pr₁ left) (pr₁ right)
+  ... | inl left<right = inl (lift left<right)
+  ... | inr (inl left=right) = inr (inl (lift left=right))
+  ... | inr (inr right<left) = inr (inr (lift right<left))
 
 -- The map from points (n , t) of this presentation to ω₁ᴳ(G), through the
 -- class of (n , t).
@@ -169,7 +163,7 @@ recoverOccurrence :
   → OccurrenceFiber geometry T base rank
   → T
 recoverOccurrence geometry T base rank fiber-point =
-  proj₂ (Cubical.fst fiber-point)
+  pr₂ (Cubical.fst fiber-point)
 
 -- recoverOccurrence (retainOccurrence t) = t, by refl.
 
@@ -209,10 +203,10 @@ occurrenceFiber-obstruction :
     (T : Set ℓ)
     (base : T)
     (rank : ℕ)
-  → (HLevels.isOfHLevel height T → ⊥)
+  → (HLevels.isOfHLevel height T → 𝟘)
   → HLevels.isOfHLevel height
       (OccurrenceFiber geometry T base rank)
-  → ⊥
+  → 𝟘
 occurrenceFiber-obstruction
     height geometry T base rank T-not-hlevel fiber-hlevel =
   T-not-hlevel
@@ -238,25 +232,25 @@ collapsed :
   → Presented.CountableOrdinal𝒫 ℓ
 collapsed {ℓ} T base = record
   { X = T
-  ; _≈_ = λ _ _ → PolyUnit.⊤ {ℓ}
-  ; _<_ = λ _ _ → PolyEmpty.⊥ {ℓ}
-  ; ≈-refl = λ _ → PolyUnit.tt
-  ; ≈-sym = λ _ → PolyUnit.tt
-  ; ≈-trans = λ _ _ → PolyUnit.tt
+  ; _≈_ = λ _ _ → Lift ℓ 𝟙
+  ; _<_ = λ _ _ → Lift ℓ 𝟘
+  ; ≈-refl = λ _ → (lift ⋆)
+  ; ≈-sym = λ _ → (lift ⋆)
+  ; ≈-trans = λ _ _ → (lift ⋆)
   ; <-trans = λ ()
   ; <-respˡ-≈ = λ _ ()
   ; <-respʳ-≈ = λ _ ()
   ; <-wf = λ point → acc (λ predecessor ())
-  ; compare = λ _ _ → inj₂ (inj₁ PolyUnit.tt)
+  ; compare = λ _ _ → inr (inl (lift ⋆))
   ; enum = λ _ → just base
   ; covers = λ point →
-      zero , base , Ordinary.refl , PolyUnit.tt
+      zero , base , Ordinary.refl , (lift ⋆)
   }
 
 unitPresentation :
   Presented.CountableOrdinal𝒫 ℓ
 unitPresentation {ℓ} =
-  collapsed (PolyUnit.⊤ {ℓ}) PolyUnit.tt
+  collapsed (Lift ℓ 𝟙) (lift ⋆)
 
 -- collapsed(T , base) ≃𝒫 unitPresentation: the forward map forgets the
 -- point, the backward map picks base.
@@ -267,14 +261,14 @@ collapsed-unit :
   → collapsed T base
       Presented.≃𝒫 unitPresentation {ℓ}
 collapsed-unit T base = record
-  { to = λ _ → PolyUnit.tt
+  { to = λ _ → (lift ⋆)
   ; from = λ _ → base
-  ; to-≈ = λ _ → PolyUnit.tt
-  ; from-≈ = λ _ → PolyUnit.tt
+  ; to-≈ = λ _ → (lift ⋆)
+  ; from-≈ = λ _ → (lift ⋆)
   ; to-< = λ ()
   ; from-< = λ ()
-  ; from-to-≈ = λ _ → PolyUnit.tt
-  ; to-from-≈ = λ _ → PolyUnit.tt
+  ; from-to-≈ = λ _ → (lift ⋆)
+  ; to-from-≈ = λ _ → (lift ⋆)
   }
 
 UnitOrderType :
@@ -323,10 +317,10 @@ recover :
     (geometry : Presented.𝒫ω₁𝒢 ℓ)
   → PositionFiber geometry (UnitOrderType ℓ)
   → PointedType ℓ
-recover geometry fiber-point
+recover {ℓ} geometry fiber-point
     with Presented.CountableOrdinal𝒫.enum
       (Cubical.fst (Cubical.fst fiber-point)) zero
-... | nothing = PolyUnit.⊤ Cubical., PolyUnit.tt
+... | nothing = Lift ℓ 𝟙 Cubical., lift ⋆
 ... | just point =
   Presented.CountableOrdinal𝒫.X (Cubical.fst (Cubical.fst fiber-point))
   Cubical., point
@@ -376,10 +370,10 @@ recover-retain-path geometry {left} =
 -- A nontrivial loop
 
 BoolPair : Set
-BoolPair = Bool × Bool
+BoolPair = 𝟚 × 𝟚
 
 swapBoolPair : BoolPair → BoolPair
-swapBoolPair pair = proj₂ pair , proj₁ pair
+swapBoolPair pair = pr₂ pair , pr₁ pair
 
 swapBoolPairIso : Isomorphism.Iso BoolPair BoolPair
 Isomorphism.Iso.fun swapBoolPairIso = swapBoolPair
@@ -391,7 +385,7 @@ swapBoolPairEquivalence : Equiv._≃_ BoolPair BoolPair
 swapBoolPairEquivalence = Isomorphism.isoToEquiv swapBoolPairIso
 
 pointedBoolPair : PointedType lzero
-pointedBoolPair = BoolPair Cubical., (false , false)
+pointedBoolPair = BoolPair Cubical., (₀ , ₀)
 
 -- The pointed loop (𝟐 × 𝟐 , (false,false)) = (𝟐 × 𝟐 , (false,false)) given
 -- by univalence for the swap of coordinates, which fixes the base point.
@@ -399,16 +393,16 @@ pointedBoolPair = BoolPair Cubical., (false , false)
 pointedSwapLoop : pointedBoolPair Cubical.≡ pointedBoolPair
 pointedSwapLoop = Pointed.ua∙ swapBoolPairEquivalence Cubical.refl
 
-true-not-false : true Cubical.≡ false → ⊥
+true-not-false : ₁ Cubical.≡ ₀ → 𝟘
 true-not-false path with EqualityConversion.pathToEq path
 ... | ()
 
 -- It is not refl: transport along it moves (false,true) to (true,false).
 
-pointedSwapLoop-not-refl : pointedSwapLoop Cubical.≡ Cubical.refl → ⊥
+pointedSwapLoop-not-refl : pointedSwapLoop Cubical.≡ Cubical.refl → 𝟘
 pointedSwapLoop-not-refl loop=refl =
   true-not-false
-    (Cubical.cong proj₁ moved-point-fixed)
+    (Cubical.cong pr₁ moved-point-fixed)
   where
   type-loop=refl :
     Univalence.ua swapBoolPairEquivalence Cubical.≡ Cubical.refl
@@ -416,15 +410,15 @@ pointedSwapLoop-not-refl loop=refl =
     Cubical.cong (Cubical.cong Cubical.fst) loop=refl
 
   moved-point-fixed :
-    swapBoolPair (false , true) Cubical.≡ (false , true)
+    swapBoolPair (₀ , ₁) Cubical.≡ (₀ , ₁)
   moved-point-fixed =
-    Cubical.sym (Univalence.uaβ swapBoolPairEquivalence (false , true))
+    Cubical.sym (Univalence.uaβ swapBoolPairEquivalence (₀ , ₁))
     Cubical.∙
     Cubical.cong
-      (λ type-loop → Cubical.transport type-loop (false , true))
+      (λ type-loop → Cubical.transport type-loop (₀ , ₁))
       type-loop=refl
 
-pointedType-not-set : Cubical.isSet (PointedType lzero) → ⊥
+pointedType-not-set : Cubical.isSet (PointedType lzero) → 𝟘
 pointedType-not-set pointed-is-set =
   pointedSwapLoop-not-refl
     (pointed-is-set pointedBoolPair pointedBoolPair
@@ -434,7 +428,7 @@ pointedType-not-set pointed-is-set =
 
 swapLoop :
     (geometry : Presented.𝒫ω₁𝒢 lzero)
-  → CoreEquality.Loop
+  → Loop
       (PositionFiber geometry (UnitOrderType lzero))
       (retain geometry pointedBoolPair)
 swapLoop geometry =
@@ -458,7 +452,7 @@ swapPath geometry =
 swapPath-not-refl :
     (geometry : Presented.𝒫ω₁𝒢 lzero)
   → swapPath geometry Cubical.≡ Cubical.refl
-  → ⊥
+  → 𝟘
 swapPath-not-refl geometry fiber-loop=refl =
   pointedSwapLoop-not-refl
     (Cubical.sym
@@ -475,7 +469,7 @@ positionFiber-not-set :
     (geometry : Presented.𝒫ω₁𝒢 lzero)
   → Cubical.isSet
       (PositionFiber geometry (UnitOrderType lzero))
-  → ⊥
+  → 𝟘
 positionFiber-not-set geometry fiber-is-set =
   swapPath-not-refl geometry
     (fiber-is-set
@@ -490,7 +484,7 @@ positionFiber-not-prop :
     (geometry : Presented.𝒫ω₁𝒢 lzero)
   → Cubical.isProp
       (PositionFiber geometry (UnitOrderType lzero))
-  → ⊥
+  → 𝟘
 positionFiber-not-prop geometry fiber-is-prop =
   positionFiber-not-set geometry
     (Cubical.isProp→isSet fiber-is-prop)
@@ -498,19 +492,19 @@ positionFiber-not-prop geometry fiber-is-prop =
 projection-not-embedding :
     (geometry : Presented.𝒫ω₁𝒢 lzero)
   → Embedding.isEmbedding (projection geometry)
-  → ⊥
+  → 𝟘
 projection-not-embedding geometry embedding =
   positionFiber-not-prop geometry
     (Embedding.isEmbedding→hasPropFibers embedding
       (UnitOrderType lzero))
 
--- The same non-setness for the identity type ≡ of Agda (Core.Equality.IsSet),
--- through the conversion between paths and ≡.
+-- The same non-setness for Agda's identity type ＝ (Foundation.Propositions'
+-- is-set), through the conversion between paths and ＝.
 
 swapLoop-not-refl :
     (geometry : Presented.𝒫ω₁𝒢 lzero)
-  → swapLoop geometry Ordinary.≡ Ordinary.refl
-  → ⊥
+  → swapLoop geometry Ordinary.＝ Ordinary.refl
+  → 𝟘
 swapLoop-not-refl geometry loop=refl =
   swapPath-not-refl geometry
     (Cubical.sym
@@ -523,9 +517,9 @@ swapLoop-not-refl geometry loop=refl =
 
 positionFiber-not-IsSet :
     (geometry : Presented.𝒫ω₁𝒢 lzero)
-  → CoreEquality.IsSet
+  → is-set
       (PositionFiber geometry (UnitOrderType lzero))
-  → ⊥
+  → 𝟘
 positionFiber-not-IsSet geometry fiber-is-set =
   swapLoop-not-refl geometry
     (fiber-is-set

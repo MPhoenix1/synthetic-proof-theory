@@ -19,13 +19,12 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Hartogs.Cardinal where
 -- Under excluded middle |α| → 𝟐 is the power set of |α|, and Regular is
 -- the statement that cofinal families have size κ.  Choice is stated for
 -- set-indexed families.  For a universe (C , D) with formers and decoding
--- laws (Core.Mahlo.Decoding), a small κ with the Hartogs cut
+-- laws (Mahlo.Decoding), a small κ with the Hartogs cut
 -- α ≺ κ ⇔ ‖Σ c. |α| ↪ D c‖ is an uncountable cardinal, and under excluded
 -- middle a strong limit.  Regularity is proved for the ranks of
 -- reflections, in Height.Hartogs.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Empty using (⊥)
+open import SPT.Cubical.Base using (Level; lsuc; 𝟘)
 
 import Cubical.Data.Bool as Bool
 open Bool using (Bool)
@@ -39,8 +38,8 @@ import Cubical.Induction.WellFounded as WellFounded
 import Cubical.Relation.Binary.Order.Woset.Base as Woset
 import Cubical.Relation.Binary.Order.Woset.Simulation as Simulation
 
-open import SPT.Cubical.Core.Mahlo.Specification using (Formers)
-open import SPT.Cubical.Core.Mahlo.Decoding using (DecodingLaws)
+open import SPT.Cubical.Mahlo.Specification using (Formers)
+open import SPT.Cubical.Mahlo.Decoding using (DecodingLaws)
 open import SPT.Cubical.OrdinalGeometry.Cubical.Hartogs.Countability using
   (ExcludedMiddle; MerelyEmbedsInNat)
 open import SPT.Cubical.OrdinalGeometry.Cubical.Hartogs.Universe using
@@ -60,7 +59,7 @@ private
 Cardinal : Woset.Woset ℓ ℓ → Set (lsuc ℓ)
 Cardinal {ℓ} κ =
   (α : Woset.Woset ℓ ℓ) → Simulation._≺_ α κ
-  → ∥ Cubical.fst κ Embedding.↪ Cubical.fst α ∥₁ → ⊥
+  → ∥ Cubical.fst κ Embedding.↪ Cubical.fst α ∥₁ → 𝟘
 
 Uncountable : Woset.Woset ℓ ℓ → Set (lsuc ℓ)
 Uncountable {ℓ} κ =
@@ -110,11 +109,11 @@ Choice ℓ =
   → ((i : I) → ∥ P i ∥₁) → ∥ ((i : I) → P i) ∥₁
 
 -- No small well-order lies below itself.
-irreflexive : (κ : Woset.Woset ℓ ℓ) → Simulation._≺_ κ κ → ⊥
+irreflexive : (κ : Woset.Woset ℓ ℓ) → Simulation._≺_ κ κ → 𝟘
 irreflexive {ℓ} κ = loop κ (Simulation.isWellFounded≺ κ)
   where
     loop : (x : Woset.Woset ℓ ℓ) → WellFounded.Acc Simulation._≺_ x
-      → Simulation._≺_ x x → ⊥
+      → Simulation._≺_ x x → 𝟘
     loop x (WellFounded.acc smaller) p = loop x (smaller x p) p
 
 ------------------------------------------------------------------------

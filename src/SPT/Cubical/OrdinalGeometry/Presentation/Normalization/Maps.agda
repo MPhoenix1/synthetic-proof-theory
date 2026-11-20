@@ -8,11 +8,8 @@ module SPT.Cubical.OrdinalGeometry.Presentation.Normalization.Maps where
 -- representative choices; changing an enumeration gives the corresponding
 -- order isomorphism.
 
-open import Agda.Primitive using (Level)
-open import Data.Product using (Σ; _,_)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; trans)
-open import SPT.Cubical.Core.Equality.Isomorphism using (_≅_)
+open import SPT.Cubical.Base
+open import SPT.Cubical.Foundation.Isomorphisms using (_≅_)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -33,7 +30,7 @@ map : Maps.Initial P Q → Point P → Point Q
 map {P = P} {Q} f x = class Q (Maps.Initial.map f (representative P x))
 
 map-β : (f : Maps.Initial P Q) (x : 𝒫.X P)
-  → map f (class P x) ≡ class Q (Maps.Initial.map f x)
+  → map f (class P x) ＝ class Q (Maps.Initial.map f x)
 map-β {P = P} {Q} f x =
   class-resp Q (Maps.Initial.resp f (representative-class P x))
 
@@ -44,14 +41,14 @@ private
     (Maps.Initial.strict f (representative-strict P {a = x} {b = y} p))
 
   cover : (f : Maps.Initial P Q) (x : Point P) (y : Point Q)
-    → Strict Q y (map f x) → Σ (Point P) (λ z → map f z ≡ y)
+    → Strict Q y (map f x) → Σ (Point P) (λ z → map f z ＝ y)
   cover {P = P} {Q} f x y p with Maps.Initial.lower f
     (representative P x) (representative Q y)
     (𝒫.<-respʳ-≈ Q
       (representative-class Q (Maps.Initial.map f (representative P x)))
       (representative-strict Q {a = y} {b = map f x} p))
-  ... | z , q = class P z , trans (map-β f z)
-    (trans (class-resp Q q) (class-representative Q y))
+  ... | z , q = class P z , map-β f z
+    ∙ (class-resp Q q ∙ class-representative Q y)
 
 -- An order embedding descends to normalized points by the same formula.
 embedding : Maps.Embedding P Q → Orders.Embedding (order P) (order Q)
@@ -63,7 +60,7 @@ embedding {P = P} {Q} f = record
 
 embedding-β : (f : Maps.Embedding P Q) (x : 𝒫.X P)
   → Orders.Embedding.map (embedding f) (class P x)
-    ≡ class Q (Maps.Embedding.map f x)
+    ＝ class Q (Maps.Embedding.map f x)
 embedding-β {P = P} {Q} f x =
   class-resp Q (Maps.Embedding.resp f (representative-class P x))
 
@@ -86,7 +83,7 @@ private
 
   cut-cover : (s : Maps.Segment P Q) (y : Point Q)
     → Strict Q y (class Q (Presented._≺𝒫_.ceiling (Maps.Segment.bound s)))
-    → Σ (Point P) (λ x → map (underlying s) x ≡ y)
+    → Σ (Point P) (λ x → map (underlying s) x ＝ y)
   cut-cover {P = P} {Q} s y p with Maps.Segment.covers s
     (representative Q y)
     (𝒫.<-respʳ-≈ Q
@@ -94,8 +91,8 @@ private
         (Presented._≺𝒫_.ceiling (Maps.Segment.bound s)))
       (representative-strict Q {a = y}
         {b = class Q (Presented._≺𝒫_.ceiling (Maps.Segment.bound s))} p))
-  ... | x , q = class P x , trans (map-β (underlying s) x)
-    (trans (class-resp Q q) (class-representative Q y))
+  ... | x , q = class P x , map-β (underlying s) x
+    ∙ (class-resp Q q ∙ class-representative Q y)
 
 segment : Maps.Segment P Q → Segments.Segment (order P) (order Q)
 segment {P = P} {Q} s = record
@@ -109,7 +106,7 @@ segment {P = P} {Q} s = record
 
 segment-β : (s : Maps.Segment P Q) (x : 𝒫.X P)
   → Segments.Segment.embed (segment s) (class P x)
-    ≡ class Q (Presented._≺𝒫_.to (Maps.Segment.bound s) x)
+    ＝ class Q (Presented._≺𝒫_.to (Maps.Segment.bound s) x)
 segment-β s = map-β (underlying s)
 
 iso : P Presented.≃𝒫 Q → Orders.Iso (order P) (order Q)
@@ -117,14 +114,14 @@ iso {P = P} {Q} e = record
   { equivalence = Orders.from-inverses
       (map (Maps.equivalence e))
       (map (Maps.equivalence (Presented.≃𝒫-sym e)))
-      (λ x → trans (map-β (Maps.equivalence (Presented.≃𝒫-sym e)) _)
-        (trans (class-resp P
+      (λ x → (map-β (Maps.equivalence (Presented.≃𝒫-sym e)) _)
+        ∙ ((class-resp P
           (Presented._≃𝒫_.from-to-≈ e (representative P x)))
-          (class-representative P x)))
-      (λ y → trans (map-β (Maps.equivalence e) _)
-        (trans (class-resp Q
+          ∙ class-representative P x))
+      (λ y → (map-β (Maps.equivalence e) _)
+        ∙ ((class-resp Q
           (Presented._≃𝒫_.to-from-≈ e (representative Q y)))
-          (class-representative Q y)))
+          ∙ class-representative Q y))
   ; strict = λ {x} {y} → strict (Maps.equivalence e) {x} {y}
   }
 
@@ -134,5 +131,5 @@ equivalence e = Orders.Iso.equivalence (iso e)
 
 iso-β : (e : P Presented.≃𝒫 Q) (x : 𝒫.X P)
   → Orders.Iso.forward (iso e) (class P x)
-    ≡ class Q (Presented._≃𝒫_.to e x)
+    ＝ class Q (Presented._≃𝒫_.to e x)
 iso-β e = map-β (Maps.equivalence e)

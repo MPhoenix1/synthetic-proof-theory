@@ -10,17 +10,17 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Height.Rank where
 -- least, the other from a simulation built on principal segments, or from
 -- least again.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Level using (Lift; lift; lower)
+open import SPT.Cubical.Base using (Level; Lift; lift; lower; lsuc)
+open import SPT.Cubical.Foundation.Accessibility using
+  ( acc; is-accessible; is-well-founded )
+open import SPT.Cubical.Foundation.Isomorphisms using (backward; forward)
 
 import Cubical.Foundations.Prelude as Cubical
 import Cubical.Induction.WellFounded as CubicalAccessibility
 import Cubical.Relation.Binary.Order.Woset.Base as Woset
 import Cubical.Relation.Binary.Order.Woset.Simulation as Simulation
 
-import SPT.Cubical.Core.Generator.Tree as Tree
-open import SPT.Cubical.Core.WellFounded using (Acc; acc; WellFounded)
-open import SPT.Cubical.Core.Equality.Isomorphism using (forward; backward)
+import SPT.Cubical.Foundation.Tree as Tree
 open import SPT.Cubical.OrdinalGeometry.Height.Simulation using
   (_≅_; branching)
 import SPT.Cubical.OrdinalGeometry.Height.Ordinals as Heights
@@ -75,14 +75,15 @@ private
 ------------------------------------------------------------------------
 -- Canonical heights and lifts
 
--- Cubical accessibility gives accessibility in the sense of Core.
+-- Cubical accessibility gives accessibility in the sense of
+-- Foundation.Accessibility.
 accessible : {A : Set ℓ} {_<_ : A → A → Set ℓ} {x : A}
-  → CubicalAccessibility.Acc _<_ x → Acc _<_ x
+  → CubicalAccessibility.Acc _<_ x → is-accessible _<_ x
 accessible (CubicalAccessibility.acc smaller) =
   acc λ y p → accessible (smaller y p)
 
 well-founded : (W : Woset.Woset ℓ ℓ)
-  → WellFounded (Woset.WosetStr._≺_ (Cubical.snd W))
+  → is-well-founded (Woset.WosetStr._≺_ (Cubical.snd W))
 well-founded W x =
   accessible
     (Woset.IsWoset.is-well-founded
@@ -104,7 +105,7 @@ canonical W =
   where
     _<_ = Woset.WosetStr._≺_ (Cubical.snd W)
 
-    at : (x : Cubical.fst W) (accessibility : Acc _<_ x)
+    at : (x : Cubical.fst W) (accessibility : is-accessible _<_ x)
       → Woset.WosetEquiv (rank (Heights.rankAt _<_ x accessibility))
           (Simulation._↓_ W x)
     at x (acc smaller) =

@@ -1,7 +1,9 @@
 {-# OPTIONS --safe --without-K --cubical-compatible #-}
 {-# OPTIONS -WnoUnsupportedIndexedMatch #-}
 
-open import Agda.Primitive using (Level)
+open import SPT.Cubical.Base
+open import SPT.Cubical.Foundation.WellFounded.Pullback using
+  ( pullback-is-well-founded )
 import SPT.Cubical.OrdinalGeometry.Presentation.CountablyPresented as 𝒫𝒢
 
 module SPT.Cubical.OrdinalGeometry.Presentation.CountablyPresented.LowerCone
@@ -13,14 +15,7 @@ module SPT.Cubical.OrdinalGeometry.Presentation.CountablyPresented.LowerCone
 -- entries of the geometry's enumeration below b, and comparison is the
 -- geometry's comparison below b.
 
-open import Data.Maybe using (Maybe; just)
-import Data.Maybe as Maybe
-open import Data.Nat using (ℕ)
-open import Data.Product using (_×_; Σ; _,_; proj₁; proj₂)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; subst; cong; sym)
 
-open import SPT.Cubical.Core.WellFounded.Pullback using (pullback-wf)
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import SPT.Cubical.OrdinalGeometry.Presentation.Enumeration as Enumeration
 
@@ -33,19 +28,20 @@ T : Geometry.X → Set ℓ
 T b =
   Σ Geometry.X λ x → Geometry._<_ x b
 
-infix 4 _≈_ _≺_
+infix 6 _≈_
+infix 30 _≺_
 
 _≈_ :
     ∀ {b}
   → T b → T b → Set ℓ
 _≈_ {b} x y =
-  Geometry._≈_ (proj₁ x) (proj₁ y)
+  Geometry._≈_ (pr₁ x) (pr₁ y)
 
 _≺_ :
     ∀ {b}
   → T b → T b → Set ℓ
 _≺_ {b} x y =
-  Geometry._<_ (proj₁ x) (proj₁ y)
+  Geometry._<_ (pr₁ x) (pr₁ y)
 
 Sequence : Geometry.X → ℕ → Maybe Geometry.X
 Sequence = Geometry.enum↓
@@ -61,7 +57,7 @@ fromOccurrence b occurrence =
   Occurrences.value occurrence
   , Geometry.enum↓-sound
       b
-      (proj₁ occurrence)
+      (pr₁ occurrence)
       (Occurrences.value occurrence)
       (Occurrences.selects occurrence)
 
@@ -69,7 +65,7 @@ enum :
     (b : Geometry.X)
   → ℕ → Maybe (T b)
 enum b n =
-  Maybe.map
+  maybe-map
     (fromOccurrence b)
     (Occurrences.enum (Sequence b) n)
 
@@ -78,23 +74,23 @@ covers :
     (x : T b)
   → Σ ℕ λ n →
       Σ (T b) λ r →
-        (enum b n ≡ just r)
-        × r ≈ x
+        (enum b n ＝ just r)
+        × (r ≈ x)
 covers b (x , x<b) with Geometry.enum↓-covers b x x<b
 ... | n , r , selected , r≈x =
-  proj₁ listed
+  pr₁ listed
   , fromOccurrence b occurrence
-  , cong (Maybe.map (fromOccurrence b)) (proj₂ listed)
-  , subst
+  , ap (maybe-map (fromOccurrence b)) (pr₂ listed)
+  , transport
       (λ y → Geometry._≈_ y x)
-      (sym (Entries.value-fromSelection selected))
+      (Entries.value-fromSelection selected ⁻¹)
       r≈x
   where
     occurrence : Occurrence b
     occurrence = n , Entries.fromSelection selected
 
     listed :
-      Σ ℕ λ m → Occurrences.enum (Sequence b) m ≡ just occurrence
+      Σ ℕ λ m → Occurrences.enum (Sequence b) m ＝ just occurrence
     listed = Occurrences.covers (Sequence b) occurrence
 
 -- The lower cone of b as a presentation.  It is constructed for every
@@ -107,18 +103,18 @@ covers b (x , x<b) with Geometry.enum↓-covers b x x<b
   { X = T b
   ; _≈_ = _≈_
   ; _<_ = _≺_
-  ; ≈-refl = λ x → Geometry.≈-refl (proj₁ x)
+  ; ≈-refl = λ x → Geometry.≈-refl (pr₁ x)
   ; ≈-sym = Geometry.≈-sym
   ; ≈-trans = Geometry.≈-trans
   ; <-trans = Geometry.<-trans
   ; <-respˡ-≈ = Geometry.<-respˡ-≈
   ; <-respʳ-≈ = Geometry.<-respʳ-≈
-  ; <-wf = pullback-wf Geometry.<-wf
+  ; <-wf = pullback-is-well-founded pr₁ Geometry._<_ Geometry.<-wf
   ; compare =
       λ x y →
         Geometry.compare↓ b
-          (proj₁ x) (proj₁ y)
-          (proj₂ x) (proj₂ y)
+          (pr₁ x) (pr₁ y)
+          (pr₂ x) (pr₂ y)
   ; enum = enum b
   ; covers = covers b
   }

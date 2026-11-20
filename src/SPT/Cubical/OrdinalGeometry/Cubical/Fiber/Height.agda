@@ -12,9 +12,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Height where
 -- an empty well-order the fiber is contractible: the leaf is the only
 -- height of rank 0.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Empty using (⊥; ⊥-elim)
-open import Level using (Lift; lift; lower)
+open import SPT.Cubical.Base using (Level; Lift; lift; lower; lsuc; 𝟘; 𝟘-elim)
 
 import Cubical.Data.Bool as Bool
 open Bool using (Bool; true; false; not)
@@ -30,7 +28,7 @@ open Truncation using (∥_∥₁; ∣_∣₁)
 import Cubical.Relation.Binary.Order.Woset.Base as Woset
 import Cubical.Relation.Binary.Order.Woset.Simulation as Simulation
 
-import SPT.Cubical.Core.Generator.Tree as Tree
+import SPT.Cubical.Foundation.Tree as Tree
 open import SPT.Cubical.OrdinalGeometry.Height.Ordinals using (Height)
 open import SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Ordinals using
   (successor; top; successor-strict; successor-least; segments→simulation)
@@ -155,7 +153,7 @@ negation-loop : two {ℓ} Cubical.≡ two
 negation-loop = type-path (Univalence.ua negation)
 
 -- It is not refl: transport along it moves true to false.
-negation-loop-not-refl : negation-loop {ℓ} Cubical.≡ Cubical.refl → ⊥
+negation-loop-not-refl : negation-loop {ℓ} Cubical.≡ Cubical.refl → 𝟘
 negation-loop-not-refl {ℓ} loop=refl =
   Empty.rec (Bool.false≢true (Cubical.cong lower moved))
   where
@@ -170,14 +168,14 @@ negation-loop-not-refl {ℓ} loop=refl =
       Cubical.∙
       Cubical.transportRefl (lift true)
 
-not-set : Cubical.isSet (InhabitedType ℓ) → ⊥
+not-set : Cubical.isSet (InhabitedType ℓ) → 𝟘
 not-set set = negation-loop-not-refl (set two two negation-loop Cubical.refl)
 
 -- So no fiber of rank over a successor is a set, or a proposition.
-fiber-not-set : (α : Woset.Woset ℓ ℓ) → Cubical.isSet (Fiber α) → ⊥
+fiber-not-set : (α : Woset.Woset ℓ ℓ) → Cubical.isSet (Fiber α) → 𝟘
 fiber-not-set α set = not-set (reflects-hlevel 2 α set)
 
-fiber-not-prop : (α : Woset.Woset ℓ ℓ) → Cubical.isProp (Fiber α) → ⊥
+fiber-not-prop : (α : Woset.Woset ℓ ℓ) → Cubical.isProp (Fiber α) → 𝟘
 fiber-not-prop α prop = fiber-not-set α (Cubical.isProp→isSet prop)
 
 ------------------------------------------------------------------------
@@ -192,7 +190,7 @@ leaf = Tree.node Empty.⊥* no-children
 
 -- Mathematical shape: rank is not an embedding: its fiber over 1 = 0 + 1
 -- is not a proposition.
-not-embedding : Embedding.isEmbedding (rank {ℓ}) → ⊥
+not-embedding : Embedding.isEmbedding (rank {ℓ}) → 𝟘
 not-embedding {ℓ} rank-embedding =
   fiber-not-prop (rank (leaf {ℓ}))
     (Embedding.isEmbedding→hasPropFibers rank-embedding
@@ -201,7 +199,7 @@ not-embedding {ℓ} rank-embedding =
 -- Mathematical shape: (|Z| → ⊥) → isContr (Σ t. rank t = Z).  A height
 -- of rank Z has an empty root label, since each child places a point in
 -- its rank, and by univalence every empty label is ⊥.
-empty-fiber : (Z : Woset.Woset ℓ ℓ) → (Cubical.fst Z → ⊥)
+empty-fiber : (Z : Woset.Woset ℓ ℓ) → (Cubical.fst Z → 𝟘)
   → Cubical.isContr (Equiv.fiber rank Z)
 empty-fiber {ℓ} Z empty = (leaf Cubical., leaf-rank) Cubical., contraction
   where
@@ -211,7 +209,7 @@ empty-fiber {ℓ} Z empty = (leaf Cubical., leaf-rank) Cubical., contraction
         (Simulation.isAntisym≼Equiv (rank leaf) Z
           (least Empty.⊥* no-children Z λ ())
           (segments→simulation {H = Z} {K = rank leaf} λ z →
-            ⊥-elim (empty z)))
+            𝟘-elim (empty z)))
 
     contraction : (y : Equiv.fiber rank Z) → (leaf Cubical., leaf-rank)
       Cubical.≡ y
@@ -221,14 +219,14 @@ empty-fiber {ℓ} Z empty = (leaf Cubical., leaf-rank) Cubical., contraction
       Cubical.isProp→PathP {B = λ j → rank (shape j) Cubical.≡ Z}
         (λ j → Woset.isSetWoset _ _) leaf-rank p i
       where
-        no-label : A → ⊥
+        no-label : A → 𝟘
         no-label a =
           empty
             (Cubical.transport (Cubical.cong Cubical.fst p)
               (Cubical.fst (child A f a)))
 
         label : Empty.⊥* Equiv.≃ A
-        label = Empty.uninhabEquiv (λ ()) λ a → ⊥-elim (no-label a)
+        label = Empty.uninhabEquiv (λ ()) λ a → 𝟘-elim (no-label a)
 
         shape : leaf Cubical.≡ Tree.node A f
         shape j =

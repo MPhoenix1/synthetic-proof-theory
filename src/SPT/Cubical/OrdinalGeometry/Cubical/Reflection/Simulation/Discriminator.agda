@@ -14,11 +14,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Simulation.Discriminator
 -- already LPO-hard. Row 13 asks for remainders among presentations, with
 -- the sum of presentations.
 
-open import Agda.Primitive using (lzero)
-open import Data.Product using (Σ; _,_)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Relation.Nullary using (yes; no)
-import Relation.Nullary as Decision
+open import SPT.Cubical.Base using (_,_; _⊎_; inl; inr; lzero; Σ)
+import SPT.Cubical.Base as Decision
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -45,9 +42,9 @@ private
   -- A Cubical decision of P′ ≺ Q′ decides Segment P Q.
   decision : {P Q : 𝒫 lzero}
     → Nullary.Dec (orderType P Simulation.≺ orderType Q)
-    → Decision.Dec (Maps.Segment P Q)
-  decision (Nullary.yes σ) = yes (Converse.segment σ)
-  decision (Nullary.no ¬σ) = no λ s → Empty.rec (¬σ (segment s))
+    → Decision.is-decidable (Maps.Segment P Q)
+  decision (Nullary.yes σ) = inl (Converse.segment σ)
+  decision (Nullary.no ¬σ) = inr λ s → Empty.rec (¬σ (segment s))
 
 -- Row 2. Mathematical shape: (Π P Q R. P′ ≼ Q′ → Q′ ≺ R′ → P′ ≺ R′)
 -- → LPO.
@@ -100,9 +97,9 @@ split splitting =
   back : {P Q : 𝒫 lzero}
     → orderType P Simulation.≺ orderType Q
       ⊎ Woset.WosetEquiv (orderType P) (orderType Q)
-    → Maps.Segment P Q ⊎ P Presented.≃𝒫 Q
-  back (inj₁ σ) = inj₁ (Converse.segment σ)
-  back (inj₂ e) = inj₂ (Converse.equivalence e)
+    → Maps.Segment P Q ⊎ (P Presented.≃𝒫 Q)
+  back (inl σ) = inl (Converse.segment σ)
+  back (inr e) = inr (Converse.equivalence e)
 
 -- Row 18. Mathematical shape: (Π P Q. P′ ≺ Q′ ⊎ P′ ≃ Q′ ⊎ Q′ ≺ P′)
 -- → LPO.
@@ -118,7 +115,7 @@ trichotomy compare =
     → orderType P Simulation.≺ orderType Q
       ⊎ (Woset.WosetEquiv (orderType P) (orderType Q)
         ⊎ orderType Q Simulation.≺ orderType P)
-    → Maps.Segment P Q ⊎ (P Presented.≃𝒫 Q ⊎ Maps.Segment Q P)
-  back (inj₁ σ) = inj₁ (Converse.segment σ)
-  back (inj₂ (inj₁ e)) = inj₂ (inj₁ (Converse.equivalence e))
-  back (inj₂ (inj₂ σ)) = inj₂ (inj₂ (Converse.segment σ))
+    → Maps.Segment P Q ⊎ ((P Presented.≃𝒫 Q) ⊎ Maps.Segment Q P)
+  back (inl σ) = inl (Converse.segment σ)
+  back (inr (inl e)) = inr (inl (Converse.equivalence e))
+  back (inr (inr σ)) = inr (inr (Converse.segment σ))

@@ -3,7 +3,7 @@
 
 module SPT.Cubical.OrdinalGeometry.Cubical.Hartogs.Formers where
 
--- The decoding laws of a universe's formers (Core.Mahlo.Decoding), read
+-- The decoding laws of a universe's formers (Mahlo.Decoding), read
 -- as equivalences of types.  The unit code decodes to a point and the
 -- empty code to nothing; two, natural, sum and product decode to 𝟐, ℕ, Σ
 -- and Π.  So the power code of a,
@@ -14,12 +14,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Hartogs.Formers where
 -- proposition-valued family P on D a has a subset code with
 -- D (subset P) ≃ Σ (D a) P.
 
-open import Agda.Primitive using (Level)
-open import Data.Empty using (⊥-elim)
-import Data.Empty as StandardEmpty
-open import Data.Nat using (ℕ)
-open import Level using (Lift; lift; lower)
-open import Relation.Binary.PropositionalEquality using (_≡_)
+open import SPT.Cubical.Base using (Level; Lift; _＝_; lift; lower; ℕ; 𝟘-elim)
+import SPT.Cubical.Base as StandardEmpty
 
 import Cubical.Data.Bool as Bool
 open Bool using (Bool)
@@ -34,8 +30,8 @@ import Cubical.Foundations.Univalence as Univalence
 import Cubical.Relation.Nullary as Nullary
 open Nullary using (Dec; yes; no)
 
-open import SPT.Cubical.Core.Mahlo.Specification using (Formers)
-open import SPT.Cubical.Core.Mahlo.Decoding using (DecodingLaws)
+open import SPT.Cubical.Mahlo.Specification using (Formers)
+open import SPT.Cubical.Mahlo.Decoding using (DecodingLaws)
 open import SPT.Cubical.OrdinalGeometry.Cubical.Hartogs.Countability using
   (ExcludedMiddle)
 
@@ -47,7 +43,7 @@ module _ {C : Set ℓ} {D : C → Set ℓ} (Q : Formers C D)
   (laws : DecodingLaws Q) where
 
   private
-    law : {X Y : Set ℓ} → X ≡ Y → X Equiv.≃ Y
+    law : {X Y : Set ℓ} → X ＝ Y → X Equiv.≃ Y
     law p = Univalence.pathToEquiv (EqualityConversion.eqToPath p)
 
     unlift : {X : Set} → Lift ℓ X Equiv.≃ X
@@ -68,7 +64,7 @@ module _ {C : Set ℓ} {D : C → Set ℓ} (Q : Formers C D)
       (Equiv.invEquiv (law (DecodingLaws.unit-β laws)))
       (λ _ _ → Cubical.refl)
 
-  empty-absurd : D (Formers.empty Q) → StandardEmpty.⊥
+  empty-absurd : D (Formers.empty Q) → StandardEmpty.𝟘
   empty-absurd z = lower (Equiv.equivFun (law (DecodingLaws.empty-β laws)) z)
 
   ----------------------------------------------------------------------
@@ -114,8 +110,8 @@ module _ {C : Set ℓ} {D : C → Set ℓ} (Q : Formers C D)
           (λ _ → p) (λ _ → unit-point)
       member-≃ x (no outside) =
         Equiv.propBiimpl→Equiv
-          (λ z → ⊥-elim (empty-absurd z)) (P-prop x)
-          (λ z → ⊥-elim (empty-absurd z)) (λ p → Empty.rec (outside p))
+          (λ z → 𝟘-elim (empty-absurd z)) (P-prop x)
+          (λ z → 𝟘-elim (empty-absurd z)) (λ p → Empty.rec (outside p))
 
     -- Mathematical shape: D (subset P) ≃ Σ (x : D a). P x.
     subset : C

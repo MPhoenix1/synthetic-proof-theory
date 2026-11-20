@@ -8,9 +8,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Higher.HigherType
 -- coordinate is a pointed split retract of it, so every cell of
 -- EilenbergMacLane lies over the one point 0.
 
-open import Agda.Primitive using (Level; lzero)
-open import Data.Empty using (⊥)
-import Data.Nat.Base as Nat
+open import SPT.Cubical.Base using (Level; lzero; 𝟘)
+import SPT.Cubical.Base as Nat
 
 import
   SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Higher.EilenbergMacLane
@@ -143,7 +142,7 @@ higherCell-nontrivial :
     (height : Nat.ℕ)
   → higherCell height Cubical.≡
       Iterated.iteratedLoopPoint height HigherType higherTypePoint
-  → ⊥
+  → 𝟘
 higherCell-nontrivial height =
   Iterated.iteratedLoopEmbedding-nonbase
     height

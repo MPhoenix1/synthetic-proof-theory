@@ -13,13 +13,7 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Addition where
 -- both arguments, P + (Q + 1) ≃ (P + Q) + 1, and P + − commutes with chain
 -- completions. Every law is an equivalence of presentations.
 
-open import Agda.Primitive using (Level)
-open import Data.Empty using (⊥-elim)
-open import Data.Nat using (ℕ; zero)
-open import Data.Product using (Σ; _,_)
-open import Data.Sum using (inj₁; inj₂)
-open import Data.Unit.Polymorphic using (tt)
-open import Relation.Binary.PropositionalEquality using (subst)
+open import SPT.Cubical.Base hiding (_+_; lower)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -44,31 +38,31 @@ initial : (P : 𝒫 ℓ) → Maps.Initial Q Q′ → Maps.Initial (P + Q) (P + Q
 initial {Q = Q} {Q′ = Q′} P f = record
   { map = map
   ; resp = λ where
-      {inj₁ _} {inj₁ _} p → p
-      {inj₁ _} {inj₂ _} ()
-      {inj₂ _} {inj₁ _} ()
-      {inj₂ _} {inj₂ _} p → F.resp p
+      {inl _} {inl _} p → p
+      {inl _} {inr _} ()
+      {inr _} {inl _} ()
+      {inr _} {inr _} p → F.resp p
   ; strict = λ where
-      {inj₁ _} {inj₁ _} p → p
-      {inj₁ _} {inj₂ _} p → tt
-      {inj₂ _} {inj₁ _} ()
-      {inj₂ _} {inj₂ _} p → F.strict p
+      {inl _} {inl _} p → p
+      {inl _} {inr _} p → (lift ⋆)
+      {inr _} {inl _} ()
+      {inr _} {inr _} p → F.strict p
   ; lower = lower
   }
   where
   module F = Maps.Initial f
 
   map : 𝒫.X (P + Q) → 𝒫.X (P + Q′)
-  map (inj₁ x) = inj₁ x
-  map (inj₂ y) = inj₂ (F.map y)
+  map (inl x) = inl x
+  map (inr y) = inr (F.map y)
 
   lower : (u : 𝒫.X (P + Q)) (z : 𝒫.X (P + Q′)) → 𝒫._<_ (P + Q′) z (map u)
     → Σ (𝒫.X (P + Q)) (λ v → 𝒫._≈_ (P + Q′) (map v) z)
-  lower (inj₁ x) (inj₁ y) p = inj₁ y , 𝒫.≈-refl P y
-  lower (inj₁ x) (inj₂ y) ()
-  lower (inj₂ y) (inj₁ x) p = inj₁ x , 𝒫.≈-refl P x
-  lower (inj₂ y) (inj₂ w) p with F.lower y w p
-  ... | v , q = inj₂ v , q
+  lower (inl x) (inl y) p = inl y , 𝒫.≈-refl P y
+  lower (inl x) (inr y) ()
+  lower (inr y) (inl x) p = inl x , 𝒫.≈-refl P x
+  lower (inr y) (inr w) p with F.lower y w p
+  ... | v , q = inr v , q
 
 -- P + − on a proper segment, with ceiling the image of the old ceiling.
 segment : (P : 𝒫 ℓ) → Maps.Segment Q Q′ → Maps.Segment (P + Q) (P + Q′)
@@ -76,24 +70,24 @@ segment {Q = Q} {Q′ = Q′} P s = record
   { bound = record
       { to = to
       ; to-≈ = λ where
-          {inj₁ _} {inj₁ _} p → p
-          {inj₁ _} {inj₂ _} ()
-          {inj₂ _} {inj₁ _} ()
-          {inj₂ _} {inj₂ _} p → Bound.to-≈ p
+          {inl _} {inl _} p → p
+          {inl _} {inr _} ()
+          {inr _} {inl _} ()
+          {inr _} {inr _} p → Bound.to-≈ p
       ; to-< = λ where
-          {inj₁ _} {inj₁ _} p → p
-          {inj₁ _} {inj₂ _} p → tt
-          {inj₂ _} {inj₁ _} ()
-          {inj₂ _} {inj₂ _} p → Bound.to-< p
+          {inl _} {inl _} p → p
+          {inl _} {inr _} p → (lift ⋆)
+          {inr _} {inl _} ()
+          {inr _} {inr _} p → Bound.to-< p
       ; reflects-< = λ where
-          {inj₁ _} {inj₁ _} p → p
-          {inj₁ _} {inj₂ _} p → tt
-          {inj₂ _} {inj₁ _} ()
-          {inj₂ _} {inj₂ _} p → Bound.reflects-< p
-      ; ceiling = inj₂ Bound.ceiling
+          {inl _} {inl _} p → p
+          {inl _} {inr _} p → (lift ⋆)
+          {inr _} {inl _} ()
+          {inr _} {inr _} p → Bound.reflects-< p
+      ; ceiling = inr Bound.ceiling
       ; below = λ where
-          (inj₁ x) → tt
-          (inj₂ y) → Bound.below y
+          (inl x) → (lift ⋆)
+          (inr y) → Bound.below y
       }
   ; covers = covers
   }
@@ -101,14 +95,14 @@ segment {Q = Q} {Q′ = Q′} P s = record
   module Bound = Presented._≺𝒫_ (Maps.Segment.bound s)
 
   to : 𝒫.X (P + Q) → 𝒫.X (P + Q′)
-  to (inj₁ x) = inj₁ x
-  to (inj₂ y) = inj₂ (Bound.to y)
+  to (inl x) = inl x
+  to (inr y) = inr (Bound.to y)
 
-  covers : (z : 𝒫.X (P + Q′)) → 𝒫._<_ (P + Q′) z (inj₂ Bound.ceiling)
+  covers : (z : 𝒫.X (P + Q′)) → 𝒫._<_ (P + Q′) z (inr Bound.ceiling)
     → Σ (𝒫.X (P + Q)) (λ u → 𝒫._≈_ (P + Q′) (to u) z)
-  covers (inj₁ x) p = inj₁ x , 𝒫.≈-refl P x
-  covers (inj₂ w) p with Maps.Segment.covers s w p
-  ... | v , q = inj₂ v , q
+  covers (inl x) p = inl x , 𝒫.≈-refl P x
+  covers (inr w) p with Maps.Segment.covers s w p
+  ... | v , q = inr v , q
 
 -- The sum respects equivalence in both arguments.
 equivalence : P Presented.≃𝒫 P′ → Q Presented.≃𝒫 Q′
@@ -117,43 +111,43 @@ equivalence {P = P} {P′ = P′} {Q = Q} {Q′ = Q′} e e′ = record
   { to = to
   ; from = from
   ; to-≈ = λ where
-      {inj₁ _} {inj₁ _} p → E.to-≈ p
-      {inj₁ _} {inj₂ _} ()
-      {inj₂ _} {inj₁ _} ()
-      {inj₂ _} {inj₂ _} p → E′.to-≈ p
+      {inl _} {inl _} p → E.to-≈ p
+      {inl _} {inr _} ()
+      {inr _} {inl _} ()
+      {inr _} {inr _} p → E′.to-≈ p
   ; from-≈ = λ where
-      {inj₁ _} {inj₁ _} p → E.from-≈ p
-      {inj₁ _} {inj₂ _} ()
-      {inj₂ _} {inj₁ _} ()
-      {inj₂ _} {inj₂ _} p → E′.from-≈ p
+      {inl _} {inl _} p → E.from-≈ p
+      {inl _} {inr _} ()
+      {inr _} {inl _} ()
+      {inr _} {inr _} p → E′.from-≈ p
   ; to-< = λ where
-      {inj₁ _} {inj₁ _} p → E.to-< p
-      {inj₁ _} {inj₂ _} p → tt
-      {inj₂ _} {inj₁ _} ()
-      {inj₂ _} {inj₂ _} p → E′.to-< p
+      {inl _} {inl _} p → E.to-< p
+      {inl _} {inr _} p → (lift ⋆)
+      {inr _} {inl _} ()
+      {inr _} {inr _} p → E′.to-< p
   ; from-< = λ where
-      {inj₁ _} {inj₁ _} p → E.from-< p
-      {inj₁ _} {inj₂ _} p → tt
-      {inj₂ _} {inj₁ _} ()
-      {inj₂ _} {inj₂ _} p → E′.from-< p
+      {inl _} {inl _} p → E.from-< p
+      {inl _} {inr _} p → (lift ⋆)
+      {inr _} {inl _} ()
+      {inr _} {inr _} p → E′.from-< p
   ; from-to-≈ = λ where
-      (inj₁ x) → E.from-to-≈ x
-      (inj₂ y) → E′.from-to-≈ y
+      (inl x) → E.from-to-≈ x
+      (inr y) → E′.from-to-≈ y
   ; to-from-≈ = λ where
-      (inj₁ x) → E.to-from-≈ x
-      (inj₂ y) → E′.to-from-≈ y
+      (inl x) → E.to-from-≈ x
+      (inr y) → E′.to-from-≈ y
   }
   where
   module E = Presented._≃𝒫_ e
   module E′ = Presented._≃𝒫_ e′
 
   to : 𝒫.X (P + Q) → 𝒫.X (P′ + Q′)
-  to (inj₁ x) = inj₁ (E.to x)
-  to (inj₂ y) = inj₂ (E′.to y)
+  to (inl x) = inl (E.to x)
+  to (inr y) = inr (E′.to y)
 
   from : 𝒫.X (P′ + Q′) → 𝒫.X (P + Q)
-  from (inj₁ x) = inj₁ (E.from x)
-  from (inj₂ y) = inj₂ (E′.from y)
+  from (inl x) = inl (E.from x)
+  from (inr y) = inr (E′.from y)
 
 ------------------------------------------------------------------------
 -- Zero and successor
@@ -164,9 +158,9 @@ zero-law {P = P} Z z = Presented.≃𝒫-sym
   (bijection (Maps.Initial.embedding (left P Z)) covers)
   where
   covers : (u : 𝒫.X (P + Z))
-    → Σ (𝒫.X P) (λ x → 𝒫._≈_ (P + Z) (inj₁ x) u)
-  covers (inj₁ x) = x , 𝒫.≈-refl P x
-  covers (inj₂ y) = ⊥-elim (empty z y)
+    → Σ (𝒫.X P) (λ x → 𝒫._≈_ (P + Z) (inl x) u)
+  covers (inl x) = x , 𝒫.≈-refl P x
+  covers (inr y) = 𝟘-elim (empty z y)
 
 -- Mathematical shape: P + (Q + 1) ≃ (P + Q) + 1, the new top to the top.
 next : (P Q : 𝒫 ℓ)
@@ -175,40 +169,40 @@ next P Q = record
   { to = to
   ; from = from
   ; to-≈ = λ where
-      {inj₁ _} {inj₁ _} p → Outer.point≈ p
-      {inj₁ _} {inj₂ _} ()
-      {inj₂ _} {inj₁ _} ()
-      {inj₂ (Inner.point _)} {inj₂ (Inner.point _)} (Inner.point≈ p) →
+      {inl _} {inl _} p → Outer.point≈ p
+      {inl _} {inr _} ()
+      {inr _} {inl _} ()
+      {inr (Inner.point _)} {inr (Inner.point _)} (Inner.point≈ p) →
         Outer.point≈ p
-      {inj₂ Inner.top} {inj₂ Inner.top} Inner.top≈ → Outer.top≈
+      {inr Inner.top} {inr Inner.top} Inner.top≈ → Outer.top≈
   ; from-≈ = λ where
-      {Outer.point (inj₁ _)} {Outer.point (inj₁ _)} (Outer.point≈ p) → p
-      {Outer.point (inj₂ _)} {Outer.point (inj₂ _)} (Outer.point≈ p) →
+      {Outer.point (inl _)} {Outer.point (inl _)} (Outer.point≈ p) → p
+      {Outer.point (inr _)} {Outer.point (inr _)} (Outer.point≈ p) →
         Inner.point≈ p
       {Outer.top} {Outer.top} Outer.top≈ → Inner.top≈
   ; to-< = λ where
-      {inj₁ _} {inj₁ _} p → Outer.point< p
-      {inj₁ _} {inj₂ (Inner.point _)} p → Outer.point< tt
-      {inj₁ _} {inj₂ Inner.top} p → Outer.point<top
-      {inj₂ _} {inj₁ _} ()
-      {inj₂ (Inner.point _)} {inj₂ (Inner.point _)} (Inner.point< p) →
+      {inl _} {inl _} p → Outer.point< p
+      {inl _} {inr (Inner.point _)} p → Outer.point< (lift ⋆)
+      {inl _} {inr Inner.top} p → Outer.point<top
+      {inr _} {inl _} ()
+      {inr (Inner.point _)} {inr (Inner.point _)} (Inner.point< p) →
         Outer.point< p
-      {inj₂ (Inner.point _)} {inj₂ Inner.top} Inner.point<top →
+      {inr (Inner.point _)} {inr Inner.top} Inner.point<top →
         Outer.point<top
   ; from-< = λ where
-      {Outer.point (inj₁ _)} {Outer.point (inj₁ _)} (Outer.point< p) → p
-      {Outer.point (inj₁ _)} {Outer.point (inj₂ _)} (Outer.point< p) → tt
-      {Outer.point (inj₂ _)} {Outer.point (inj₂ _)} (Outer.point< p) →
+      {Outer.point (inl _)} {Outer.point (inl _)} (Outer.point< p) → p
+      {Outer.point (inl _)} {Outer.point (inr _)} (Outer.point< p) → (lift ⋆)
+      {Outer.point (inr _)} {Outer.point (inr _)} (Outer.point< p) →
         Inner.point< p
-      {Outer.point (inj₁ _)} {Outer.top} Outer.point<top → tt
-      {Outer.point (inj₂ _)} {Outer.top} Outer.point<top → Inner.point<top
+      {Outer.point (inl _)} {Outer.top} Outer.point<top → (lift ⋆)
+      {Outer.point (inr _)} {Outer.top} Outer.point<top → Inner.point<top
   ; from-to-≈ = λ where
-      (inj₁ x) → 𝒫.≈-refl P x
-      (inj₂ (Inner.point y)) → Inner.point≈ (𝒫.≈-refl Q y)
-      (inj₂ Inner.top) → Inner.top≈
+      (inl x) → 𝒫.≈-refl P x
+      (inr (Inner.point y)) → Inner.point≈ (𝒫.≈-refl Q y)
+      (inr Inner.top) → Inner.top≈
   ; to-from-≈ = λ where
-      (Outer.point (inj₁ x)) → Outer.point≈ (𝒫.≈-refl P x)
-      (Outer.point (inj₂ y)) → Outer.point≈ (𝒫.≈-refl Q y)
+      (Outer.point (inl x)) → Outer.point≈ (𝒫.≈-refl P x)
+      (Outer.point (inr y)) → Outer.point≈ (𝒫.≈-refl Q y)
       Outer.top → Outer.top≈
   }
   where
@@ -218,14 +212,14 @@ next P Q = record
     (Adjoin.constant (P + Q)) zero
 
   to : 𝒫.X (P + Maps.Successor.next Q) → 𝒫.X (Maps.Successor.next (P + Q))
-  to (inj₁ x) = Outer.point (inj₁ x)
-  to (inj₂ (Inner.point y)) = Outer.point (inj₂ y)
-  to (inj₂ Inner.top) = Outer.top
+  to (inl x) = Outer.point (inl x)
+  to (inr (Inner.point y)) = Outer.point (inr y)
+  to (inr Inner.top) = Outer.top
 
   from : 𝒫.X (Maps.Successor.next (P + Q)) → 𝒫.X (P + Maps.Successor.next Q)
-  from (Outer.point (inj₁ x)) = inj₁ x
-  from (Outer.point (inj₂ y)) = inj₂ (Inner.point y)
-  from Outer.top = inj₂ Inner.top
+  from (Outer.point (inl x)) = inl x
+  from (Outer.point (inr y)) = inr (Inner.point y)
+  from Outer.top = inr Inner.top
 
 -- Mathematical shape: S is-suc-of Q → D is-suc-of (P + Q) → P + S ≃ D.
 successor-law : Successor Q R → {D : 𝒫 ℓ} → Successor (P + Q) D
@@ -256,10 +250,10 @@ continuous P C = Limit.exhaustion (chain P C) (P + Limit.completion C)
     → Σ ℕ (λ n → Σ (𝒫.X (P + Limit.Chain.stage C n)) (λ x →
         𝒫._≈_ (P + Limit.completion C)
           (Maps.Initial.map (initial P (Limit.stage C n)) x) y))
-  covers (inj₁ x) = zero , inj₁ x , 𝒫.≈-refl P x
-  covers (inj₂ y) with Limit.coverage C y
-  ... | n , x , p = n , inj₂ x ,
-    subst (𝒫._≈_ (Limit.completion C) _) p
+  covers (inl x) = zero , inl x , 𝒫.≈-refl P x
+  covers (inr y) with Limit.coverage C y
+  ... | n , x , p = n , inr x ,
+    transport (𝒫._≈_ (Limit.completion C) _) p
       (𝒫.≈-refl (Limit.completion C) _)
 
 -- Mathematical shape: A is-lim-of Qₙ → B is-sup-of (P + Qₙ) → P + A ≃ B.

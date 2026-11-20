@@ -8,8 +8,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Hartogs.Uncountability where
 -- embedding of that carrier into ℕ does: one-step propositional resizing
 -- suffices, and excluded middle at lsuc ℓ provides it.
 
-open import Agda.Primitive using (Level; lsuc; _⊔_)
-open import Data.Nat using (ℕ)
+open import SPT.Cubical.Base using (Level; _⊔_; lsuc; ℕ)
 
 import SPT.Cubical.OrdinalGeometry.Cubical.Hartogs.Countability
   as NatCountability

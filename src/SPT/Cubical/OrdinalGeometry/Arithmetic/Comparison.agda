@@ -22,16 +22,7 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Comparison where
 -- With the discriminators each of these is equivalent to LPO
 -- (Comparison.Strength).
 
-open import Agda.Primitive using (Level)
-open import Data.Bool using (Bool; true; false)
-open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Maybe using (Maybe; just; nothing; maybe′)
-open import Data.Nat using (ℕ; zero; suc)
-open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
-open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_]′)
-open import Relation.Nullary using (Dec; yes; no)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; refl; sym; trans; cong)
+open import SPT.Cubical.Base hiding (_+_)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -56,87 +47,91 @@ private
   variable
     ℓ : Level
 
-  true≢false : true ≡ false → ⊥
+  true≢false : ₁ ＝ ₀ → 𝟘
   true≢false ()
 
 -- Mathematical shape: P < Q → Q ≤ P → ⊥.
-proper : {P Q : 𝒫 ℓ} → Maps.Segment P Q → Maps.Initial Q P → ⊥
+proper : {P Q : 𝒫 ℓ} → Maps.Segment P Q → Maps.Initial Q P → 𝟘
 proper {P = P} s f =
   Presented.Embedding.irrefl P (Maps.bounded (Maps.Segment.bound s) f)
 
 private
   -- Mathematical shape: x ≈ y, as a Boolean, by comparison in Q.
-  same : (Q : 𝒫 ℓ) → 𝒫.X Q → 𝒫.X Q → Bool
+  same : (Q : 𝒫 ℓ) → 𝒫.X Q → 𝒫.X Q → 𝟚
   same Q x y =
-    [ (λ _ → false) , [ (λ _ → true) , (λ _ → false) ]′ ]′ (𝒫.compare Q x y)
+    cases (λ _ → ₀) (cases (λ _ → ₁) (λ _ → ₀)) (𝒫.compare Q x y)
 
-  same-sound : (Q : 𝒫 ℓ) (x y : 𝒫.X Q) → same Q x y ≡ true → 𝒫._≈_ Q x y
+  same-sound : (Q : 𝒫 ℓ) (x y : 𝒫.X Q) → same Q x y ＝ ₁ → 𝒫._≈_ Q x y
   same-sound Q x y = at (𝒫.compare Q x y)
     where
     at : (d : 𝒫._<_ Q x y ⊎ (𝒫._≈_ Q x y ⊎ 𝒫._<_ Q y x))
-      → [ (λ _ → false) , [ (λ _ → true) , (λ _ → false) ]′ ]′ d ≡ true
+      → cases (λ _ → ₀) (cases (λ _ → ₁) (λ _ → ₀)) d ＝ ₁
       → 𝒫._≈_ Q x y
-    at (inj₁ _) ()
-    at (inj₂ (inj₁ e)) _ = e
-    at (inj₂ (inj₂ _)) ()
+    at (inl _) ()
+    at (inr (inl e)) _ = e
+    at (inr (inr _)) ()
 
   same-complete : (Q : 𝒫 ℓ) (x y : 𝒫.X Q) → 𝒫._≈_ Q x y
-    → same Q x y ≡ true
+    → same Q x y ＝ ₁
   same-complete Q x y e = at (𝒫.compare Q x y)
     where
     at : (d : 𝒫._<_ Q x y ⊎ (𝒫._≈_ Q x y ⊎ 𝒫._<_ Q y x))
-      → [ (λ _ → false) , [ (λ _ → true) , (λ _ → false) ]′ ]′ d ≡ true
-    at (inj₁ p) = ⊥-elim (Presented.Presentation.≈↛< Q e p)
-    at (inj₂ (inj₁ _)) = refl
-    at (inj₂ (inj₂ p)) =
-      ⊥-elim (Presented.Presentation.≈↛< Q (𝒫.≈-sym Q e) p)
+      → cases (λ _ → ₀) (cases (λ _ → ₁) (λ _ → ₀)) d ＝ ₁
+    at (inl p) = 𝟘-elim (Presented.Presentation.≈↛< Q e p)
+    at (inr (inl _)) = refl
+    at (inr (inr p)) =
+      𝟘-elim (Presented.Presentation.≈↛< Q (𝒫.≈-sym Q e) p)
 
 module _ (lpo : Stream.LPO) where
 
   -- Mathematical shape: P ≤ Q ⊎ Q < P.
   comparable : (P Q : 𝒫 ℓ) → Maps.Initial P Q ⊎ Maps.Segment Q P
   comparable P Q =
-    [ (λ f → inj₁ (Maps.compose (Normalized.quotient P)
+    cases
+      (λ f → inl (Maps.compose (Normalized.quotient P)
         (Maps.compose (Normalized.initial f) (Normalized.section Q))))
-    , (λ s → inj₂ (precompose
+      (λ s → inr (precompose
         (Maps.antisymmetry (Normalized.quotient Q) (Normalized.section Q))
         (Maps.along (Normalized.segment s) (Normalized.section P))))
-    ]′ (Exact.comparable lpo (Normalization.order P) (Normalization.order Q))
+      (Exact.comparable lpo (Normalization.order P) (Normalization.order Q))
 
   -- Mathematical shape: P < Q ⊎ P ≃ Q ⊎ Q < P (row 18).
   trichotomy : (P Q : 𝒫 ℓ)
-    → Maps.Segment P Q ⊎ (P Presented.≃𝒫 Q ⊎ Maps.Segment Q P)
+    → Maps.Segment P Q ⊎ ((P Presented.≃𝒫 Q) ⊎ Maps.Segment Q P)
   trichotomy P Q =
-    [ (λ f → [ (λ g → inj₂ (inj₁ (Maps.antisymmetry f g))) , inj₁ ]′
+    cases
+      (λ f → cases (λ g → inr (inl (Maps.antisymmetry f g))) inl
         (comparable Q P))
-    , (λ s → inj₂ (inj₂ s))
-    ]′ (comparable P Q)
+      (λ s → inr (inr s))
+      (comparable P Q)
 
   -- Mathematical shape: Dec (P < Q) (row 16).
-  decidable : (P Q : 𝒫 ℓ) → Dec (Maps.Segment P Q)
+  decidable : (P Q : 𝒫 ℓ) → is-decidable (Maps.Segment P Q)
   decidable P Q =
-    [ yes
-    , [ (λ e → no λ s → proper s (Maps.equivalence (Presented.≃𝒫-sym e)))
-      , (λ s′ → no λ s → proper s (Maps.inclusion s′))
-      ]′
-    ]′ (trichotomy P Q)
+    cases
+      inl
+      (cases
+        (λ e → inr λ s → proper s (Maps.equivalence (Presented.≃𝒫-sym e)))
+        (λ s′ → inr λ s → proper s (Maps.inclusion s′)))
+      (trichotomy P Q)
 
   -- Mathematical shape: Dec (P ≤ Q).
-  initial : (P Q : 𝒫 ℓ) → Dec (Maps.Initial P Q)
-  initial P Q = [ yes , (λ s → no λ f → proper s f) ]′ (comparable P Q)
+  initial : (P Q : 𝒫 ℓ) → is-decidable (Maps.Initial P Q)
+  initial P Q = cases inl (λ s → inr λ f → proper s f) (comparable P Q)
 
   -- Mathematical shape: Dec (P ≃ Q).
-  equivalent : (P Q : 𝒫 ℓ) → Dec (P Presented.≃𝒫 Q)
+  equivalent : (P Q : 𝒫 ℓ) → is-decidable (P Presented.≃𝒫 Q)
   equivalent P Q =
-    [ (λ s → no λ e → proper s (Maps.equivalence (Presented.≃𝒫-sym e)))
-    , [ yes , (λ s → no λ e → proper s (Maps.equivalence e)) ]′
-    ]′ (trichotomy P Q)
+    cases
+      (λ s → inr λ e → proper s (Maps.equivalence (Presented.≃𝒫-sym e)))
+      (cases inl (λ s → inr λ e → proper s (Maps.equivalence e)))
+      (trichotomy P Q)
 
   -- Mathematical shape: P ≤ Q → P < Q ⊎ P ≃ Q (row 17).
   split : {P Q : 𝒫 ℓ} → Maps.Initial P Q
-    → Maps.Segment P Q ⊎ P Presented.≃𝒫 Q
+    → Maps.Segment P Q ⊎ (P Presented.≃𝒫 Q)
   split {P = P} {Q = Q} f =
-    [ inj₁ , [ inj₂ , (λ s → ⊥-elim (proper s f)) ]′ ]′ (trichotomy P Q)
+    cases inl (cases inr (λ s → 𝟘-elim (proper s f))) (trichotomy P Q)
 
   -- Mathematical shape: P ≤ Q → Q < R → P < R (row 2).
   along : {P Q R : 𝒫 ℓ} → Maps.Initial P Q → Maps.Segment Q R
@@ -144,17 +139,18 @@ module _ (lpo : Stream.LPO) where
   along f s = Characterization.segment (split f) s
 
   -- Mathematical shape: Dec (P < ω) (row 15).
-  finite : (P : 𝒫 ℓ) → Dec (Maps.Segment P omega)
+  finite : (P : 𝒫 ℓ) → is-decidable (Maps.Segment P omega)
   finite P = decidable P omega
 
   -- Mathematical shape: P ≤ Q → P + 1 ≤ Q + 1 (row 5).
   successor-initial : {P Q : 𝒫 ℓ} → Maps.Initial P Q
     → Maps.Initial (Maps.Successor.next P) (Maps.Successor.next Q)
   successor-initial {Q = Q} f =
-    [ (λ s → Maps.compose (Maps.Segment.closed s)
+    cases
+      (λ s → Maps.compose (Maps.Segment.closed s)
         (Maps.Successor.initial Q))
-    , (λ e → Maps.equivalence (Successor.respect e))
-    ]′ (split f)
+      (λ e → Maps.equivalence (Successor.respect e))
+      (split f)
 
   -- Mathematical shape: P < Q → P + 1 < Q + 1 (row 5).
   successor-segment : {P Q : 𝒫 ℓ} → Maps.Segment P Q
@@ -165,42 +161,43 @@ module _ (lpo : Stream.LPO) where
   -- Mathematical shape: Π y : Q. (Σ x. f x ≈ y) ⊎ (Π x. f x < y).
   decided : {P Q : 𝒫 ℓ} (f : Maps.Initial P Q) → Subtraction.Decided f
   decided {P = P} {Q = Q} f y =
-    [ (λ h → inj₁ (found (𝒫.enum P (proj₁ h)) (proj₂ h)))
-    , (λ none → inj₂ (above none))
-    ]′ (lpo hit)
+    cases
+      (λ h → inl (found (𝒫.enum P (pr₁ h)) (pr₂ h)))
+      (λ none → inr (above none))
+      (lpo hit)
     where
-    test : 𝒫.X P → Bool
+    test : 𝒫.X P → 𝟚
     test x = same Q (Maps.Initial.map f x) y
 
-    hit : ℕ → Bool
-    hit n = maybe′ test false (𝒫.enum P n)
+    hit : ℕ → 𝟚
+    hit n = maybe-rec ₀ test (𝒫.enum P n)
 
-    found : (m : Maybe (𝒫.X P)) → maybe′ test false m ≡ true
+    found : (m : Maybe (𝒫.X P)) → maybe-rec ₀ test m ＝ ₁
       → Σ (𝒫.X P) (λ x → 𝒫._≈_ Q (Maps.Initial.map f x) y)
     found (just x) p = x , same-sound Q (Maps.Initial.map f x) y p
     found nothing ()
 
-    missing : ((n : ℕ) → hit n ≡ false) → (z : 𝒫.X P)
-      → 𝒫._≈_ Q (Maps.Initial.map f z) y → ⊥
+    missing : ((n : ℕ) → hit n ＝ ₀) → (z : 𝒫.X P)
+      → 𝒫._≈_ Q (Maps.Initial.map f z) y → 𝟘
     missing none z e =
       let n , r , selected , r≈z = 𝒫.covers P z
-      in true≢false (trans
-           (sym (same-complete Q (Maps.Initial.map f r) y
-             (𝒫.≈-trans Q (Maps.Initial.resp f r≈z) e)))
-           (trans (sym (cong (maybe′ test false) selected)) (none n)))
+      in true≢false (
+           ((same-complete Q (Maps.Initial.map f r) y
+             (𝒫.≈-trans Q (Maps.Initial.resp f r≈z) e)) ⁻¹)
+           ∙ (ap (maybe-rec ₀ test) selected ⁻¹ ∙ none n))
 
-    above : ((n : ℕ) → hit n ≡ false) → Subtraction.Above f y
+    above : ((n : ℕ) → hit n ＝ ₀) → Subtraction.Above f y
     above none x = place (𝒫.compare Q (Maps.Initial.map f x) y)
       where
       place : 𝒫._<_ Q (Maps.Initial.map f x) y
           ⊎ (𝒫._≈_ Q (Maps.Initial.map f x) y
             ⊎ 𝒫._<_ Q y (Maps.Initial.map f x))
         → 𝒫._<_ Q (Maps.Initial.map f x) y
-      place (inj₁ p) = p
-      place (inj₂ (inj₁ e)) = ⊥-elim (missing none x e)
-      place (inj₂ (inj₂ p)) =
+      place (inl p) = p
+      place (inr (inl e)) = 𝟘-elim (missing none x e)
+      place (inr (inr p)) =
         let z , e = Maps.Initial.lower f x y p
-        in ⊥-elim (missing none z e)
+        in 𝟘-elim (missing none z e)
 
   -- Mathematical shape: P ≤ Q → Σ R. P + R ≃ Q (row 13).
   subtract : {P Q : 𝒫 ℓ} → Maps.Initial P Q
@@ -216,24 +213,25 @@ module _ (lpo : Stream.LPO) where
     next : (k n : ℕ) → Σ ℕ (λ m →
       Maps.Initial (F k) (F m) × Maps.Initial (F (suc n)) (F m))
     next k n =
-      [ (λ f → k , Maps.identity (F k) , f)
-      , (λ s → suc n , Maps.inclusion s , Maps.identity (F (suc n)))
-      ]′ (comparable (F (suc n)) (F k))
+      cases
+        (λ f → k , Maps.identity (F k) , f)
+        (λ s → suc n , Maps.inclusion s , Maps.identity (F (suc n)))
+        (comparable (F (suc n)) (F k))
 
     -- index n: the member that is the maximum of F 0, …, F n.
     index : ℕ → ℕ
     index zero = zero
-    index (suc n) = proj₁ (next (index n) n)
+    index (suc n) = pr₁ (next (index n) n)
 
     chain : Limit.Chain ℓ
     chain = record
       { stage = λ n → F (index n)
-      ; edge = λ n → proj₁ (proj₂ (next (index n) n))
+      ; edge = λ n → pr₁ (pr₂ (next (index n) n))
       }
 
     above : (n : ℕ) → Maps.Initial (F n) (F (index n))
     above zero = Maps.identity (F zero)
-    above (suc n) = proj₂ (proj₂ (next (index n) n))
+    above (suc n) = pr₂ (pr₂ (next (index n) n))
 
     -- Mathematical shape: sup F = completion of the running maxima.
     supremum : Supremum F (Limit.completion chain)
@@ -255,6 +253,6 @@ module _ (lpo : Stream.LPO) where
   bound : (F : ℕ → 𝒫 ℓ)
     → Σ (𝒫 ℓ) (λ S → (n : ℕ) → Maps.Segment (F n) S)
   bound F =
-    Maps.Successor.next (proj₁ (supremum F))
-    , λ n → along (Supremum.member (proj₂ (supremum F)) n)
-        (Maps.successor (proj₁ (supremum F)))
+    Maps.Successor.next (pr₁ (supremum F))
+    , λ n → along (Supremum.member (pr₂ (supremum F)) n)
+        (Maps.successor (pr₁ (supremum F)))

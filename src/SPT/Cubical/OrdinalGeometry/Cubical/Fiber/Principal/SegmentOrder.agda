@@ -6,8 +6,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Principal.SegmentOrder
 
 -- The order of unitSegment(G) is empty.
 
-open import Agda.Primitive using (Level)
-open import Data.Empty using (⊥)
+open import SPT.Cubical.Base using (Level; 𝟘)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import
@@ -35,7 +34,7 @@ segment-strict-empty :
   → Woset.WosetStr._≺_
       (Cubical.snd (Principal.unitSegment geometry))
       left right
-  → ⊥
+  → 𝟘
 segment-strict-empty {ℓ} geometry left right strict =
   UnitOrder.unitOrderType-strict-empty
     (CubicalEquiv.equivFun

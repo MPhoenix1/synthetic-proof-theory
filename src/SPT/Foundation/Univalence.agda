@@ -59,8 +59,6 @@ open import SPT.Foundation.Contractible using
 open import SPT.Foundation.Fibers using (fiber; has-contractible-fibers)
 open import SPT.Foundation.Happly using
   (happly; funext; happly-funext; transport-at)
-open import SPT.Foundation.Identifications using
-  (transport-fiber; forth-and-back-transport)
 open import SPT.Foundation.Isomorphisms using
   (_≅_; forward; backward; backward-forward; forward-backward;
    transport-is-isomorphism)

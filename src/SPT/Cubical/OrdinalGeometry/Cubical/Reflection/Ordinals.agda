@@ -14,8 +14,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Ordinals where
 -- (segments→simulation), by which W + 1 is least above W
 -- (successor-least).
 
-open import Agda.Primitive using (Level; lsuc; _⊔_)
-open import Level using (Lift; lift; lower)
+open import SPT.Cubical.Base using (Level; Lift; _⊔_; lift; lower; lsuc)
 
 import Cubical.Data.Empty as Empty
 import Cubical.Data.Sigma.Properties as SigmaProperties

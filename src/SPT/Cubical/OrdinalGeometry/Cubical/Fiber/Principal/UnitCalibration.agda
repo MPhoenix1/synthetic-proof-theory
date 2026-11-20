@@ -7,8 +7,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Principal.UnitCalibration
 -- UnitOrderType ≃ unitSegment(G), from the carrier equivalence of
 -- UnitCarrier and the emptiness of both orders.
 
-open import Agda.Primitive using (Level)
-open import Data.Empty using (⊥-elim)
+open import SPT.Cubical.Base using (Level; 𝟘-elim)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import
@@ -62,10 +61,10 @@ abstract
               (UnitCarrier.unitCarrier-equivalence geometry)
               right))
           (λ strict →
-            ⊥-elim
+            𝟘-elim
               (UnitOrder.unitOrderType-strict-empty left right strict))
           (λ strict →
-            ⊥-elim
+            𝟘-elim
               (PrincipalOrder.segment-strict-empty geometry
                 (CubicalEquiv.equivFun
                   (UnitCarrier.unitCarrier-equivalence

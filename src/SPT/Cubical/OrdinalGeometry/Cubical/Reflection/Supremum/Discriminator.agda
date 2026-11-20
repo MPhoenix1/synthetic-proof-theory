@@ -18,12 +18,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Supremum.Discriminator
 -- decision the same way). The presented form of row 8 holds for chains
 -- instead (Supremum.Chain).
 
-open import Agda.Primitive using (lzero)
-open import Data.Bool using (Bool; true; false)
-open import Data.Nat using (ℕ; zero; suc)
-open import Data.Product using (Σ; _,_)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Relation.Binary.PropositionalEquality using (_≡_)
+open import SPT.Cubical.Base using
+  ( _,_; _⊎_; _＝_; inl; inr; lzero; suc; zero; Σ; ₀; ₁; ℕ; 𝟚 )
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -54,57 +50,57 @@ import Cubical.Relation.Nullary as Nullary
 -- Decisions of LPO under truncation
 
 -- The decision of LPO at s, with the inductive identity of Stream.
-Decision : (ℕ → Bool) → Set
-Decision s = Stream.Hit s ⊎ ((n : ℕ) → s n ≡ false)
+Decision : (ℕ → 𝟚) → Set
+Decision s = Stream.Hit s ⊎ ((n : ℕ) → s n ＝ ₀)
 
 -- The same decision with paths, and with the hit truncated: a
 -- proposition, since a hit and its absence exclude each other.
-Settled : (ℕ → Bool) → Set
+Settled : (ℕ → 𝟚) → Set
 Settled s =
-  Truncation.∥ Σ ℕ (λ n → s n Cubical.≡ true) ∥₁
-    ⊎ ((n : ℕ) → s n Cubical.≡ false)
+  Truncation.∥ Σ ℕ (λ n → s n Cubical.≡ ₁) ∥₁
+    ⊎ ((n : ℕ) → s n Cubical.≡ ₀)
 
 private
-  clash : (s : ℕ → Bool) → Σ ℕ (λ n → s n Cubical.≡ true)
-    → ((n : ℕ) → s n Cubical.≡ false) → Empty.⊥
+  clash : (s : ℕ → 𝟚) → Σ ℕ (λ n → s n Cubical.≡ ₁)
+    → ((n : ℕ) → s n Cubical.≡ ₀) → Empty.⊥
   clash s (n , p) none =
     CubicalBool.true≢false (Cubical.sym p Cubical.∙ none n)
 
-settled : (s : ℕ → Bool) → Cubical.isProp (Settled s)
-settled s (inj₁ a) (inj₁ b) =
-  Cubical.cong inj₁ (Truncation.isPropPropTrunc a b)
-settled s (inj₁ a) (inj₂ b) =
+settled : (s : ℕ → 𝟚) → Cubical.isProp (Settled s)
+settled s (inl a) (inl b) =
+  Cubical.cong inl (Truncation.isPropPropTrunc a b)
+settled s (inl a) (inr b) =
   Empty.rec (Truncation.rec Empty.isProp⊥ (λ h → clash s h b) a)
-settled s (inj₂ a) (inj₁ b) =
+settled s (inr a) (inl b) =
   Empty.rec (Truncation.rec Empty.isProp⊥ (λ h → clash s h a) b)
-settled s (inj₂ a) (inj₂ b) =
-  Cubical.cong inj₂
-    (HLevels.isPropΠ (λ n → CubicalBool.isSetBool (s n) false) a b)
+settled s (inr a) (inr b) =
+  Cubical.cong inr
+    (HLevels.isPropΠ (λ n → CubicalBool.isSetBool (s n) ₀) a b)
 
-settle : (s : ℕ → Bool) → Decision s → Settled s
-settle s (inj₁ (n , p)) =
-  inj₁ Truncation.∣ n , EqualityConversion.eqToPath p ∣₁
-settle s (inj₂ none) = inj₂ λ n → EqualityConversion.eqToPath (none n)
+settle : (s : ℕ → 𝟚) → Decision s → Settled s
+settle s (inl (n , p)) =
+  inl Truncation.∣ n , EqualityConversion.eqToPath p ∣₁
+settle s (inr none) = inr λ n → EqualityConversion.eqToPath (none n)
 
 -- A truncated hit yields the least hit, by search.
-unsettle : (s : ℕ → Bool) → Settled s → Decision s
-unsettle s (inj₁ t) =
+unsettle : (s : ℕ → 𝟚) → Settled s → Decision s
+unsettle s (inl t) =
   let n , p =
         Nullary.Collapsible→SplitSupport
           (NatOrder.Decidable→Collapsible
-            (λ n → CubicalBool.isSetBool (s n) true)
-            (λ n → s n CubicalBool.≟ true))
+            (λ n → CubicalBool.isSetBool (s n) ₁)
+            (λ n → s n CubicalBool.≟ ₁))
           t
-  in inj₁ (n , EqualityConversion.pathToEq p)
-unsettle s (inj₂ none) =
-  inj₂ λ n → EqualityConversion.pathToEq (none n)
+  in inl (n , EqualityConversion.pathToEq p)
+unsettle s (inr none) =
+  inr λ n → EqualityConversion.pathToEq (none n)
 
 ------------------------------------------------------------------------
 -- Suprema of countable families
 
 private
   -- A presentation of the supremum of family s decides s.
-  decide : (s : ℕ → Bool)
+  decide : (s : ℕ → 𝟚)
     → Σ (𝒫 lzero) (λ R →
         Woset.WosetEquiv (orderType R) (supremum (family s)))
     → Decision s

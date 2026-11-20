@@ -22,15 +22,11 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Ambient where
 -- - the domain of a point of a multiple D · V divides by D, and a division
 --   of P by D places P as the domain of a point of a multiple.
 
-open import Agda.Primitive using (Level)
-open import Data.Empty using (⊥-elim)
-open import Data.Nat using (ℕ; zero; suc)
-open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
-open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_]′)
-open import Relation.Nullary using (Dec; yes; no)
+open import SPT.Cubical.Base hiding (_+_)
+open import SPT.Cubical.Foundation.Accessibility using (is-well-founded)
+open import SPT.Cubical.Foundation.WellFounded.Subrelation using
+  ( subrelations-are-well-founded )
 
-open import SPT.Cubical.Core.WellFounded using (WellFounded)
-open import SPT.Cubical.Core.WellFounded.Subrelation using (subrel-wf)
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
 import SPT.Cubical.OrdinalGeometry.Presentation.Map as Maps
@@ -74,19 +70,19 @@ module _ {ℓ : Level} (W : 𝒫 ℓ) where
 
   -- Mathematical shape: x ≤ y := x < y ⊎ x ≈ y.
   _≤_ : W.X → W.X → Set ℓ
-  x ≤ y = x W.< y ⊎ x W.≈ y
+  x ≤ y = x W.< y ⊎ (x W.≈ y)
 
   -- Equivalent points have equivalent domains.
   same : {x y : W.X} → x W.≈ y → ∂ W x Presented.≃𝒫 ∂ W y
   same p = record
-    { to = λ u → proj₁ u , W.<-respʳ-≈ p (proj₂ u)
-    ; from = λ v → proj₁ v , W.<-respʳ-≈ (W.≈-sym p) (proj₂ v)
+    { to = λ u → pr₁ u , W.<-respʳ-≈ p (pr₂ u)
+    ; from = λ v → pr₁ v , W.<-respʳ-≈ (W.≈-sym p) (pr₂ v)
     ; to-≈ = λ q → q
     ; from-≈ = λ q → q
     ; to-< = λ q → q
     ; from-< = λ q → q
-    ; from-to-≈ = λ u → W.≈-refl (proj₁ u)
-    ; to-from-≈ = λ v → W.≈-refl (proj₁ v)
+    ; from-to-≈ = λ u → W.≈-refl (pr₁ u)
+    ; to-from-≈ = λ v → W.≈-refl (pr₁ v)
     }
 
   -- Mathematical shape: x < y gives the principal cone ∂x ⊂ ∂y, with
@@ -94,36 +90,36 @@ module _ {ℓ : Level} (W : 𝒫 ℓ) where
   segment : {x y : W.X} → x W.< y → Maps.Segment (∂ W x) (∂ W y)
   segment {x} {y} p = record
     { bound = record
-        { to = λ u → proj₁ u , W.<-trans (proj₂ u) p
+        { to = λ u → pr₁ u , W.<-trans (pr₂ u) p
         ; to-≈ = λ q → q
         ; to-< = λ q → q
         ; reflects-< = λ q → q
         ; ceiling = x , p
-        ; below = proj₂
+        ; below = pr₂
         }
-    ; covers = λ v q → (proj₁ v , q) , W.≈-refl (proj₁ v)
+    ; covers = λ v q → (pr₁ v , q) , W.≈-refl (pr₁ v)
     }
 
   -- The inclusion of domains along x ≤ y.
   included : {x y : W.X} → x ≤ y → Maps.Initial (∂ W x) (∂ W y)
-  included (inj₁ p) = Maps.inclusion (segment p)
-  included (inj₂ q) = Maps.equivalence (same q)
+  included (inl p) = Maps.inclusion (segment p)
+  included (inr q) = Maps.equivalence (same q)
 
   -- A proper segment ∂x ⊂ ∂y comes from x < y: x ≈ y or y < x would bound
   -- ∂x strictly below itself.
   reflect : {x y : W.X} → Maps.Segment (∂ W x) (∂ W y) → x W.< y
   reflect {x} {y} s with W.compare x y
-  ... | inj₁ p = p
-  ... | inj₂ (inj₁ q) = ⊥-elim (Presented.Embedding.irrefl (∂ W x)
+  ... | inl p = p
+  ... | inr (inl q) = 𝟘-elim (Presented.Embedding.irrefl (∂ W x)
     (Maps.bounded (Maps.Segment.bound s)
       (Maps.equivalence (same {y} {x} (W.≈-sym q)))))
-  ... | inj₂ (inj₂ p) = ⊥-elim (Presented.Embedding.irrefl (∂ W x)
+  ... | inr (inr p) = 𝟘-elim (Presented.Embedding.irrefl (∂ W x)
     (Maps.bounded (Maps.Segment.bound s)
       (Maps.inclusion (segment {y} {x} p))))
 
   -- Proper segments of domains are well-founded, through the order of W.
-  wf : WellFounded (λ x y → Maps.Segment (∂ W x) (∂ W y))
-  wf = subrel-wf (λ {x} {y} → reflect {x} {y}) W.<-wf
+  wf : is-well-founded (λ x y → Maps.Segment (∂ W x) (∂ W y))
+  wf = subrelations-are-well-founded (λ {x} {y} → reflect {x} {y}) W.<-wf
 
   ----------------------------------------------------------------------
   -- Comparison
@@ -131,20 +127,20 @@ module _ {ℓ : Level} (W : 𝒫 ℓ) where
   -- The domains of points of W are trichotomous.
   compare : (x y : W.X)
     → Maps.Segment (∂ W x) (∂ W y)
-      ⊎ (∂ W x Presented.≃𝒫 ∂ W y ⊎ Maps.Segment (∂ W y) (∂ W x))
+      ⊎ ((∂ W x Presented.≃𝒫 ∂ W y) ⊎ Maps.Segment (∂ W y) (∂ W x))
   compare x y with W.compare x y
-  ... | inj₁ p = inj₁ (segment p)
-  ... | inj₂ (inj₁ q) = inj₂ (inj₁ (same q))
-  ... | inj₂ (inj₂ p) = inj₂ (inj₂ (segment p))
+  ... | inl p = inl (segment p)
+  ... | inr (inl q) = inr (inl (same q))
+  ... | inr (inr p) = inr (inr (segment p))
 
   -- Every initial map of domains splits into a proper segment or an
   -- equivalence: a reverse proper segment would bound ∂y below itself.
   split : {x y : W.X} → Maps.Initial (∂ W x) (∂ W y)
-    → Maps.Segment (∂ W x) (∂ W y) ⊎ ∂ W x Presented.≃𝒫 ∂ W y
+    → Maps.Segment (∂ W x) (∂ W y) ⊎ (∂ W x Presented.≃𝒫 ∂ W y)
   split {x} {y} f with W.compare x y
-  ... | inj₁ p = inj₁ (segment p)
-  ... | inj₂ (inj₁ q) = inj₂ (same q)
-  ... | inj₂ (inj₂ p) = ⊥-elim (Maps.no-reverse
+  ... | inl p = inl (segment p)
+  ... | inr (inl q) = inr (same q)
+  ... | inr (inr p) = 𝟘-elim (Maps.no-reverse
     (Maps.Initial.embedding f) (Maps.Segment.bound (segment p)))
 
   -- Mathematical shape: ∂x ≤ ∂y < ∂z → ∂x < ∂z; the ≤ splits.
@@ -160,55 +156,57 @@ module _ {ℓ : Level} (W : 𝒫 ℓ) where
     → Maps.Initial (Maps.Successor.next (∂ W x))
         (Maps.Successor.next (∂ W y))
   successor-initial {x} {y} f =
-    [ (λ s → Maps.compose (Maps.Segment.closed s)
+    cases
+      (λ s → Maps.compose (Maps.Segment.closed s)
         (Maps.Successor.initial (∂ W y)))
-    , (λ e → Maps.equivalence
+      (λ e → Maps.equivalence
         (Successor.respect {P = ∂ W x} {P′ = ∂ W y} e))
-    ]′ (split {x} {y} f)
+      (split {x} {y} f)
 
   -- ∂x < ∂y is decided, by comparison of x and y in W.
-  decidable : (x y : W.X) → Dec (Maps.Segment (∂ W x) (∂ W y))
+  decidable : (x y : W.X) → is-decidable (Maps.Segment (∂ W x) (∂ W y))
   decidable x y =
-    [ (λ p → yes (segment {x} {y} p))
-    , [ (λ q → no λ s → Laws.≈↛< q (reflect {x} {y} s))
-      , (λ p → no λ s → Laws.<-asym p (reflect {x} {y} s))
-      ]′
-    ]′ (W.compare x y)
+    cases
+      (λ p → inl (segment {x} {y} p))
+      (cases
+        (λ q → inr λ s → Laws.≈↛< q (reflect {x} {y} s))
+        (λ p → inr λ s → Laws.<-asym p (reflect {x} {y} s)))
+      (W.compare x y)
 
   -- x < α is decided for α = ∂w placed in W; otherwise α ≤ ∂x.
   below? : (w x : W.X)
     → Maps.Segment (∂ W x) (∂ W w) ⊎ Maps.Initial (∂ W w) (∂ W x)
   below? w x with W.compare x w
-  ... | inj₁ p = inj₁ (segment p)
-  ... | inj₂ (inj₁ q) = inj₂ (Maps.equivalence (same (W.≈-sym q)))
-  ... | inj₂ (inj₂ p) = inj₂ (Maps.inclusion (segment p))
+  ... | inl p = inl (segment p)
+  ... | inr (inl q) = inr (Maps.equivalence (same (W.≈-sym q)))
+  ... | inr (inr p) = inr (Maps.inclusion (segment p))
 
   -- With ∂w ≃ ω, finiteness is decided: ∂x < ω, or ω ≤ ∂x.
   finite? : (w : W.X) → ∂ W w Presented.≃𝒫 omega → (x : W.X)
     → Maps.Segment (∂ W x) omega ⊎ Maps.Initial omega (∂ W x)
   finite? w e x with below? w x
-  ... | inj₁ s = inj₁ (Maps.along s (Maps.equivalence e))
-  ... | inj₂ f =
-    inj₂ (Maps.compose (Maps.equivalence (Presented.≃𝒫-sym e)) f)
+  ... | inl s = inl (Maps.along s (Maps.equivalence e))
+  ... | inr f =
+    inr (Maps.compose (Maps.equivalence (Presented.≃𝒫-sym e)) f)
 
   ----------------------------------------------------------------------
   -- Joins and suprema
 
   -- Mathematical shape: z with x ≤ z and y ≤ z, z being x or y.
   Upper : W.X → W.X → Set ℓ
-  Upper x y = Σ W.X (λ z → (x ≤ z) × (y ≤ z) × (z W.≈ x ⊎ z W.≈ y))
+  Upper x y = Σ W.X (λ z → (x ≤ z) × (y ≤ z) × ((z W.≈ x) ⊎ (z W.≈ y)))
 
   max : (x y : W.X) → Upper x y
   max x y with W.compare x y
-  ... | inj₁ p = y , inj₁ p , inj₂ (W.≈-refl y) , inj₂ (W.≈-refl y)
-  ... | inj₂ (inj₁ q) =
-    x , inj₂ (W.≈-refl x) , inj₂ (W.≈-sym q) , inj₁ (W.≈-refl x)
-  ... | inj₂ (inj₂ p) = x , inj₂ (W.≈-refl x) , inj₁ p , inj₁ (W.≈-refl x)
+  ... | inl p = y , inl p , inr (W.≈-refl y) , inr (W.≈-refl y)
+  ... | inr (inl q) =
+    x , inr (W.≈-refl x) , inr (W.≈-sym q) , inl (W.≈-refl x)
+  ... | inr (inr p) = x , inr (W.≈-refl x) , inl p , inl (W.≈-refl x)
 
   -- ∂(max x y) is the join of ∂x and ∂y: it is one of them, and each
   -- includes into it.
   join : (x y : W.X)
-    → Supremum (pair (∂ W x) (∂ W y)) (∂ W (proj₁ (max x y)))
+    → Supremum (pair (∂ W x) (∂ W y)) (∂ W (pr₁ (max x y)))
   join x y with max x y
   ... | z , x≤z , y≤z , which = record { member = member ; least = least }
     where
@@ -221,29 +219,29 @@ module _ {ℓ : Level} (W : 𝒫 ℓ) where
       → Maps.Initial (∂ W z) Q
     least Q g = choose which
       where
-      choose : z W.≈ x ⊎ z W.≈ y → Maps.Initial (∂ W z) Q
-      choose (inj₁ q) = Maps.compose (Maps.equivalence (same q)) (g zero)
-      choose (inj₂ q) =
+      choose : (z W.≈ x) ⊎ (z W.≈ y) → Maps.Initial (∂ W z) Q
+      choose (inl q) = Maps.compose (Maps.equivalence (same q)) (g zero)
+      choose (inr q) =
         Maps.compose (Maps.equivalence (same q)) (g (suc zero))
 
   -- The running maximum of a sequence of points.
   peak : (ℕ → W.X) → ℕ → W.X
   peak f zero = f zero
-  peak f (suc n) = proj₁ (max (peak f n) (f (suc n)))
+  peak f (suc n) = pr₁ (max (peak f n) (f (suc n)))
 
   peak-step : (f : ℕ → W.X) (n : ℕ) → peak f n ≤ peak f (suc n)
-  peak-step f n = proj₁ (proj₂ (max (peak f n) (f (suc n))))
+  peak-step f n = pr₁ (pr₂ (max (peak f n) (f (suc n))))
 
   peak-above : (f : ℕ → W.X) (n : ℕ) → f n ≤ peak f n
-  peak-above f zero = inj₂ (W.≈-refl (f zero))
-  peak-above f (suc n) = proj₁ (proj₂ (proj₂ (max (peak f n) (f (suc n)))))
+  peak-above f zero = inr (W.≈-refl (f zero))
+  peak-above f (suc n) = pr₁ (pr₂ (pr₂ (max (peak f n) (f (suc n)))))
 
   -- Every running maximum is one of the points.
   peak-from : (f : ℕ → W.X) (n : ℕ) → Σ ℕ (λ k → peak f n W.≈ f k)
   peak-from f zero = zero , W.≈-refl (f zero)
-  peak-from f (suc n) with proj₂ (proj₂ (proj₂ (max (peak f n) (f (suc n)))))
-  ... | inj₁ q = let k , r = peak-from f n in k , W.≈-trans q r
-  ... | inj₂ q = suc n , q
+  peak-from f (suc n) with pr₂ (pr₂ (pr₂ (max (peak f n) (f (suc n)))))
+  ... | inl q = let k , r = peak-from f n in k , W.≈-trans q r
+  ... | inr q = suc n , q
 
   -- The cones at the running maxima, along their inclusions.
   chain : (ℕ → W.X) → Limit.Chain ℓ
@@ -278,8 +276,8 @@ module _ {ℓ : Level} (W : 𝒫 ℓ) where
   -- Mathematical shape: x ≤ y gives ∂y ≃ ∂x + R.
   subtract : {x y : W.X} → x ≤ y
     → Σ (𝒫 ℓ) (λ R → (∂ W x + R) Presented.≃𝒫 ∂ W y)
-  subtract (inj₁ p) = Subtraction.subtract (inj₁ (segment p))
-  subtract (inj₂ q) = Subtraction.subtract (inj₂ (same q))
+  subtract (inl p) = Subtraction.subtract (inl (segment p))
+  subtract (inr q) = Subtraction.subtract (inr (same q))
 
 ------------------------------------------------------------------------
 -- Division in a multiple
@@ -300,7 +298,7 @@ ceiling-domain : {R D : 𝒫 ℓ} (s : Maps.Segment R D)
   → R Presented.≃𝒫
     ∂ D (Presented._≺𝒫_.ceiling (Maps.Segment.bound s))
 ceiling-domain s = bijection (ceiling-cone s) λ v →
-  Maps.Segment.covers s (proj₁ v) (proj₂ v)
+  Maps.Segment.covers s (pr₁ v) (pr₂ v)
 
 -- A division of P by D places P as the domain of the point (top, c) of
 -- D · (Q + 1), where c is the ceiling of the remainder:

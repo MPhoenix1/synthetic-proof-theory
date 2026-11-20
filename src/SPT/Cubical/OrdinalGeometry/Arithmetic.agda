@@ -14,15 +14,10 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic where
 -- each row asked of all presentations without its datum. This module is a
 -- stable re-export; modules of the geometry import the defining modules.
 
-open import Agda.Primitive using (Level; lsuc; lzero)
-open import Data.Empty using (⊥)
-open import Data.Nat using (ℕ; suc)
-open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
-open import Data.Sum using (_⊎_)
-open import Function.Bundles using (_⇔_; mk⇔)
-open import Relation.Nullary using (Dec)
+open import SPT.Cubical.Base hiding (_+_; zero)
+open import SPT.Cubical.Foundation.Accessibility using (is-well-founded)
+open import SPT.Cubical.Foundation.LogicalEquivalence using (_⇔_)
 
-open import SPT.Cubical.Core.WellFounded using (WellFounded)
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
 import SPT.Cubical.OrdinalGeometry.Presentation.Map as Maps
@@ -98,7 +93,7 @@ record Rows {ℓ : Level} (W : 𝒫 ℓ) : Set (lsuc ℓ) where
       → Maps.Segment (∂ W y) (∂ W z) → Maps.Segment (∂ W x) (∂ W z)
 
     -- 3. Well-founded.
-    wf : WellFounded (λ x y → Maps.Segment (∂ W x) (∂ W y))
+    wf : is-well-founded (λ x y → Maps.Segment (∂ W x) (∂ W y))
 
     -- 4. Extensional: points with the same predecessors.
     extensional : {x y : 𝒫.X W} → Presented.Presentation._≈↓_ W x y
@@ -108,7 +103,7 @@ record Rows {ℓ : Level} (W : 𝒫 ℓ) : Set (lsuc ℓ) where
     -- domain; ∂x + 1 is the strong successor, and it is ∂y when y follows
     -- x immediately in W; x < y ⇔ x + 1 ≤ y; the successor is monotone
     -- for ≤.
-    zero : (x : 𝒫.X W) → ((z : 𝒫.X W) → 𝒫._<_ W z x → ⊥) → Zero (∂ W x)
+    zero : (x : 𝒫.X W) → ((z : 𝒫.X W) → 𝒫._<_ W z x → 𝟘) → Zero (∂ W x)
     successor : (x : 𝒫.X W)
       → Strong (∂ W x) (Maps.Successor.next (∂ W x))
     immediate : {x y : 𝒫.X W} → 𝒫._<_ W x y
@@ -152,16 +147,16 @@ record Rows {ℓ : Level} (W : 𝒫 ℓ) : Set (lsuc ℓ) where
       → Maps.Segment (∂ W x) omega ⊎ Maps.Initial omega (∂ W x)
 
     -- 16. ∂x < ∂y decided.
-    decidable : (x y : 𝒫.X W) → Dec (Maps.Segment (∂ W x) (∂ W y))
+    decidable : (x y : 𝒫.X W) → is-decidable (Maps.Segment (∂ W x) (∂ W y))
 
     -- 17. ≤ splits into < or ≃.
     split : {x y : 𝒫.X W} → Maps.Initial (∂ W x) (∂ W y)
-      → Maps.Segment (∂ W x) (∂ W y) ⊎ ∂ W x Presented.≃𝒫 ∂ W y
+      → Maps.Segment (∂ W x) (∂ W y) ⊎ (∂ W x Presented.≃𝒫 ∂ W y)
 
     -- 18. Trichotomy.
     trichotomy : (x y : 𝒫.X W)
       → Maps.Segment (∂ W x) (∂ W y)
-        ⊎ (∂ W x Presented.≃𝒫 ∂ W y ⊎ Maps.Segment (∂ W y) (∂ W x))
+        ⊎ ((∂ W x Presented.≃𝒫 ∂ W y) ⊎ Maps.Segment (∂ W y) (∂ W x))
 
 private
   -- The limit of the domains of strictly ascending points.
@@ -188,14 +183,14 @@ rows W = record
   ; extensional = λ {x} {y} e →
       Ambient.same W {x} {y} (Presented.Presentation.≈↓→≈ W e)
   ; zero = λ x none →
-      pointless {Z = ∂ W x} λ u → none (proj₁ u) (proj₂ u)
+      pointless {Z = ∂ W x} λ u → none (pr₁ u) (pr₂ u)
   ; successor = λ x → Successors.next (∂ W x)
   ; immediate = λ {x} {y} → Induction.immediate W {x} {y}
-  ; <⇔suc≤ = λ {x} {y} → mk⇔
-      (Maps.Segment.closed {P = ∂ W x} {Q = ∂ W y})
-      (Successor.segment {P = ∂ W x} {Q = ∂ W y})
+  ; <⇔suc≤ = λ {x} {y} →
+      ((Maps.Segment.closed {P = ∂ W x} {Q = ∂ W y}) ,
+      (Successor.segment {P = ∂ W x} {Q = ∂ W y}))
   ; successor-initial = λ {x} {y} → Ambient.successor-initial W {x} {y}
-  ; join = λ x y → proj₁ (Ambient.max W x y) , Ambient.join W x y
+  ; join = λ x y → pr₁ (Ambient.max W x y) , Ambient.join W x y
   ; limit = limit W
   ; supremum = λ f → Limit.completion (Ambient.chain W f) ,
       Ambient.supremum W f
@@ -204,7 +199,7 @@ rows W = record
       Subtraction.subtract {P = ∂ W x} {Q = ∂ W y}
         (Ambient.split W {x} {y} f)
   ; division = λ x D →
-      mk⇔ (divide {P = ∂ W x} {D = D}) (place {P = ∂ W x} {D = D})
+      ((divide {P = ∂ W x} {D = D}) , (place {P = ∂ W x} {D = D}))
   ; quotients = λ x D → unique {P = ∂ W x} {D = D}
   ; finite = Ambient.finite? W
   ; decidable = Ambient.decidable W
@@ -254,9 +249,9 @@ record Strength : Set₁ where
   field
     comparable : Stream.LPO
       ⇔ ((P Q : 𝒫 lzero) → Maps.Initial P Q ⊎ Maps.Segment Q P)
-    initial : Stream.LPO ⇔ ((P Q : 𝒫 lzero) → Dec (Maps.Initial P Q))
+    initial : Stream.LPO ⇔ ((P Q : 𝒫 lzero) → is-decidable (Maps.Initial P Q))
     equivalent : Stream.LPO
-      ⇔ ((P Q : 𝒫 lzero) → Dec (P Presented.≃𝒫 Q))
+      ⇔ ((P Q : 𝒫 lzero) → is-decidable (P Presented.≃𝒫 Q))
     bound : Stream.LPO
       ⇔ ((F : ℕ → 𝒫 lzero)
           → Σ (𝒫 lzero) (λ S → (n : ℕ) → Maps.Segment (F n) S))
@@ -267,7 +262,7 @@ record Strength : Set₁ where
           → Maps.Segment P R)
 
     -- 5.
-    zero : WLPO ⇔ ((P : 𝒫 lzero) → Dec (Zero P))
+    zero : WLPO ⇔ ((P : 𝒫 lzero) → is-decidable (Zero P))
     successor-initial : Stream.LPO
       ⇔ ((P Q : 𝒫 lzero) → Maps.Initial P Q
           → Maps.Initial (Maps.Successor.next P) (Maps.Successor.next Q))
@@ -295,19 +290,19 @@ record Strength : Set₁ where
 
     -- 15, and equality with ω.
     finite : Stream.LPO
-      ⇔ ((P : 𝒫 lzero) → Dec (Maps.Segment P omega))
+      ⇔ ((P : 𝒫 lzero) → is-decidable (Maps.Segment P omega))
     omega-equivalent : Stream.LPO
-      ⇔ ((P : 𝒫 lzero) → Dec (P Presented.≃𝒫 omega))
+      ⇔ ((P : 𝒫 lzero) → is-decidable (P Presented.≃𝒫 omega))
 
     -- 16–18.
     decidable : Stream.LPO
-      ⇔ ((P Q : 𝒫 lzero) → Dec (Maps.Segment P Q))
+      ⇔ ((P Q : 𝒫 lzero) → is-decidable (Maps.Segment P Q))
     split : Stream.LPO
       ⇔ ((P Q : 𝒫 lzero) → Maps.Initial P Q
-          → Maps.Segment P Q ⊎ P Presented.≃𝒫 Q)
+          → Maps.Segment P Q ⊎ (P Presented.≃𝒫 Q))
     trichotomy : Stream.LPO
       ⇔ ((P Q : 𝒫 lzero)
-          → Maps.Segment P Q ⊎ (P Presented.≃𝒫 Q ⊎ Maps.Segment Q P))
+          → Maps.Segment P Q ⊎ ((P Presented.≃𝒫 Q) ⊎ Maps.Segment Q P))
 
 strength : Strength
 strength = record

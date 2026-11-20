@@ -18,8 +18,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.TypeTopology.OrdinalOfOrdinals
 -- ω₁(ℓ) ⊲ OO ℓ (principal), and the ordinals below that point are exactly
 -- the merely presented ones (below).
 
-open import Agda.Primitive using (Level; lsuc)
-open import Level using (lift; lower)
+open import SPT.Cubical.Base using (Level; lift; lower; lsuc)
 
 import Cubical.Foundations.Equiv as Equiv
 import Cubical.Foundations.Isomorphism as Isomorphism

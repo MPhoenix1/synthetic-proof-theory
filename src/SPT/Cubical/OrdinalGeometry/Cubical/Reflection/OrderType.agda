@@ -11,11 +11,9 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Reflection.OrderType where
 -- is a Cubical well-ordered set.  An equivalence of presentations P ≃𝒫 Q
 -- gives an equivalence of order types, hence a path ord(P) = ord(Q).
 
-open import Agda.Primitive using (Level)
-open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Sum using (inj₁; inj₂)
+open import SPT.Cubical.Base using (Level; inl; inr; 𝟘; 𝟘-elim)
 
-import SPT.Cubical.Core.WellFounded as Accessibility
+import SPT.Cubical.Foundation.Accessibility as Accessibility
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 
 import Cubical.Foundations.Prelude as Cubical
@@ -171,7 +169,7 @@ Less-elim presentation {x} {y} =
   Cubical.transport (Less-[] presentation x y)
 
 private
-  ordinary-empty-is-prop : Cubical.isProp ⊥
+  ordinary-empty-is-prop : Cubical.isProp 𝟘
   ordinary-empty-is-prop ()
 
 -- Between two given representatives, comparison recovers an untruncated
@@ -184,15 +182,15 @@ Less-witness :
   → Presented.CountableOrdinal𝒫._<_ presentation x y
 Less-witness presentation {x} {y} strict
     with Presented.CountableOrdinal𝒫.compare presentation x y
-... | inj₁ x<y = x<y
-... | inj₂ (inj₁ x≈y) =
-  ⊥-elim
+... | inl x<y = x<y
+... | inr (inl x≈y) =
+  𝟘-elim
     (Truncation.rec
       ordinary-empty-is-prop
       (Presented.Presentation.≈↛< presentation x≈y)
       (Less-elim presentation strict))
-... | inj₂ (inj₂ y<x) =
-  ⊥-elim
+... | inr (inr y<x) =
+  𝟘-elim
     (Truncation.rec
       ordinary-empty-is-prop
       (λ x<y → Presented.Presentation.<-asym presentation x<y y<x)
@@ -230,7 +228,8 @@ Less-trans presentation =
 Less-acc :
     (presentation : Presented.CountableOrdinal𝒫 ℓ)
     {point : Presented.CountableOrdinal𝒫.X presentation}
-  → Accessibility.Acc (Presented.CountableOrdinal𝒫._<_ presentation) point
+  → Accessibility.is-accessible
+      (Presented.CountableOrdinal𝒫._<_ presentation) point
   → CubicalAcc.Acc
       (Less presentation)
       (Quotient.[ point ])
@@ -275,20 +274,20 @@ private
     → Quotient.[ x ] Cubical.≡ Quotient.[ y ]
   representatives-extensional presentation x y lower-cones
       with Presented.CountableOrdinal𝒫.compare presentation x y
-  ... | inj₁ x<y =
-    ⊥-elim
+  ... | inl x<y =
+    𝟘-elim
       (Truncation.rec
         ordinary-empty-is-prop
         (Presented.Presentation.<-irrefl presentation x)
         (Less-elim presentation
           (Cubical.snd (lower-cones (Quotient.[ x ]))
             (Less-intro presentation x<y))))
-  ... | inj₂ (inj₁ x≈y) =
+  ... | inr (inl x≈y) =
     Quotient.eq/
       {R = Presented.CountableOrdinal𝒫._≈_ presentation}
       x y x≈y
-  ... | inj₂ (inj₂ y<x) =
-    ⊥-elim
+  ... | inr (inr y<x) =
+    𝟘-elim
       (Truncation.rec
         ordinary-empty-is-prop
         (Presented.Presentation.<-irrefl presentation y)

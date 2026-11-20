@@ -19,17 +19,14 @@ module SPT.Cubical.OrdinalGeometry.Cubical.OmegaOne.Small where
 -- exactly the merely presented well-orders, and Ω′ is the only point of
 -- Ord(ℓ) with that property (cutPoint-isContr).
 
-open import Agda.Primitive using (Level; lzero; lsuc)
-open import Data.Bool.Base using (Bool; true; false; T)
-open import Data.Empty using (⊥; ⊥-elim)
-import Data.Maybe as Maybe
-open import Data.Nat using (ℕ)
-open import Data.Product using (Σ; _,_; proj₁; proj₂)
-open import Data.Sum using (inj₁; inj₂)
-open import Level using (lift; lower)
-import Relation.Binary.PropositionalEquality as InductiveEquality
+open import SPT.Cubical.Base using
+  ( Level; _,_; inl; inr; lift; lower; lsuc; lzero; pr₁; pr₂; Σ; ₀; ₁; ℕ; 𝟘
+  ; 𝟘-elim; 𝟚 )
+import SPT.Cubical.Base as InductiveEquality
+import SPT.Cubical.Base as Maybe
+open import SPT.Cubical.Foundation.Two.Truth using (is-₁)
 
-import SPT.Cubical.Core.WellFounded as Accessibility
+import SPT.Cubical.Foundation.Accessibility as Accessibility
 import SPT.Cubical.OrdinalGeometry.ExactOrder.Base as Order
 open import SPT.Cubical.OrdinalGeometry.ExactOrder.Boolean using
   (BooleanOrder; Points; order; point-≡)
@@ -89,15 +86,15 @@ private
 -- The well-order of a Boolean order
 
 private
-  isPropT : (b : Bool) → isProp (T b)
-  isPropT true _ _ = Cubical.refl
-  isPropT false ()
+  isPropT : (b : 𝟚) → isProp (is-₁ b)
+  isPropT ₁ _ _ = Cubical.refl
+  isPropT ₀ ()
 
   Strict : (O : BooleanOrder) → Points O → Points O → Set
-  Strict O x y = T (BooleanOrder.less O (proj₁ x) (proj₁ y))
+  Strict O x y = is-₁ (BooleanOrder.less O (pr₁ x) (pr₁ y))
 
   pointPath : (O : BooleanOrder) {x y : Points O}
-    → proj₁ x InductiveEquality.≡ proj₁ y → x Cubical.≡ y
+    → pr₁ x InductiveEquality.＝ pr₁ y → x Cubical.≡ y
   pointPath O e = eqToPath (point-≡ O e)
 
 -- Mathematical shape: well-order(O) = (Points O , less_O) : Woset(0, 0).
@@ -111,22 +108,23 @@ well-order O =
       (λ n → isProp→isSet (isPropT (BooleanOrder.point O n)))
 
     prop : (x y : Points O) → isProp (Strict O x y)
-    prop x y = isPropT (BooleanOrder.less O (proj₁ x) (proj₁ y))
+    prop x y = isPropT (BooleanOrder.less O (pr₁ x) (pr₁ y))
 
     accessible : (i : ℕ)
-      → Accessibility.Acc (λ i j → T (BooleanOrder.less O i j)) i
-      → (s : T (BooleanOrder.point O i))
+      → Accessibility.is-accessible (λ i j → is-₁ (BooleanOrder.less O i j)) i
+      → (s : is-₁ (BooleanOrder.point O i))
       → WellFounded.Acc (Strict O) (i , s)
     accessible i (Accessibility.acc smaller) s =
       WellFounded.acc λ y p →
-        accessible (proj₁ y) (smaller (proj₁ y) p) (proj₂ y)
+        accessible (pr₁ y) (smaller (pr₁ y) p) (pr₂ y)
 
     well-founded : WellFounded.WellFounded (Strict O)
     well-founded x =
-      accessible (proj₁ x) (BooleanOrder.wf O (proj₁ x)) (proj₂ x)
+      accessible (pr₁ x) (BooleanOrder.wf O (pr₁ x)) (pr₂ x)
 
-    irreflexive : (x : Points O) → Strict O x x → ⊥
-    irreflexive x = Accessibility.acc↛loop (BooleanOrder.wf O (proj₁ x))
+    irreflexive : (x : Points O) → Strict O x x → 𝟘
+    irreflexive x =
+      Accessibility.accessible-points-have-no-loops (BooleanOrder.wf O (pr₁ x))
 
     -- Equal predecessors force equal points, through trichotomy.
     same-predecessors : (x y : Points O)
@@ -134,10 +132,10 @@ well-order O =
           (Strict O z x → Strict O z y) × (Strict O z y → Strict O z x))
       → x Cubical.≡ y
     same-predecessors x y same
-        with BooleanOrder.compare O (proj₁ x) (proj₁ y) (proj₂ x) (proj₂ y)
-    ... | inj₁ p = ⊥-elim (irreflexive x (Cubical.snd (same x) p))
-    ... | inj₂ (inj₁ e) = pointPath O e
-    ... | inj₂ (inj₂ p) = ⊥-elim (irreflexive y (Cubical.fst (same y) p))
+        with BooleanOrder.compare O (pr₁ x) (pr₁ y) (pr₂ x) (pr₂ y)
+    ... | inl p = 𝟘-elim (irreflexive x (Cubical.snd (same x) p))
+    ... | inr (inl e) = pointPath O e
+    ... | inr (inr p) = 𝟘-elim (irreflexive y (Cubical.fst (same y) p))
 
     extensional : isWeaklyExtensional (Strict O)
     extensional =
@@ -145,7 +143,7 @@ well-order O =
 
     transitive : (x y z : Points O)
       → Strict O x y → Strict O y z → Strict O x z
-    transitive x y z = BooleanOrder.trans O {proj₁ x} {proj₁ y} {proj₁ z}
+    transitive x y z = BooleanOrder.trans O {pr₁ x} {pr₁ y} {pr₁ z}
 
 ------------------------------------------------------------------------
 -- Its presentations at every level
@@ -160,22 +158,22 @@ private
 
   trichotomy : (O : BooleanOrder) → StrictTrichotomy (raised ℓ O)
   trichotomy O x y
-      with BooleanOrder.compare O (proj₁ (lower x)) (proj₁ (lower y))
-        (proj₂ (lower x)) (proj₂ (lower y))
-  ... | inj₁ p = inj₁ (lift p)
-  ... | inj₂ (inj₁ e) = inj₂ (inj₁ (Cubical.cong lift (pointPath O e)))
-  ... | inj₂ (inj₂ p) = inj₂ (inj₂ (lift p))
+      with BooleanOrder.compare O (pr₁ (lower x)) (pr₁ (lower y))
+        (pr₂ (lower x)) (pr₂ (lower y))
+  ... | inl p = inl (lift p)
+  ... | inr (inl e) = inr (inl (Cubical.cong lift (pointPath O e)))
+  ... | inr (inr p) = inr (inr (lift p))
 
   enumeration : (O : BooleanOrder)
     → PartialEnumeration (WosetCarrier (raised ℓ O))
   enumeration O = record
-    { sequence = λ n → Maybe.map lift (Order.Order.enum (order O) n)
+    { sequence = λ n → Maybe.maybe-map lift (Order.Order.enum (order O) n)
     ; covers = λ x →
         let found = Order.Order.covers (order O) (lower x)
         in Truncation.∣
-             proj₁ found
+             pr₁ found
              , eqToPath
-                 (InductiveEquality.cong (Maybe.map lift) (proj₂ found))
+                 (InductiveEquality.ap (Maybe.maybe-map lift) (pr₂ found))
            ∣₁
     }
 
@@ -263,8 +261,8 @@ private
         in
         Truncation.map
           (λ found →
-            proj₁ found
-            , compWosetEquiv (proj₂ found)
+            pr₁ found
+            , compWosetEquiv (pr₂ found)
                 (compWosetEquiv (invWosetEquiv (↓RespectsEquiv change x))
                   (compWosetEquiv (invWosetEquiv e)
                     (↓RespectsEquiv (raise-equivalence ℓ ℓ Ω) (lower k)))))
@@ -335,5 +333,5 @@ cutPoint-isContr {ℓ} =
         (λ K → isPropΠ λ α →
           isOfHLevel≃ 1 (isPropValued≺ α K) (isPropMerelyPresented α))
         (isWeaklyExtensional→≺Equiv→≡ _≺_ isWeaklyExtensional≺
-          (Ω′ ℓ) (proj₁ other)
-          λ α → compEquiv (below α) (invEquiv (proj₂ other α)))
+          (Ω′ ℓ) (pr₁ other)
+          λ α → compEquiv (below α) (invEquiv (pr₂ other α)))

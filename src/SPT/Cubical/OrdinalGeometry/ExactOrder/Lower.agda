@@ -7,16 +7,11 @@ module SPT.Cubical.OrdinalGeometry.ExactOrder.Lower where
 -- order: its enumeration, its unique witnesses, and its initial map into
 -- the original order.
 
-open import Data.Empty using (⊥-elim)
-open import Data.Maybe using (Maybe; nothing; just)
-open import Data.Nat using (ℕ)
-open import Data.Product using (Σ; _,_; proj₁; proj₂)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; refl; cong; subst)
+open import SPT.Cubical.Base
+open import SPT.Cubical.Foundation.Accessibility using (is-well-founded)
+open import SPT.Cubical.Foundation.WellFounded.Pullback using
+  ( pullback-is-well-founded )
 
-open import SPT.Cubical.Core.WellFounded using (WellFounded)
-open import SPT.Cubical.Core.WellFounded.Pullback using (pullback-wf)
 import SPT.Cubical.OrdinalGeometry.ExactOrder.Base as Order
 import SPT.Cubical.OrdinalGeometry.ExactOrder.Maps as Maps
 import SPT.Cubical.OrdinalGeometry.ExactOrder.Unique as Unique
@@ -34,44 +29,44 @@ module Segments {A : Set} (P : Order.Order A) (unique : Unique.Unique P) where
     Carrier : Set
     Carrier = P.Pred x
 
-    infix 4 _<_
+    infix 30 _<_
     _<_ : Carrier → Carrier → Set
-    u < v = proj₁ u P.< proj₁ v
+    u < v = pr₁ u P.< pr₁ v
 
     private
-      compare : (u v : Carrier) → u < v ⊎ (u ≡ v ⊎ v < u)
-      compare u v with P.compare (proj₁ u) (proj₁ v)
-      ... | inj₁ p = inj₁ p
-      ... | inj₂ (inj₁ p) = inj₂ (inj₁ (Equality.equal p))
-      ... | inj₂ (inj₂ p) = inj₂ (inj₂ p)
+      compare : (u v : Carrier) → u < v ⊎ ((u ＝ v) ⊎ v < u)
+      compare u v with P.compare (pr₁ u) (pr₁ v)
+      ... | inl p = inl p
+      ... | inr (inl p) = inr (inl (Equality.equal p))
+      ... | inr (inr p) = inr (inr p)
 
       select : A → Maybe Carrier
       select y with P.compare y x
-      ... | inj₁ p = just (y , p)
-      ... | inj₂ _ = nothing
+      ... | inl p = just (y , p)
+      ... | inr _ = nothing
 
-      selected : (u : Carrier) → select (proj₁ u) ≡ just u
+      selected : (u : Carrier) → select (pr₁ u) ＝ just u
       selected (y , p) with P.compare y x
-      ... | inj₁ q = cong just (Equality.equal refl)
-      ... | inj₂ (inj₁ q) = ⊥-elim
-        (P.irrefl x (subst (λ z → z P.< x) q p))
-      ... | inj₂ (inj₂ q) = ⊥-elim (P.irrefl x (P.trans q p))
+      ... | inl q = ap just (Equality.equal refl)
+      ... | inr (inl q) = 𝟘-elim
+        (P.irrefl x (transport (λ z → z P.< x) q p))
+      ... | inr (inr q) = 𝟘-elim (P.irrefl x (P.trans q p))
 
     enum : ℕ → Maybe Carrier
     enum n with P.enum n
     ... | nothing = nothing
     ... | just y = select y
 
-    covers : (u : Carrier) → Σ ℕ (λ n → enum n ≡ just u)
+    covers : (u : Carrier) → Σ ℕ (λ n → enum n ＝ just u)
     covers (y , p) with P.covers y
     ... | n , q = n , found
       where
-      found : enum n ≡ just (y , p)
+      found : enum n ＝ just (y , p)
       found rewrite q = selected (y , p)
 
     abstract
-      well-founded : WellFounded _<_
-      well-founded = pullback-wf {rank = proj₁} P.wf
+      well-founded : is-well-founded _<_
+      well-founded = pullback-is-well-founded pr₁ P._<_ P.wf
 
     order : Order.Order Carrier
     order = record
@@ -84,6 +79,6 @@ module Segments {A : Set} (P : Order.Order A) (unique : Unique.Unique P) where
 
     initial : Maps.Initial order P
     initial = record
-      { map = proj₁ ; strict = λ p → p
-      ; lower = λ u y p → (y , P.trans p (proj₂ u)) , refl
+      { map = pr₁ ; strict = λ p → p
+      ; lower = λ u y p → (y , P.trans p (pr₂ u)) , refl
       }

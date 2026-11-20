@@ -13,10 +13,7 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Successor where
 -- Over all presentations it is not monotone for ≤ nor for proper
 -- segments: each gives LPO (Successor.Discriminator).
 
-open import Agda.Primitive using (Level)
-open import Data.Empty using (⊥-elim)
-open import Data.Nat using (zero)
-open import Data.Product using (Σ; _,_)
+open import SPT.Cubical.Base
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -73,7 +70,7 @@ segment {P = P} {Q = Q} f = record
     → Σ (𝒫.X P) (λ x → 𝒫._≈_ Q (F.map (E.point x)) y)
   covered y _ (E.point x , q) = x , q
   covered y p (E.top , q) =
-    ⊥-elim (Presented.Presentation.≈↛< Q (𝒫.≈-sym Q q) p)
+    𝟘-elim (Presented.Presentation.≈↛< Q (𝒫.≈-sym Q q) p)
 
 -- Mathematical shape: P ≺ Q → P + 1 ≺ Q + 1, the top to the ceiling and
 -- the new ceiling the top.
@@ -110,9 +107,9 @@ bounded {P = P} {Q = Q} b = record
   reflects {E.point x} {E.point y} (T.point< p) = E.point< (B.reflects-< p)
   reflects {E.point x} {E.top} _ = E.point<top
   reflects {E.top} {E.point y} (T.point< p) =
-    ⊥-elim (Presented.Presentation.<-asym Q p (B.below y))
+    𝟘-elim (Presented.Presentation.<-asym Q p (B.below y))
   reflects {E.top} {E.top} (T.point< p) =
-    ⊥-elim (Presented.Presentation.<-irrefl Q B.ceiling p)
+    𝟘-elim (Presented.Presentation.<-irrefl Q B.ceiling p)
 
   below : (x : E.Entry) → to x T.< T.top
   below (E.point x) = T.point<top

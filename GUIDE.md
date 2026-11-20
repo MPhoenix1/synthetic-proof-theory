@@ -398,9 +398,10 @@ univalence, which holds in Cubical Agda (§6.1).
 ### 4.7 Heights, and the rank of their ordinal of ordinals
 
 The ω₁ geometry has an analogue one level up, built from heights instead
-of presentations. A closed height of level ℓ is a closed Core tree whose
-nodes are labelled by types of level ℓ and branch over their labels. These
-closed heights are not the heights with stage nodes of §8.
+of presentations. A closed height of level ℓ is a closed tree of the
+foundation (Foundation.Tree) whose nodes are labelled by types of level ℓ
+and branch over their labels. These closed heights are not the heights with
+stage nodes of §8.
 
 - **Geometry.** [Height/Simulation](src/SPT/Cubical/OrdinalGeometry/Height/Simulation.agda)
   compares closed trees: ancestry ◃ and <, the simulation order ⊑ and ⊏,
@@ -446,12 +447,12 @@ labels: its fibers over successors contain the merely inhabited types
 ### 4.8 Inaccessible points, and the comparison with Mahlo cardinals
 
 The universe of level ℓ is a parent whose codes are its own types
-([Core/Mahlo/Ambient](src/SPT/Cubical/Core/Mahlo/Ambient.agda)). A *reflection* of an
+([Mahlo/Ambient](src/SPT/Cubical/Mahlo/Ambient.agda)). A *reflection* of an
 operator Ψ on families of types is a type of codes with a decoding into
 types. Its codes are closed under the type formers (empty, unit, 𝟐, ℕ, Σ,
 Π, W, identity) and under Ψ
-([Core/Mahlo/Specification](src/SPT/Cubical/Core/Mahlo/Specification.agda),
-[Core/Mahlo/Decoding](src/SPT/Cubical/Core/Mahlo/Decoding.agda)). A *reflector* reflects
+([Mahlo/Specification](src/SPT/Cubical/Mahlo/Specification.agda),
+[Mahlo/Decoding](src/SPT/Cubical/Mahlo/Decoding.agda)). A *reflector* reflects
 every operator; this is the Mahlo rule. Agda provides a reflector by
 induction–recursion. This release takes it as a parameter and uses no
 induction–recursion.

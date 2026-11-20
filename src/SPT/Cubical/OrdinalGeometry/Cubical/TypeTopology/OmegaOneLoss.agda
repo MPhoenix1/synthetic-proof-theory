@@ -8,8 +8,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.TypeTopology.OmegaOneLoss
 -- the map G ↦ ω₁ᴳ′(G) identifies the two distinct geometries of
 -- Fiber.Geometry, so it is not an embedding, with paths or with ＝.
 
-open import Agda.Primitive using (Level; lzero; lsuc)
-open import Data.Empty using (⊥)
+open import SPT.Cubical.Base using (Level; lsuc; lzero; 𝟘)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import SPT.Cubical.OrdinalGeometry.Cubical.OmegaOne.Base as Omega
@@ -127,7 +126,7 @@ raisedIdentityPoint =
 canonical≠raised-path :
     canonicalPathPoint Cubical.≡
     raisedPathPoint
-  → ⊥
+  → 𝟘
 canonical≠raised-path fiber-path =
   GeometryLoss.canonical≢raised
     (Cubical.cong Cubical.fst fiber-path)
@@ -135,7 +134,7 @@ canonical≠raised-path fiber-path =
 canonical≠raised-identity :
     canonicalIdentityPoint Cubical.≡
     raisedIdentityPoint
-  → ⊥
+  → 𝟘
 canonical≠raised-identity fiber-path =
   GeometryLoss.canonical≢raised
     (Cubical.cong TypeTopologyNotation.fiber-point fiber-path)
@@ -148,13 +147,13 @@ canonical≠raised-identity fiber-path =
 -- the same ordinal.
 
 geometryPathFiber-not-prop :
-  Cubical.isProp GeometryPathFiber → ⊥
+  Cubical.isProp GeometryPathFiber → 𝟘
 geometryPathFiber-not-prop proposition =
   canonical≠raised-path
     (proposition canonicalPathPoint raisedPathPoint)
 
 geometryIdentityFiber-not-prop :
-  Cubical.isProp GeometryIdentityFiber → ⊥
+  Cubical.isProp GeometryIdentityFiber → 𝟘
 geometryIdentityFiber-not-prop proposition =
   canonical≠raised-identity
     (proposition
@@ -164,7 +163,7 @@ geometryIdentityFiber-not-prop proposition =
 geometryIdentityFiber-not-TT-prop :
   TypeTopologyPropositions.is-prop
     GeometryIdentityFiber
-  → ⊥
+  → 𝟘
 geometryIdentityFiber-not-TT-prop
     proposition =
   canonical≠raised-identity
@@ -176,7 +175,7 @@ geometryIdentityFiber-not-TT-prop
 ω₁ᴳ′-not-embedding :
   CubicalEmbedding.isEmbedding
     (ω₁ᴳ′ {lzero})
-  → ⊥
+  → 𝟘
 ω₁ᴳ′-not-embedding embedding =
   geometryPathFiber-not-prop
     (CubicalEmbedding.isEmbedding→hasPropFibers embedding
@@ -185,14 +184,14 @@ geometryIdentityFiber-not-TT-prop
 ω₁ᴳ′-not-TT-embedding :
   TypeTopologyEmbedding.is-embedding
     (ω₁ᴳ′ {lzero})
-  → ⊥
+  → 𝟘
 ω₁ᴳ′-not-TT-embedding embedding =
   geometryIdentityFiber-not-TT-prop
     (embedding
       (ω₁ᴳ′ GeometryLoss.canonicalGeometry))
 
 geometryPathFiber-not-contractible :
-  Cubical.isContr GeometryPathFiber → ⊥
+  Cubical.isContr GeometryPathFiber → 𝟘
 geometryPathFiber-not-contractible contraction =
   canonical≠raised-path
     (Cubical.sym

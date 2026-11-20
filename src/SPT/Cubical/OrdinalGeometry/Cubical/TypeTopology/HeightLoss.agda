@@ -12,9 +12,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.TypeTopology.HeightLoss where
 -- a finite h-level in TypeTopology's hierarchy, and rank′ is not an
 -- embedding, in either sense.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Empty using (⊥)
-import Data.Nat.Base as Nat
+open import SPT.Cubical.Base using (Level; lsuc; 𝟘)
+import SPT.Cubical.Base as Nat
 
 import Cubical.Foundations.Equiv as Equiv
 import Cubical.Foundations.HLevels as HLevels
@@ -22,7 +21,7 @@ import Cubical.Foundations.Prelude as Cubical
 import Cubical.Functions.Embedding as Embedding
 import Cubical.Relation.Binary.Order.Woset.Base as Woset
 
-import SPT.Cubical.Core.Generator.Tree as Tree
+import SPT.Cubical.Foundation.Tree as Tree
 open import SPT.Cubical.OrdinalGeometry.Height.Ordinals using (Height)
 open import SPT.Cubical.OrdinalGeometry.Cubical.Height.Rank using (rank)
 open import SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Ordinals using
@@ -94,10 +93,10 @@ rankFiber-embedding α =
     Cubical.refl
 
 rankFiber-not-finite-hlevel : (α : Woset.Woset ℓ ℓ) (n : Nat.ℕ)
-  → HLevels.isOfHLevel n (RankFiber α) → ⊥
+  → HLevels.isOfHLevel n (RankFiber α) → 𝟘
 rankFiber-not-finite-hlevel α = not-finite-hlevel (rankFiber-embedding α)
 
-rank′-not-embedding : Embedding.isEmbedding (rank′ {ℓ}) → ⊥
+rank′-not-embedding : Embedding.isEmbedding (rank′ {ℓ}) → 𝟘
 rank′-not-embedding {ℓ} rank′-embedding =
   rankFiber-not-finite-hlevel (rank (leaf {ℓ})) 1
     (Embedding.isEmbedding→hasPropFibers rank′-embedding
@@ -127,7 +126,7 @@ private
     Cubical.cong (t Cubical.,_) (path→＝→path p)
 
 rankIdentityFiber-not-finite-hlevel : (α : Woset.Woset ℓ ℓ) (n : Nat.ℕ)
-  → HLevels.isOfHLevel n (RankIdentityFiber α) → ⊥
+  → HLevels.isOfHLevel n (RankIdentityFiber α) → 𝟘
 rankIdentityFiber-not-finite-hlevel α n hlevel =
   rankFiber-not-finite-hlevel α n
     (HLevels.isOfHLevelRetract n
@@ -135,13 +134,13 @@ rankIdentityFiber-not-finite-hlevel α n hlevel =
 
 -- TypeTopology's h-level n is Cubical's n + 1.
 rankIdentityFiber-not-finite-TT-hlevel : (α : Woset.Woset ℓ ℓ)
-  (n : Nat.ℕ) → RankIdentityFiber α is-of-hlevel n → ⊥
+  (n : Nat.ℕ) → RankIdentityFiber α is-of-hlevel n → 𝟘
 rankIdentityFiber-not-finite-TT-hlevel α n hlevel =
   rankIdentityFiber-not-finite-hlevel α (Nat.suc n)
     (TT-hlevel→hlevel univalence n (RankIdentityFiber α) hlevel)
 
 rank′-not-TT-embedding :
-  TypeTopologyEmbedding.is-embedding (rank′ {ℓ}) → ⊥
+  TypeTopologyEmbedding.is-embedding (rank′ {ℓ}) → 𝟘
 rank′-not-TT-embedding {ℓ} rank′-embedding =
   rankIdentityFiber-not-finite-hlevel (rank (leaf {ℓ})) 1
     λ x y →

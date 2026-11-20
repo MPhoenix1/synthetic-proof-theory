@@ -16,8 +16,7 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Uniqueness where
 -- pointwise equivalent families. Multiplication respects ≃𝒫 on the left
 -- at hereditary right arguments, which the successor case of ω^ uses at ω.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Nat using (ℕ)
+open import SPT.Cubical.Base hiding (_+_; _∙_)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)

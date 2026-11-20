@@ -14,12 +14,7 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Characterization where
 -- equivalence, and ≤ followed by < gives a strict bound, and a proper
 -- segment when ≤ is split into < or ≃𝒫.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Nat using (ℕ; zero; suc)
-open import Data.Product using (Σ; _,_)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Level using (lower)
+open import SPT.Cubical.Base hiding (nothing)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -68,10 +63,10 @@ strictly {P = P} {R = R} f s = record
 
 -- A split ≤, a proper segment or an equivalence, followed by a proper
 -- segment is a proper segment.
-segment : Maps.Segment P Q ⊎ P Presented.≃𝒫 Q → Maps.Segment Q R
+segment : Maps.Segment P Q ⊎ (P Presented.≃𝒫 Q) → Maps.Segment Q R
   → Maps.Segment P R
-segment (inj₁ s) t = Maps.along s (Maps.inclusion t)
-segment (inj₂ e) t = Normal.precompose e t
+segment (inl s) t = Maps.along s (Maps.inclusion t)
+segment (inr e) t = Normal.precompose e t
 
 ------------------------------------------------------------------------
 -- Zero
@@ -81,15 +76,15 @@ Zero : 𝒫 ℓ → Set (lsuc ℓ)
 Zero {ℓ} Z = (Q : 𝒫 ℓ) → Maps.Initial Z Q
 
 -- A zero has no points, and a presentation without points is a zero.
-empty : Zero Z → 𝒫.X Z → ⊥
+empty : Zero Z → 𝒫.X Z → 𝟘
 empty z x = lower (Maps.Initial.map (z Operation.empty) x)
 
-pointless : (𝒫.X Z → ⊥) → Zero Z
+pointless : (𝒫.X Z → 𝟘) → Zero Z
 pointless none Q = record
-  { map = λ x → ⊥-elim (none x)
-  ; resp = λ {x} → ⊥-elim (none x)
-  ; strict = λ {x} → ⊥-elim (none x)
-  ; lower = λ x → ⊥-elim (none x)
+  { map = λ x → 𝟘-elim (none x)
+  ; resp = λ {x} → 𝟘-elim (none x)
+  ; strict = λ {x} → 𝟘-elim (none x)
+  ; lower = λ x → 𝟘-elim (none x)
   }
 
 -- The empty presentation is a zero.

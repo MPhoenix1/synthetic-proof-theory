@@ -9,9 +9,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Postcomposed.Unbounded
 -- nontrivial cell in every iterated loop space.  So that fiber, and the map
 -- A ∘ q_G, have no finite h-level.
 
-open import Agda.Primitive using (Level; lzero)
-open import Data.Empty using (⊥)
-import Data.Nat.Base as Nat
+open import SPT.Cubical.Base using (Level; lzero; 𝟘)
+import SPT.Cubical.Base as Nat
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import
@@ -116,7 +115,7 @@ cell-nontrivial :
       Iterated.iteratedLoopPoint (Nat.suc height)
         (Postcomposition.PostcomposedFiber geometry adapter)
         (basePoint geometry adapter)
-  → ⊥
+  → 𝟘
 cell-nontrivial geometry adapter height =
   Iterated.preserves-nonbase
     (iteratedEmbedding
@@ -133,7 +132,7 @@ fiber-not-hlevel :
     (height : Nat.ℕ)
   → HLevels.isOfHLevel (Nat.suc (Nat.suc height))
       (Postcomposition.PostcomposedFiber geometry adapter)
-  → ⊥
+  → 𝟘
 fiber-not-hlevel
     geometry adapter height fiber-hlevel =
   cell-nontrivial geometry adapter height
@@ -155,7 +154,7 @@ fiber-not-finite-hlevel :
     (height : Nat.ℕ)
   → HLevels.isOfHLevel height
       (Postcomposition.PostcomposedFiber geometry adapter)
-  → ⊥
+  → 𝟘
 fiber-not-finite-hlevel
     geometry adapter Nat.zero fiber-contractible =
   fiber-not-hlevel geometry adapter Nat.zero
@@ -177,7 +176,7 @@ projection-not-finite-hlevel :
     (height : Nat.ℕ)
   → HLevels.isOfHLevelFun height
       (Postcomposition.projection geometry adapter)
-  → ⊥
+  → 𝟘
 projection-not-finite-hlevel
     geometry adapter height projection-hlevel =
   fiber-not-finite-hlevel geometry adapter height

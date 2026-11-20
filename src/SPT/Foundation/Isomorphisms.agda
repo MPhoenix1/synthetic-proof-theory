@@ -29,8 +29,6 @@ module SPT.Foundation.Isomorphisms where
 
 open import SPT.Base
 open import SPT.Foundation.Extensionality using (FunExt)
-open import SPT.Foundation.Identifications using
-  (from-Σ-＝-pr₂; forth-and-back-transport; back-and-forth-transport)
 
 ------------------------------------------------------------------------
 -- Isomorphisms

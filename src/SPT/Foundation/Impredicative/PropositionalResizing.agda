@@ -28,9 +28,7 @@ module SPT.Foundation.Impredicative.PropositionalResizing where
 -- to κ; every proposition resizes to its own level
 -- (`propositions-resize-to-their-level`), and from ℓ + 1 to ℓ the two forms
 -- are one strength (`propositional-resizing-between-levels`,
--- `resizing-between-levels-gives-propositional-resizing`). After Core's
--- FiberCoding.Proposition and FiberCoding.Proposition.Envelope; the form
--- between two levels moved here from Mahlo.DS.Univalent.Resizing.
+-- `resizing-between-levels-gives-propositional-resizing`).
 
 open import SPT.Base
 open import SPT.Foundation.Covers using

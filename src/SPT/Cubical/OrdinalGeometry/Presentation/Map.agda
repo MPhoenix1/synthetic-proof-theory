@@ -6,13 +6,9 @@ module SPT.Cubical.OrdinalGeometry.Presentation.Map where
 -- Order embeddings and initial maps of presented ordinals, their comparison
 -- laws, and proper principal segments with predecessor coverage.
 
-open import Agda.Primitive using (Level)
-open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Nat.Base using (zero)
-open import Data.Product using (Σ; _,_; proj₁; proj₂)
-open import Data.Sum.Base using (inj₁; inj₂)
+open import SPT.Cubical.Base hiding (lower)
+open import SPT.Cubical.Foundation.Accessibility using (acc; is-accessible)
 
-open import SPT.Cubical.Core.WellFounded using (Acc; acc)
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
 import SPT.Cubical.OrdinalGeometry.Presentation.Successor as Adjoin
@@ -26,31 +22,31 @@ record Embedding {ℓ : Level} (P Q : 𝒫 ℓ) : Set ℓ where
 
   reflect : ∀ {x y} → 𝒫._<_ Q (map x) (map y) → 𝒫._<_ P x y
   reflect {x} {y} p with 𝒫.compare P x y
-  ... | inj₁ q = q
-  ... | inj₂ (inj₁ q) = ⊥-elim (Presented.Presentation.≈↛< Q (resp q) p)
-  ... | inj₂ (inj₂ q) =
-    ⊥-elim (Presented.Presentation.<-asym Q p (strict q))
+  ... | inl q = q
+  ... | inr (inl q) = 𝟘-elim (Presented.Presentation.≈↛< Q (resp q) p)
+  ... | inr (inr q) =
+    𝟘-elim (Presented.Presentation.<-asym Q p (strict q))
 
   reflect-≈ : ∀ {x y} → 𝒫._≈_ Q (map x) (map y) → 𝒫._≈_ P x y
   reflect-≈ {x} {y} p with 𝒫.compare P x y
-  ... | inj₁ q = ⊥-elim (Presented.Presentation.≈↛< Q p (strict q))
-  ... | inj₂ (inj₁ q) = q
-  ... | inj₂ (inj₂ q) =
-    ⊥-elim (Presented.Presentation.≈↛< Q (𝒫.≈-sym Q p) (strict q))
+  ... | inl q = 𝟘-elim (Presented.Presentation.≈↛< Q p (strict q))
+  ... | inr (inl q) = q
+  ... | inr (inr q) =
+    𝟘-elim (Presented.Presentation.≈↛< Q (𝒫.≈-sym Q p) (strict q))
 
 private
   ascending : ∀ {ℓ} {P : 𝒫 ℓ} (f : Embedding P P) (x : 𝒫.X P)
-    → Acc (𝒫._<_ P) x → 𝒫._<_ P (Embedding.map f x) x → ⊥
+    → is-accessible (𝒫._<_ P) x → 𝒫._<_ P (Embedding.map f x) x → 𝟘
   ascending f x (acc smaller) p = ascending f (Embedding.map f x)
     (smaller (Embedding.map f x) p) (Embedding.strict f p)
 
 abstract
   nondecreasing : ∀ {ℓ} {P : 𝒫 ℓ} (f : Embedding P P) (x : 𝒫.X P)
-    → 𝒫._<_ P (Embedding.map f x) x → ⊥
+    → 𝒫._<_ P (Embedding.map f x) x → 𝟘
   nondecreasing {P = P} f x = ascending f x (𝒫.<-wf P x)
 
   no-reverse : ∀ {ℓ} {P Q : 𝒫 ℓ}
-    → Embedding P Q → Q Presented.≺𝒫 P → ⊥
+    → Embedding P Q → Q Presented.≺𝒫 P → 𝟘
   no-reverse {Q = Q} f e = Presented.Embedding.irrefl Q record
     { to = λ x → Embedding.map f (Presented._≺𝒫_.to e x)
     ; to-≈ = λ p → Embedding.resp f (Presented._≺𝒫_.to-≈ e p)
@@ -87,15 +83,15 @@ record Initial {ℓ : Level} (P Q : Presented.CountableOrdinal𝒫 ℓ) : Set �
 
   reflect : ∀ {x y} → map x Q.< map y → x P.< y
   reflect {x} {y} p with P.compare x y
-  ... | inj₁ q = q
-  ... | inj₂ (inj₁ q) = ⊥-elim (Laws.≈↛< (resp q) p)
-  ... | inj₂ (inj₂ q) = ⊥-elim (Laws.<-asym p (strict q))
+  ... | inl q = q
+  ... | inr (inl q) = 𝟘-elim (Laws.≈↛< (resp q) p)
+  ... | inr (inr q) = 𝟘-elim (Laws.<-asym p (strict q))
 
   reflect-≈ : ∀ {x y} → map x Q.≈ map y → x P.≈ y
   reflect-≈ {x} {y} p with P.compare x y
-  ... | inj₁ q = ⊥-elim (Laws.≈↛< p (strict q))
-  ... | inj₂ (inj₁ q) = q
-  ... | inj₂ (inj₂ q) = ⊥-elim (Laws.≈↛< (Q.≈-sym p) (strict q))
+  ... | inl q = 𝟘-elim (Laws.≈↛< p (strict q))
+  ... | inr (inl q) = q
+  ... | inr (inr q) = 𝟘-elim (Laws.≈↛< (Q.≈-sym p) (strict q))
 
   -- Forgetting the lower law leaves an order embedding.
   embedding : Embedding P Q
@@ -161,17 +157,17 @@ module Uniqueness {ℓ : Level} {P Q : Presented.CountableOrdinal𝒫 ℓ}
     module F = Initial f
     module G = Initial g
 
-    agree : (x : P.X) → Acc P._<_ x → F.map x Q.≈ G.map x
+    agree : (x : P.X) → is-accessible P._<_ x → F.map x Q.≈ G.map x
     agree x (acc smaller) with Q.compare (F.map x) (G.map x)
-    ... | inj₂ (inj₁ q) = q
-    ... | inj₁ p with G.lower x (F.map x) p
-    ...   | y , q = ⊥-elim
+    ... | inr (inl q) = q
+    ... | inl p with G.lower x (F.map x) p
+    ...   | y , q = 𝟘-elim
       (Laws.≈↛< (Q.≈-trans (agree y (smaller y r)) q) (F.strict r))
       where
         r : y P.< x
         r = G.reflect (Q.<-respˡ-≈ (Q.≈-sym q) p)
-    agree x (acc smaller) | inj₂ (inj₂ p) with F.lower x (G.map x) p
-    ... | y , q = ⊥-elim
+    agree x (acc smaller) | inr (inr p) with F.lower x (G.map x) p
+    ... | y , q = 𝟘-elim
       (Laws.≈↛< (Q.≈-trans (Q.≈-sym (agree y (smaller y r))) q) (G.strict r))
       where
         r : y P.< x
@@ -202,9 +198,9 @@ abstract
     → Σ (𝒫.X P) (λ y → 𝒫._≈_ Q (Initial.map f y) x)
   surjective {Q = Q} f g x
     with 𝒫.compare Q x (Initial.map f (Embedding.map g x))
-  ... | inj₁ p = Initial.lower f (Embedding.map g x) x p
-  ... | inj₂ (inj₁ p) = Embedding.map g x , 𝒫.≈-sym Q p
-  ... | inj₂ (inj₂ p) = ⊥-elim (nondecreasing self x p)
+  ... | inl p = Initial.lower f (Embedding.map g x) x p
+  ... | inr (inl p) = Embedding.map g x , 𝒫.≈-sym Q p
+  ... | inr (inr p) = 𝟘-elim (nondecreasing self x p)
     where
     self : Embedding Q Q
     self = record
@@ -218,18 +214,18 @@ abstract
     → ((x : 𝒫.X Q) → Σ (𝒫.X P) (λ y → 𝒫._≈_ Q (Initial.map f y) x))
     → P Presented.≃𝒫 Q
   onto {P = P} {Q = Q} f covers = record
-    { to = Initial.map f ; from = λ x → proj₁ (covers x)
+    { to = Initial.map f ; from = λ x → pr₁ (covers x)
     ; to-≈ = Initial.resp f
     ; from-≈ = λ {x} {y} p → Initial.reflect-≈ f
-        (𝒫.≈-trans Q (proj₂ (covers x))
-          (𝒫.≈-trans Q p (𝒫.≈-sym Q (proj₂ (covers y)))))
+        (𝒫.≈-trans Q (pr₂ (covers x))
+          (𝒫.≈-trans Q p (𝒫.≈-sym Q (pr₂ (covers y)))))
     ; to-< = Initial.strict f
     ; from-< = λ {x} {y} p → Initial.reflect f
-        (𝒫.<-respʳ-≈ Q (𝒫.≈-sym Q (proj₂ (covers y)))
-          (𝒫.<-respˡ-≈ Q (𝒫.≈-sym Q (proj₂ (covers x))) p))
+        (𝒫.<-respʳ-≈ Q (𝒫.≈-sym Q (pr₂ (covers y)))
+          (𝒫.<-respˡ-≈ Q (𝒫.≈-sym Q (pr₂ (covers x))) p))
     ; from-to-≈ = λ x → Initial.reflect-≈ f
-        (proj₂ (covers (Initial.map f x)))
-    ; to-from-≈ = λ x → proj₂ (covers x)
+        (pr₂ (covers (Initial.map f x)))
+    ; to-from-≈ = λ x → pr₂ (covers x)
     }
 
   onto-β : ∀ {ℓ} {P Q : 𝒫 ℓ} (f : Initial P Q)

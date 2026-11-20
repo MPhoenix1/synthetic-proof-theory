@@ -7,12 +7,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Countability where
 -- invariance under equivalence, and countability of every order type
 -- ord(P).
 
-open import Agda.Primitive using (Level)
-open import Data.Maybe using (Maybe; just)
-import Data.Maybe as Maybe
-open import Data.Nat using (ℕ)
-open import Data.Product using (Σ; _,_)
-import Relation.Binary.PropositionalEquality as InductiveEquality
+open import SPT.Cubical.Base using
+  ( Level; Maybe; _,_; ap; just; maybe-map; Σ; ℕ )
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import SPT.Cubical.OrdinalGeometry.Cubical.Reflection.OrderType as Reflection
@@ -74,7 +70,7 @@ partialEnumeration-respects-equivalence :
   → PartialEnumeration B
 partialEnumeration-respects-equivalence equivalence enumeration = record
   { sequence = λ index →
-      Maybe.map
+      maybe-map
         (Equiv.equivFun equivalence)
         (sequence enumeration index)
   ; covers = λ point →
@@ -83,7 +79,7 @@ partialEnumeration-respects-equivalence equivalence enumeration = record
           Cubical.fst hit
           , Cubical._∙_
               (Cubical.cong
-                (Maybe.map (Equiv.equivFun equivalence))
+                (maybe-map (Equiv.equivFun equivalence))
                 (Cubical.snd hit))
               (Cubical.cong just (Equiv.secEq equivalence point)))
         (covers enumeration (Equiv.invEq equivalence point))
@@ -108,7 +104,7 @@ classSequence :
     (presentation : Presented.CountableOrdinal𝒫 ℓ)
   → ℕ → Maybe (Reflection.Class presentation)
 classSequence presentation index =
-  Maybe.map
+  maybe-map
     (λ point → Quotient.[ point ])
     (Presented.CountableOrdinal𝒫.enum presentation index)
 
@@ -128,8 +124,8 @@ private
       index
       , Cubical._∙_
           (EqualityConversion.eqToPath
-            (InductiveEquality.cong
-              (Maybe.map (λ entry → Quotient.[ entry ]))
+            (ap
+              (maybe-map (λ entry → Quotient.[ entry ]))
               selected))
           (Cubical.cong just
             (Quotient.eq/

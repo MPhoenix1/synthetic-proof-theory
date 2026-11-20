@@ -15,13 +15,7 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Comparison.Discriminator where
 --   possible s + 1 and 1 is a common initial bound, which decides s
 --   (bound, through Ambient.Discriminator.common).
 
-open import Agda.Primitive using (lzero)
-open import Data.Bool using (Bool)
-open import Data.Nat using (ℕ; zero; suc)
-open import Data.Product using (Σ; proj₁; proj₂)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Unit using (tt)
-open import Relation.Nullary using (Dec; yes; no)
+open import SPT.Cubical.Base
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -33,38 +27,38 @@ open import SPT.Cubical.OrdinalGeometry.Arithmetic.Ambient.Discriminator using
 
 private
   -- 1 ≤ possible s at a hit: the point goes to the hit.
-  point : (s : ℕ → Bool) → Stream.Hit s
+  point : (s : ℕ → 𝟚) → Stream.Hit s
     → Maps.Initial Stream.one (Stream.possible s)
   point s h = record
-    { map = λ _ → h ; resp = λ _ → tt ; strict = λ () ; lower = λ _ _ () }
+    { map = λ _ → h ; resp = λ _ → ⋆ ; strict = λ () ; lower = λ _ _ () }
 
 -- Mathematical shape: (Π P Q. P ≤ Q ⊎ Q < P) → LPO.
 comparable : ((P Q : 𝒫 lzero) → Maps.Initial P Q ⊎ Maps.Segment Q P)
   → Stream.LPO
 comparable compare s with compare Stream.one (Stream.possible s)
-... | inj₁ f = inj₁ (Maps.Initial.map f tt)
-... | inj₂ σ = inj₂ (Stream.absent s λ h →
+... | inl f = inl (Maps.Initial.map f ⋆)
+... | inr σ = inr (Stream.absent s λ h →
   Presented._≺𝒫_.below (Maps.Segment.bound σ) h)
 
 -- Mathematical shape: (Π P Q. Dec (P ≤ Q)) → LPO.
-initial : ((P Q : 𝒫 lzero) → Dec (Maps.Initial P Q)) → Stream.LPO
+initial : ((P Q : 𝒫 lzero) → is-decidable (Maps.Initial P Q)) → Stream.LPO
 initial decide s with decide Stream.one (Stream.possible s)
-... | yes f = inj₁ (Maps.Initial.map f tt)
-... | no none = inj₂ (Stream.absent s λ h → none (point s h))
+... | inl f = inl (Maps.Initial.map f ⋆)
+... | inr none = inr (Stream.absent s λ h → none (point s h))
 
 -- Mathematical shape: (Π P Q. Dec (P ≃ Q)) → LPO.
-equivalent : ((P Q : 𝒫 lzero) → Dec (P Presented.≃𝒫 Q)) → Stream.LPO
+equivalent : ((P Q : 𝒫 lzero) → is-decidable (P Presented.≃𝒫 Q)) → Stream.LPO
 equivalent decide s with decide (Stream.possible s) Stream.one
-... | yes e = inj₁ (Presented._≃𝒫_.from e tt)
-... | no none = inj₂ (Stream.absent s λ h → none (Stream.single s h))
+... | inl e = inl (Presented._≃𝒫_.from e ⋆)
+... | inr none = inr (Stream.absent s λ h → none (Stream.single s h))
 
 -- Mathematical shape: (Π F : ℕ → 𝒫. Σ S. Π n. F n < S) → LPO.
 bound : ((F : ℕ → 𝒫 lzero)
     → Σ (𝒫 lzero) (λ S → (n : ℕ) → Maps.Segment (F n) S))
   → Stream.LPO
 bound strict s =
-  common s (proj₁ bounded) (Maps.inclusion (proj₂ bounded zero))
-    (Maps.inclusion (proj₂ bounded (suc zero)))
+  common s (pr₁ bounded) (Maps.inclusion (pr₂ bounded zero))
+    (Maps.inclusion (pr₂ bounded (suc zero)))
   where
   bounded : Σ (𝒫 lzero) (λ S → (n : ℕ)
     → Maps.Segment

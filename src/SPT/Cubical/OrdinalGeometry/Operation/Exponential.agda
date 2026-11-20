@@ -14,18 +14,7 @@ module SPT.Cubical.OrdinalGeometry.Operation.Exponential where
 -- point are its finite support, they move with the embedding, and they
 -- determine the point.
 
-open import Agda.Primitive using (Level)
-open import Data.Empty using (⊥-elim)
-open import Data.List using (List; []; _∷_)
-import Data.List as List
-open import Data.List.Relation.Unary.All using (All)
-open import Data.Nat using (ℕ; zero; suc)
-import Data.Nat.Properties as Nat
-open import Data.Product using (Σ; _,_; proj₁)
-open import Data.Unit using (tt)
-open import Level using (lift; lower)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; refl; cong; trans)
+open import SPT.Cubical.Base
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -69,7 +58,7 @@ opaque
 -- The new presentation enters the geometry through its own route.
 position : (geometry : Presented.𝒫ω₁𝒢 ℓ)
   → Geometry.Position geometry → Geometry.Position geometry
-position geometry p = Geometry.position geometry (exp (proj₁ p))
+position geometry p = Geometry.position geometry (exp (pr₁ p))
 
 chain : Limit.Chain ℓ → Limit.Chain ℓ
 chain C = record
@@ -82,13 +71,13 @@ private
   -- of one stage.
   exponent : (C : Limit.Chain ℓ) (a : Normal.Point (Limit.completion C))
     → Σ ℕ (λ n → Σ (Normal.Point (Limit.Chain.stage C n)) (λ u →
-        NormalMaps.map (Limit.stage C n) u ≡ a))
+        NormalMaps.map (Limit.stage C n) u ＝ a))
   exponent C a
     with Limit.coverage C (Normal.representative (Limit.completion C) a)
   ... | n , x , p = n , Normal.class (Limit.Chain.stage C n) x ,
-    trans (NormalMaps.map-β (Limit.stage C n) x)
-      (trans (cong (Normal.class (Limit.completion C)) p)
-        (Normal.class-representative (Limit.completion C) a))
+    NormalMaps.map-β (Limit.stage C n) x
+      ∙ (ap (Normal.class (Limit.completion C)) p
+        ∙ Normal.class-representative (Limit.completion C) a)
 
 opaque
   unfolding exp initial
@@ -107,12 +96,12 @@ opaque
       → Σ ℕ (λ n → Σ (𝒫.X (exp (Limit.Chain.stage C n))) (λ x →
           𝒫._≈_ (exp (Limit.completion C))
             (Maps.Initial.map (initial (Limit.stage C n)) x) y))
-    captured (lift ([] , tt)) = zero , lift ([] , tt) , lift refl
+    captured (lift ([] , ⋆)) = zero , lift ([] , ⋆) , lift refl
     captured (lift (((a , c) ∷ xs) , v)) with exponent C a
     ... | n , u , refl =
       n , Maps.Initial.lower (initial (Limit.stage C n))
         (lift (Stage.single u (suc c))) (lift (((b , c) ∷ xs) , v))
-        (lift (Target.head (Target.Pair.within b (Nat.n<1+n c))))
+        (lift (Target.head (Target.Pair.within b (≤ℕˢ-refl (suc c)))))
       where
       module Stage = Support.Power (Normal.order (Limit.Chain.stage C n))
       module Target = Support.Power (Normal.order (Limit.completion C))
@@ -130,12 +119,12 @@ opaque
   positive : (P : 𝒫 ℓ) → Maps.Segment Operation.empty (exp P)
   positive P = record
     { bound = record
-        { to = λ x → ⊥-elim (lower x)
-        ; to-≈ = λ {x} → ⊥-elim (lower x)
-        ; to-< = λ {x} → ⊥-elim (lower x)
-        ; reflects-< = λ {x} → ⊥-elim (lower x)
-        ; ceiling = lift ([] , tt)
-        ; below = λ x → ⊥-elim (lower x)
+        { to = λ x → 𝟘-elim (lower x)
+        ; to-≈ = λ {x} → 𝟘-elim (lower x)
+        ; to-< = λ {x} → 𝟘-elim (lower x)
+        ; reflects-< = λ {x} → 𝟘-elim (lower x)
+        ; ceiling = lift ([] , ⋆)
+        ; below = λ x → 𝟘-elim (lower x)
         }
     ; covers = λ _ → λ { (lift ()) }
     }
@@ -154,22 +143,22 @@ opaque
   exponents P x = Support.Power.exponents (Normal.order P) (lower x)
 
   exponents-resp : (P : 𝒫 ℓ) {x y : 𝒫.X (exp P)}
-    → 𝒫._≈_ (exp P) x y → exponents P x ≡ exponents P y
+    → 𝒫._≈_ (exp P) x y → exponents P x ＝ exponents P y
   exponents-resp P p =
-    cong (Support.Power.exponents (Normal.order P)) (lower p)
+    ap (Support.Power.exponents (Normal.order P)) (lower p)
 
   -- The exponents of ω^f(x) are the images of the exponents of x …
   exponents-natural : {P Q : 𝒫 ℓ} (f : Maps.Embedding P Q) (x : 𝒫.X (exp P))
     → exponents Q (Maps.Embedding.map (embedding f) x)
-      ≡ List.map (Orders.Embedding.map (NormalMaps.embedding f))
+      ＝ list-map (Orders.Embedding.map (NormalMaps.embedding f))
           (exponents P x)
   exponents-natural f x =
     ExponentialInitial.exponents (NormalMaps.embedding f) (lower x)
 
   -- … and a point whose exponents all lie in the image comes from ω^P.
   restrict : (f : Maps.Embedding P Q) (y : 𝒫.X (exp Q))
-    → All (λ b → Σ (Normal.Point P)
-        (λ a → Orders.Embedding.map (NormalMaps.embedding f) a ≡ b))
+    → List-All (λ b → Σ (Normal.Point P)
+        (λ a → Orders.Embedding.map (NormalMaps.embedding f) a ＝ b))
         (exponents Q y)
     → Σ (𝒫.X (exp P))
         (λ x → 𝒫._≈_ (exp Q) (Maps.Embedding.map (embedding f) x) y)
@@ -191,7 +180,7 @@ opaque
     where
     pointwise : (a : Normal.Point P)
       → Orders.Embedding.map (NormalMaps.embedding h) a
-        ≡ Orders.Embedding.map (NormalMaps.embedding g)
+        ＝ Orders.Embedding.map (NormalMaps.embedding g)
             (Orders.Embedding.map (NormalMaps.embedding f) a)
     pointwise a = Normal.class-resp R (𝒫.≈-trans R
       (e (Normal.representative P a))
@@ -207,9 +196,9 @@ opaque
     (ExponentialInitial.identity (NormalMaps.embedding h) pointwise (lower x))
     where
     pointwise : (a : Normal.Point P)
-      → Orders.Embedding.map (NormalMaps.embedding h) a ≡ a
-    pointwise a = trans (Normal.class-resp P (e (Normal.representative P a)))
-      (Normal.class-representative P a)
+      → Orders.Embedding.map (NormalMaps.embedding h) a ＝ a
+    pointwise a = Normal.class-resp P (e (Normal.representative P a))
+      ∙ Normal.class-representative P a
 
   -- On an initial map the embedding action is the initial-map action.
   embedding-initial : (f : Maps.Initial P Q) (x : 𝒫.X (exp P))
@@ -234,7 +223,7 @@ opaque
           (Maps.Segment.bound (segment (Maps.successor Q))))
   ceiling P Q g top = lift (Support.Power.equal
     (Normal.order (Maps.Successor.next Q))
-    (cong (λ b → (b , zero) ∷ []) (Normal.class-resp (Maps.Successor.next Q)
+    (ap (λ b → (b , zero) ∷ []) (Normal.class-resp (Maps.Successor.next Q)
       (𝒫.≈-trans (Maps.Successor.next Q)
         (Maps.Embedding.resp g
           (Normal.representative-class (Maps.Successor.next P) topP))

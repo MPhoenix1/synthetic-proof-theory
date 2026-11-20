@@ -7,9 +7,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Higher.EilenbergMacLane
 -- A nontrivial cell in every iterated loop space of the Eilenberg–MacLane
 -- spaces K(ℤ,n), from the equivalence K(ℤ,n) ≃ Ω K(ℤ,n+1).
 
-open import Agda.Primitive using (lzero)
-open import Data.Empty using (⊥)
-import Data.Nat.Base as Nat
+open import SPT.Cubical.Base using (lzero; suc; zero; ℕ; 𝟘)
 
 import
   SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Higher.IteratedLoop
@@ -30,21 +28,21 @@ import Cubical.Homotopy.EilenbergMacLane.Properties as EMProperties
 ------------------------------------------------------------------------
 -- The spaces K(ℤ,n)
 
-EMType : Nat.ℕ → Set lzero
+EMType : ℕ → Set lzero
 EMType height = EM.EM IntegerAbGroup.ℤAbGroup height
 
-EMPoint : (height : Nat.ℕ) → EMType height
+EMPoint : (height : ℕ) → EMType height
 EMPoint height = EM.0ₖ height
 
 -- K(ℤ,n) ◁∗ Ω(K(ℤ,n+1), 0), from the loop equivalence of the cubical
 -- library.
 
 emLoopSplitEmbedding :
-    (height : Nat.ℕ)
+    (height : ℕ)
   → Split.SplitEmbedding
       (EMType height)
-      (Iterated.Loop (EMType (Nat.suc height))
-        (EMPoint (Nat.suc height)))
+      (Iterated.Loop (EMType (suc height))
+        (EMPoint (suc height)))
 emLoopSplitEmbedding height =
   Split.split-embedding
     (EMProperties.EM→ΩEM+1
@@ -59,12 +57,12 @@ emLoopSplitEmbedding height =
         height))
 
 emLoopPointedSplitEmbedding :
-    (height : Nat.ℕ)
+    (height : ℕ)
   → Iterated.PointedSplitEmbedding
       (EMType height)
       (EMPoint height)
-      (Iterated.Loop (EMType (Nat.suc height))
-        (EMPoint (Nat.suc height)))
+      (Iterated.Loop (EMType (suc height))
+        (EMPoint (suc height)))
       Cubical.refl
 emLoopPointedSplitEmbedding height =
   Iterated.pointed-split-embedding
@@ -76,10 +74,10 @@ emLoopPointedSplitEmbedding height =
 ------------------------------------------------------------------------
 -- One nonzero point at height zero
 
-integerOne : EMType Nat.zero
-integerOne = Integer.pos (Nat.suc Nat.zero)
+integerOne : EMType zero
+integerOne = Integer.pos (suc zero)
 
-integerOne-not-zero : integerOne Cubical.≡ EMPoint Nat.zero → ⊥
+integerOne-not-zero : integerOne Cubical.≡ EMPoint zero → 𝟘
 integerOne-not-zero path with EqualityConversion.pathToEq path
 ... | ()
 
@@ -87,7 +85,7 @@ integerOne-not-zero path with EqualityConversion.pathToEq path
 -- The height-n ladder map
 
 emSuccessorPointedSplitEmbedding :
-    (height : Nat.ℕ)
+    (height : ℕ)
   → Iterated.PointedSplitEmbedding
       (Iterated.IteratedLoop height
         (EMType height)
@@ -95,12 +93,12 @@ emSuccessorPointedSplitEmbedding :
       (Iterated.iteratedLoopPoint height
         (EMType height)
         (EMPoint height))
-      (Iterated.IteratedLoop (Nat.suc height)
-        (EMType (Nat.suc height))
-        (EMPoint (Nat.suc height)))
-      (Iterated.iteratedLoopPoint (Nat.suc height)
-        (EMType (Nat.suc height))
-        (EMPoint (Nat.suc height)))
+      (Iterated.IteratedLoop (suc height)
+        (EMType (suc height))
+        (EMPoint (suc height)))
+      (Iterated.iteratedLoopPoint (suc height)
+        (EMType (suc height))
+        (EMPoint (suc height)))
 emSuccessorPointedSplitEmbedding height =
   Iterated.iteratePointedSplitEmbedding height
     (emLoopPointedSplitEmbedding height)
@@ -112,26 +110,26 @@ emSuccessorPointedSplitEmbedding height =
 -- through the loop embedding.
 
 emCell :
-    (height : Nat.ℕ)
+    (height : ℕ)
   → Iterated.IteratedLoop height
       (EMType height)
       (EMPoint height)
-emCell Nat.zero = integerOne
-emCell (Nat.suc height) =
+emCell zero = integerOne
+emCell (suc height) =
   Split.include
     (Iterated.splitEmbedding
       (emSuccessorPointedSplitEmbedding height))
     (emCell height)
 
 emCell-nontrivial :
-    (height : Nat.ℕ)
+    (height : ℕ)
   → emCell height Cubical.≡
       Iterated.iteratedLoopPoint height
         (EMType height)
         (EMPoint height)
-  → ⊥
-emCell-nontrivial Nat.zero = integerOne-not-zero
-emCell-nontrivial (Nat.suc height) =
+  → 𝟘
+emCell-nontrivial zero = integerOne-not-zero
+emCell-nontrivial (suc height) =
   Iterated.preserves-nonbase
     (emSuccessorPointedSplitEmbedding height)
     (emCell height)
@@ -141,19 +139,19 @@ emCell-nontrivial (Nat.suc height) =
 -- An h-level bound for each space
 
 emType-not-lower-hlevel :
-    (height : Nat.ℕ)
-  → HLevels.isOfHLevel (Nat.suc height) (EMType height)
-  → ⊥
-emType-not-lower-hlevel Nat.zero em-is-proposition =
+    (height : ℕ)
+  → HLevels.isOfHLevel (suc height) (EMType height)
+  → 𝟘
+emType-not-lower-hlevel zero em-is-proposition =
   integerOne-not-zero
-    (em-is-proposition integerOne (EMPoint Nat.zero))
-emType-not-lower-hlevel (Nat.suc height) em-is-lower =
-  emCell-nontrivial (Nat.suc height)
+    (em-is-proposition integerOne (EMPoint zero))
+emType-not-lower-hlevel (suc height) em-is-lower =
+  emCell-nontrivial (suc height)
     (Iterated.iteratedLoop-isProp
       height
-      (EMPoint (Nat.suc height))
+      (EMPoint (suc height))
       em-is-lower
-      (emCell (Nat.suc height))
-      (Iterated.iteratedLoopPoint (Nat.suc height)
-        (EMType (Nat.suc height))
-        (EMPoint (Nat.suc height))))
+      (emCell (suc height))
+      (Iterated.iteratedLoopPoint (suc height)
+        (EMType (suc height))
+        (EMPoint (suc height))))

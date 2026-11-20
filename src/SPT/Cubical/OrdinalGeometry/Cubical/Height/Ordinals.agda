@@ -8,8 +8,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Height.Ordinals where
 -- rank is Cubical's Ord(ℓ), the well-order of the well-orders of level ℓ
 -- (ordinals), and so TypeTopology's OO ℓ (identity).
 
-open import Agda.Primitive using (Level; lsuc)
-open import Level using (lift; lower)
+open import SPT.Cubical.Base using (Level; lift; lower; lsuc)
 
 import Cubical.Foundations.Equiv as Equiv
 import Cubical.Foundations.Prelude as Cubical

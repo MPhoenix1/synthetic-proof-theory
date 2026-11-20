@@ -18,10 +18,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Classification where
 -- - Limit: the order type of a limit is the supremum of the order types
 --   of its stages (Supremum.Chain).
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Nat using (ℕ; suc)
-import Data.Nat as Nat
-open import Data.Product using (_,_)
+open import SPT.Cubical.Base using (Level; _,_; lsuc; suc; ℕ)
+import SPT.Cubical.Base as Nat
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)

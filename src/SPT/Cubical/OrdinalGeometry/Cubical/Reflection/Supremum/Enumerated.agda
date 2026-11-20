@@ -15,15 +15,10 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Supremum.Enumerated
 -- supremum lies strictly below the presented ω₁. Empty and finite index
 -- types are included.
 
-open import Agda.Primitive using (Level)
-open import Data.Empty using (⊥-elim)
-open import Data.Maybe using (Maybe; just; nothing)
-import Data.Maybe as Maybe
-open import Data.Nat using (ℕ; zero; suc)
-open import Data.Product using (Σ; _,_; proj₁; proj₂)
-open import Data.Sum using (inj₁; inj₂)
-open import Data.Unit.Polymorphic using (⊤; tt)
-open import Relation.Binary.PropositionalEquality using (_≡_; subst; sym)
+open import SPT.Cubical.Base using
+  ( Level; Lift; Maybe; _,_; _⁻¹; _＝_; inl; inr; just; lift; nothing; pr₁; pr₂
+  ; suc; transport; zero; Σ; ℕ; ⋆; 𝟘-elim; 𝟙 )
+import SPT.Cubical.Base as Maybe
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -72,17 +67,17 @@ vacuous Z z B =
           (λ a b → HLevels.isPropΠ λ _ →
             Woset.IsWoset.is-prop-valued
               (Woset.WosetStr.isWoset (Cubical.snd B)) (map a) (map b))
-          (λ x _ _ → ⊥-elim (empty z x)))
+          (λ x _ _ → 𝟘-elim (empty z x)))
         (Quotient.elimProp
           (λ _ → HLevels.isPropΠ2 λ _ _ → Truncation.isPropPropTrunc)
-          (λ x _ _ → ⊥-elim (empty z x)))))
+          (λ x _ _ → 𝟘-elim (empty z x)))))
   where
   map : Cubical.fst (orderType Z) → Cubical.fst B
   map =
     Quotient.rec
       (Woset.IsWoset.is-set (Woset.WosetStr.isWoset (Cubical.snd B)))
-      (λ x → ⊥-elim (empty z x))
-      (λ x _ _ → ⊥-elim (empty z x))
+      (λ x → 𝟘-elim (empty z x))
+      (λ x _ _ → 𝟘-elim (empty z x))
 
 module _ (W : 𝒫 ℓ) {I : Set ℓ} (f : I → 𝒫.X W) (e : PartialEnumeration I)
   where
@@ -98,23 +93,23 @@ module _ (W : 𝒫 ℓ) {I : Set ℓ} (f : I → 𝒫.X W) (e : PartialEnumerati
     merge : Maybe W.X → Maybe W.X → Maybe W.X
     merge nothing z = z
     merge (just x) nothing = just x
-    merge (just x) (just y) = just (proj₁ (Ambient.max W x y))
+    merge (just x) (just y) = just (pr₁ (Ambient.max W x y))
 
     step : (a z : Maybe W.X) → Maps.Initial (cone a) (cone (merge a z))
     step nothing z = vacant (cone z)
     step (just x) nothing = Maps.identity (∂ W x)
     step (just x) (just y) =
-      Ambient.included W (proj₁ (proj₂ (Ambient.max W x y)))
+      Ambient.included W (pr₁ (pr₂ (Ambient.max W x y)))
 
     enter : (a : Maybe W.X) (y : W.X)
       → Maps.Initial (∂ W y) (cone (merge a (just y)))
     enter nothing y = Maps.identity (∂ W y)
     enter (just x) y =
-      Ambient.included W (proj₁ (proj₂ (proj₂ (Ambient.max W x y))))
+      Ambient.included W (pr₁ (pr₂ (pr₂ (Ambient.max W x y))))
 
     -- The running maximum is one of the points f i.
     Attained : Maybe W.X → Set ℓ
-    Attained nothing = ⊤
+    Attained nothing = Lift ℓ 𝟙
     Attained (just x) = Σ I (λ i → x W.≈ f i)
 
     attained : (a z : Maybe W.X) → Attained a → Attained z
@@ -122,12 +117,12 @@ module _ (W : 𝒫 ℓ) {I : Set ℓ} (f : I → 𝒫.X W) (e : PartialEnumerati
     attained nothing z _ t = t
     attained (just x) nothing t _ = t
     attained (just x) (just y) (i , p) (j , q)
-      with proj₂ (proj₂ (proj₂ (Ambient.max W x y)))
-    ... | inj₁ r = i , W.≈-trans r p
-    ... | inj₂ r = j , W.≈-trans r q
+      with pr₂ (pr₂ (pr₂ (Ambient.max W x y)))
+    ... | inl r = i , W.≈-trans r p
+    ... | inr r = j , W.≈-trans r q
 
     entry : ℕ → Maybe W.X
-    entry n = Maybe.map f (sequence e n)
+    entry n = Maybe.maybe-map f (sequence e n)
 
     running : ℕ → Maybe W.X
     running zero = merge nothing (entry zero)
@@ -135,23 +130,23 @@ module _ (W : 𝒫 ℓ) {I : Set ℓ} (f : I → 𝒫.X W) (e : PartialEnumerati
 
     entered : (n : ℕ) → Attained (entry n)
     entered n with sequence e n
-    ... | nothing = tt
+    ... | nothing = (lift ⋆)
     ... | just i = i , W.≈-refl (f i)
 
     reached : (n : ℕ) → Attained (running n)
-    reached zero = attained nothing (entry zero) tt (entered zero)
+    reached zero = attained nothing (entry zero) (lift ⋆) (entered zero)
     reached (suc n) =
       attained (running n) (entry (suc n)) (reached n) (entered (suc n))
 
     -- The point listed at n lies below the running maximum at n.
-    reach : (n : ℕ) (y : W.X) → entry n ≡ just y
+    reach : (n : ℕ) (y : W.X) → entry n ＝ just y
       → Maps.Initial (∂ W y) (cone (running n))
     reach zero y p =
-      subst (λ z → Maps.Initial (∂ W y) (cone (merge nothing z)))
-        (sym p) (enter nothing y)
+      transport (λ z → Maps.Initial (∂ W y) (cone (merge nothing z)))
+        (p ⁻¹) (enter nothing y)
     reach (suc n) y p =
-      subst (λ z → Maps.Initial (∂ W y) (cone (merge (running n) z)))
-        (sym p) (enter (running n) y)
+      transport (λ z → Maps.Initial (∂ W y) (cone (merge (running n) z)))
+        (p ⁻¹) (enter (running n) y)
 
     family : I → 𝒫 ℓ
     family i = ∂ W (f i)
@@ -201,12 +196,12 @@ module _ (W : 𝒫 ℓ) {I : Set ℓ} (f : I → 𝒫.X W) (e : PartialEnumerati
             (supremum stages))
           (λ hit →
             Simulation.isTrans≼ (orderType (family i))
-              (orderType (stages (proj₁ hit)))
+              (orderType (stages (pr₁ hit)))
               (supremum stages)
-              (initial (reach (proj₁ hit) (f i)
+              (initial (reach (pr₁ hit) (f i)
                 (EqualityConversion.pathToEq
-                  (Cubical.cong (Maybe.map f) (proj₂ hit)))))
-              (upper stages (proj₁ hit)))
+                  (Cubical.cong (Maybe.maybe-map f) (pr₂ hit)))))
+              (upper stages (pr₁ hit)))
           (covers e i)
 
     backward : supremum stages Simulation.≼ supremum family

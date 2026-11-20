@@ -10,10 +10,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Height.Mahlo where
 -- reflection of an operator built from f (operator), paired with the
 -- labels of the canonical height of β (Height.Ordinals.Mahlo).
 
-open import Agda.Primitive using (Level)
-open import Data.Sum using (inj₁; inj₂)
-open import Data.Unit.Polymorphic using (tt)
-import Relation.Binary.PropositionalEquality as Ordinary
+open import SPT.Cubical.Base using (Level; _⁻¹; inl; inr; lift; ⋆)
+import SPT.Cubical.Base as Ordinary
 
 import Cubical.Data.Equality.Conversion as EqualityConversion
 import Cubical.Foundations.Equiv as Equiv
@@ -24,8 +22,8 @@ import Cubical.HITs.PropositionalTruncation as Truncation
 import Cubical.Relation.Binary.Order.Woset.Base as Woset
 import Cubical.Relation.Binary.Order.Woset.Simulation as Simulation
 
-import SPT.Cubical.Core.Mahlo.Specification as Mahlo
-import SPT.Cubical.Core.Mahlo.Ambient as Ambient
+import SPT.Cubical.Mahlo.Specification as Mahlo
+import SPT.Cubical.Mahlo.Ambient as Ambient
 open import SPT.Cubical.OrdinalGeometry.Height.Ordinals.Mahlo using
   (reflection; child; member)
 open import SPT.Cubical.OrdinalGeometry.Cubical.Height.Rank using
@@ -65,7 +63,7 @@ module _ (lem : ExcludedMiddle ℓ) (M : Mahlo.Mahlo (Ambient.formers ℓ))
     unit = Mahlo.Closure.unit closure
 
     unit-point : Decode (Cubical.fst unit)
-    unit-point = Ordinary.subst (λ X → X) (Ordinary.sym (Cubical.snd unit)) tt
+    unit-point = Ordinary.transport (λ X → X) (Cubical.snd unit ⁻¹) (lift ⋆)
 
     -- A type named in the child embeds into a child type.
     named : {X : Set ℓ} → Mahlo.Closure.Name closure X → Embeds Decode X
@@ -88,7 +86,7 @@ module _ (lem : ExcludedMiddle ℓ) (M : Mahlo.Mahlo (Ambient.formers ℓ))
       (named
         (member M (operator f) (canonical-height β)
           (Cubical.fst unit Cubical., λ _ → Cubical.fst unit)
-          (inj₂ (inj₁ tt))))
+          (inr (inl (lift ⋆)))))
 
   -- Mathematical shape: α ≺ κ → f α ≺ κ.  α embeds into a child type, so
   -- it is a coded well-order W on a subset of it, and the child names
@@ -107,7 +105,7 @@ module _ (lem : ExcludedMiddle ℓ) (M : Mahlo.Mahlo (Ambient.formers ℓ))
                 (named
                   (member M (operator f) (canonical-height β)
                     (Cubical.fst unit Cubical., λ _ → i)
-                    (inj₁ (unit-point Cubical., W))))
+                    (inl (unit-point Cubical., W))))
         in Cubical.subst (λ X → Simulation._≺_ (f X) point)
              (Cubical.sym
                (Equiv.equivFun (Woset.WosetPath α (woset-of W))

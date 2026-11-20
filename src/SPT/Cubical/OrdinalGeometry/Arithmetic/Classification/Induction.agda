@@ -15,15 +15,10 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Classification.Induction where
 -- Hereditary are: ∅, P + 1 and limits of hereditary presentations, P + Q
 -- for hereditary P and Q, the finite ordinals and ω.
 
-open import Agda.Primitive using (Level; lsuc; _⊔_)
-open import Data.Nat using (ℕ; zero; suc)
-import Data.Nat.Properties as NatProperties
-open import Data.Product using (Σ; _,_; proj₁; proj₂)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Unit.Polymorphic using (⊤)
-open import Level using (lift)
+open import SPT.Cubical.Base hiding (_+_)
+open import SPT.Cubical.Foundation.Accessibility using (acc; is-accessible)
+open import SPT.Cubical.Foundation.Nat.Arithmetic using (≤ℕˢ-pred; ≤ℕˢ-split)
 
-open import SPT.Cubical.Core.WellFounded using (Acc; acc)
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
 import SPT.Cubical.OrdinalGeometry.Presentation.Map as Maps
@@ -96,7 +91,7 @@ respect e (limit s sup h) = limit s (supremum-respect e sup) h
 
 -- The predecessors named by a classification lie in C.
 Within : (C : 𝒫 ℓ → Set κ) {P : 𝒫 ℓ} → Classified P → Set κ
-Within C (Classified.zero _) = ⊤
+Within {κ = κ} C (Classified.zero _) = Lift κ 𝟙
 Within C (Classified.successor Q _) = C Q
 Within C (Classified.limit s _) = (n : ℕ) → C (Increasing.stage s n)
 
@@ -109,7 +104,7 @@ hereditary : (C : 𝒫 ℓ → Set κ)
   → (P : 𝒫 ℓ) → C P → Hereditary P
 hereditary {ℓ = ℓ} C closed P = go P (Presented.Embedding.wf P)
   where
-  go : (P : 𝒫 ℓ) → Acc Presented._≺𝒫_ P → C P → Hereditary P
+  go : (P : 𝒫 ℓ) → is-accessible Presented._≺𝒫_ P → C P → Hereditary P
   go P (acc smaller) c with closed P c
   ... | Classified.zero z , _ = zero z
   ... | Classified.successor Q st , cQ =
@@ -177,25 +172,25 @@ immediate {ℓ} W {x} {y} x<y between =
     (Adjoin.constant (∂ W x)) zero
 
   map : E.Entry → 𝒫.X (∂ W y)
-  map (E.point u) = proj₁ u , W.<-trans (proj₂ u) x<y
+  map (E.point u) = pr₁ u , W.<-trans (pr₂ u) x<y
   map E.top = x , x<y
 
   embedding : Maps.Embedding (Maps.Successor.next (∂ W x)) (∂ W y)
   embedding = record
     { map = map
     ; resp = λ { (E.point≈ p) → p ; E.top≈ → W.≈-refl x }
-    ; strict = λ { (E.point< p) → p ; (E.point<top {u}) → proj₂ u }
+    ; strict = λ { (E.point< p) → p ; (E.point<top {u}) → pr₂ u }
     }
 
   equivalent : Maps.Successor.next (∂ W x) Presented.≃𝒫 ∂ W y
   equivalent =
-    bijection embedding λ v → covered v (between (proj₁ v) (proj₂ v))
+    bijection embedding λ v → covered v (between (pr₁ v) (pr₂ v))
     where
     covered : (v : 𝒫.X (∂ W y))
-      → 𝒫._<_ W (proj₁ v) x ⊎ 𝒫._≈_ W (proj₁ v) x
+      → 𝒫._<_ W (pr₁ v) x ⊎ 𝒫._≈_ W (pr₁ v) x
       → Σ E.Entry (λ u → 𝒫._≈_ (∂ W y) (map u) v)
-    covered v (inj₁ v<x) = E.point (proj₁ v , v<x) , W.≈-refl (proj₁ v)
-    covered v (inj₂ v≈x) = E.top , W.≈-sym v≈x
+    covered v (inl v<x) = E.point (pr₁ v , v<x) , W.≈-refl (pr₁ v)
+    covered v (inr v≈x) = E.top , W.≈-sym v≈x
 
 -- The cones of ω at its points are the finite ordinals.
 finite : (n : ℕ) → Hereditary (∂ (omega {ℓ}) (lift n))
@@ -203,16 +198,16 @@ finite zero = zero (pointless λ { (_ , lift ()) })
 finite {ℓ} (suc n) =
   successor (∂ omega (lift n))
     (immediate omega {lift n} {lift (suc n)}
-      (lift (NatProperties.n<1+n n)) between)
+      (lift (≤ℕˢ-refl (suc n))) between)
     (finite n)
   where
   between : (z : 𝒫.X (omega {ℓ})) → 𝒫._<_ omega z (lift (suc n))
     → 𝒫._<_ omega z (lift n) ⊎ 𝒫._≈_ omega z (lift n)
-  between z (lift p) with NatProperties.m<1+n⇒m<n∨m≡n p
-  ... | inj₁ q = inj₁ (lift q)
-  ... | inj₂ q = inj₂ (lift q)
+  between (lift m) (lift p) with ≤ℕˢ-split m n (≤ℕˢ-pred p)
+  ... | inl q = inl (lift q)
+  ... | inr q = inr (lift q)
 
 -- ω is the limit of its finite cones.
 omega-hereditary : Hereditary (omega {ℓ})
 omega-hereditary =
-  limit (proj₁ naturals) (proj₂ naturals) λ n → finite n
+  limit (pr₁ naturals) (pr₂ naturals) λ n → finite n

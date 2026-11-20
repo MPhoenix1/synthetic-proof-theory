@@ -13,19 +13,7 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Exponential where
 -- or the top exponent with a coefficient k followed by a support of ω^P,
 -- in copy k + 1. ω^ respects ≃𝒫.
 
-open import Agda.Primitive using (Level)
-open import Data.Empty using (⊥-elim)
-open import Data.List using ([]; _∷_)
-import Data.List as List
-open import Data.List.Relation.Unary.All using (All; []; _∷_)
-import Data.List.Relation.Unary.All as All
-open import Data.Nat using (ℕ; zero; suc; z≤n; s≤s)
-import Data.Nat as Nat
-open import Data.Product using (Σ; _,_; proj₁; proj₂)
-open import Data.Unit using (tt)
-open import Level using (lift; lower)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; refl; cong; cong₂; sym; trans)
+open import SPT.Cubical.Base
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -73,15 +61,15 @@ opaque
       (Adjoin.constant Z) zero
 
     map : Entry.Entry → 𝒫.X (exp Z)
-    map (Entry.point x) = ⊥-elim (empty z x)
-    map Entry.top = lift ([] , tt)
+    map (Entry.point x) = 𝟘-elim (empty z x)
+    map Entry.top = lift ([] , ⋆)
 
     resp : ∀ {u v} → u Entry.≈ v → 𝒫._≈_ (exp Z) (map u) (map v)
-    resp {Entry.point x} _ = ⊥-elim (empty z x)
+    resp {Entry.point x} _ = 𝟘-elim (empty z x)
     resp {Entry.top} {Entry.top} Entry.top≈ = lift refl
 
     strict : ∀ {u v} → u Entry.< v → 𝒫._<_ (exp Z) (map u) (map v)
-    strict {Entry.point x} _ = ⊥-elim (empty z x)
+    strict {Entry.point x} _ = 𝟘-elim (empty z x)
     strict {Entry.top} ()
 
     embedding : Maps.Embedding (Maps.Successor.next Z) (exp Z)
@@ -93,9 +81,9 @@ opaque
 
     covers : (y : 𝒫.X (exp Z))
       → Σ Entry.Entry (λ u → 𝒫._≈_ (exp Z) (map u) y)
-    covers (lift ([] , tt)) = Entry.top , lift refl
+    covers (lift ([] , ⋆)) = Entry.top , lift refl
     covers (lift (((e , k) ∷ xs) , v)) =
-      ⊥-elim (empty z (Normal.representative Z e))
+      𝟘-elim (empty z (Normal.representative Z e))
 
   -- Mathematical shape: ω^(P + 1) ≃ ω^P · ω. The copy of a support is the
   -- coefficient of the top exponent plus one, or 0 without that exponent.
@@ -136,10 +124,10 @@ opaque
     -- The top exponent above a raised support.
     capped : (k : ℕ) (s : Base.Term)
       → Top.Valid ((peak , k) ∷ Top.raw (raise s))
-    capped k ([] , _) = tt
+    capped k ([] , _) = ⋆
     capped k (((a , n) ∷ xs) , v) =
       Top.complete {Orders.Embedding.map lifted a} {peak} (lifted-peak a) ,
-      proj₂ (raise (((a , n) ∷ xs) , v))
+      pr₂ (raise (((a , n) ∷ xs) , v))
 
     -- The support in copy n of ω^P.
     glue : ℕ → Base.Term → Top.Term
@@ -163,7 +151,7 @@ opaque
       {a = Orders.Embedding.map lifted a} {a′ = peak} {x = n} {y = k}
       (lifted-peak a))
 
-    earlier : {m n : ℕ} → m Nat.< n → (s t : Base.Term)
+    earlier : {m n : ℕ} → m <ℕˢ n → (s t : Base.Term)
       → glue m s Top.< glue n t
     earlier {zero} {suc k} (s≤s z≤n) s t = under s
     earlier {suc j} {suc k} (s≤s p) s t = Top.head (Top.Pair.within peak p)
@@ -189,60 +177,60 @@ opaque
     embedding = record
       { map = map
       ; resp = λ where
-          (lift e) → lift (cong (λ w → glue (number (proj₁ w))
-            (shape (proj₂ w))) e)
+          (lift e) → lift (ap (λ w → glue (number (pr₁ w))
+            (shape (pr₂ w))) e)
       ; strict = λ {u} {v} → strict {u} {v}
       }
 
     -- A normalized point strictly below another is an old exponent.
     image : (b : Normal.Point N) (x : 𝒫.X P)
-      → Normal.representative N b ≡ Entry.point x
-      → Σ (Normal.Point P) (λ a → Orders.Embedding.map lifted a ≡ b)
-    image b x r = Normal.class P x , trans
-      (Normal.class-resp N (Entry.point≈ (Normal.representative-class P x)))
-      (trans (cong (Normal.class N) (sym r)) (Normal.class-representative N b))
+      → Normal.representative N b ＝ Entry.point x
+      → Σ (Normal.Point P) (λ a → Orders.Embedding.map lifted a ＝ b)
+    image b x r = Normal.class P x ,
+      Normal.class-resp N (Entry.point≈ (Normal.representative-class P x))
+      ∙ (ap (Normal.class N) (r ⁻¹) ∙ Normal.class-representative N b)
 
     beneath : (b e : Normal.Point N) → Normal.Strict N b e
-      → Σ (Normal.Point P) (λ a → Orders.Embedding.map lifted a ≡ b)
+      → Σ (Normal.Point P) (λ a → Orders.Embedding.map lifted a ＝ b)
     beneath b e p = old (Normal.representative N b) refl
       (Normal.representative-strict N {a = b} {b = e} p)
       where
-      old : (u : Entry.Entry) → Normal.representative N b ≡ u
+      old : (u : Entry.Entry) → Normal.representative N b ＝ u
         → u Entry.< Normal.representative N e
-        → Σ (Normal.Point P) (λ a → Orders.Embedding.map lifted a ≡ b)
+        → Σ (Normal.Point P) (λ a → Orders.Embedding.map lifted a ＝ b)
       old (Entry.point x) r _ = image b x r
       old Entry.top r ()
 
     -- The exponents after the leading one lie below it.
     descending : (e : Normal.Point N) (k : ℕ) (xs : Top.Raw)
       → Top.Valid ((e , k) ∷ xs)
-      → All (λ b → Normal.Strict N b e) (List.map proj₁ xs)
+      → List-All (λ b → Normal.Strict N b e) (list-map pr₁ xs)
     descending e k [] _ = []
-    descending e k ((b , m) ∷ ys) (p , w) = Top.sound {b} {e} p ∷ All.map
+    descending e k ((b , m) ∷ ys) (p , w) = Top.sound {b} {e} p ∷ all-map
       (λ {c} q → Order.Order.trans (Normal.order N) {c} {b} {e} q
         (Top.sound {b} {e} p))
       (descending b m ys w)
 
     restrict : (t : Top.Term)
-      → All (λ b → Σ (Normal.Point P)
-          (λ a → Orders.Embedding.map lifted a ≡ b)) (Top.exponents t)
-      → Σ Base.Term (λ s → raise s ≡ t)
+      → List-All (λ b → Σ (Normal.Point P)
+          (λ a → Orders.Embedding.map lifted a ＝ b)) (Top.exponents t)
+      → Σ Base.Term (λ s → raise s ＝ t)
     restrict = ExponentialInitial.restrict lifted
 
     -- Every support of ω^(P + 1) is glued from a copy and a support.
     decompose : (t : Top.Term)
-      → Σ ℕ (λ n → Σ Base.Term (λ s → glue n s ≡ t))
+      → Σ ℕ (λ n → Σ Base.Term (λ s → glue n s ＝ t))
     decompose ([] , v) = zero , Base.zero , Top.equal refl
     decompose (((e , k) ∷ xs) , v) with Normal.representative N e in r
     ... | Entry.top with restrict (xs , Top.tail-valid v)
-          (All.map (λ {b} q → beneath b e q) (descending e k xs v))
-    ...   | s , q = suc k , s , Top.equal (cong₂ _∷_
-            (cong (_, k) (trans (cong (Normal.class N) (sym r))
-              (Normal.class-representative N e)))
-            (cong Top.raw q))
+          (all-map (λ {b} q → beneath b e q) (descending e k xs v))
+    ...   | s , q = suc k , s , Top.equal (ap₂ _∷_
+            (ap (_, k) (ap (Normal.class N) (r ⁻¹)
+              ∙ Normal.class-representative N e))
+            (ap Top.raw q))
     decompose (((e , k) ∷ xs) , v) | Entry.point y
       with restrict (((e , k) ∷ xs) , v)
-        (image e y r ∷ All.map (λ {b} q → beneath b e q)
+        (image e y r ∷ all-map (λ {b} q → beneath b e q)
           (descending e k xs v))
     ... | s , q = zero , s , q
 
@@ -251,9 +239,9 @@ opaque
     covers (lift t) with decompose t
     ... | n , s , e =
       lift (Normal.class ω (lift n) , Normal.class (exp P) (lift s)) ,
-      lift (trans (cong₂ glue
+      lift ((ap₂ glue
         (lower (Normal.representative-class ω (lift n)))
-        (lower (Normal.representative-class (exp P) (lift s)))) e)
+        (lower (Normal.representative-class (exp P) (lift s)))) ∙ e)
 
 ------------------------------------------------------------------------
 -- The specification

@@ -11,13 +11,7 @@ module SPT.Cubical.OrdinalGeometry.Operation.Base where
 -- the seed is free. Completions of ℕ × ℕ grids of initial maps may be
 -- taken in either order.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Maybe using (nothing)
-open import Data.Nat using (ℕ; zero; suc; _≤_)
-import Data.Nat.Properties as Nat
-open import Data.Product using (_,_)
-open import Level using (lower)
+open import SPT.Cubical.Base
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -104,10 +98,10 @@ fixed F continuous P e =
     (Presented.≃𝒫-trans
       (Limit.equivalence (chain F (tower F P e)) shifted
         (λ n → Presented.≃𝒫-refl (level F P (suc n))))
-      (Limit.cofinal (tower F P e) suc ascending (λ n → n , Nat.n≤1+n n)))
+      (Limit.cofinal (tower F P e) suc ascending (λ n → n , ≤ℕˢ-to-suc n)))
   where
-  ascending : (n : ℕ) → suc n ≤ suc (suc n)
-  ascending n = Nat.n≤1+n (suc n)
+  ascending : (n : ℕ) → suc n ≤ℕˢ suc (suc n)
+  ascending n = ≤ℕˢ-to-suc (suc n)
 
   shifted : Limit.Chain _
   shifted = Limit.subsequence (tower F P e) suc ascending
@@ -116,10 +110,10 @@ fixed F continuous P e =
 -- From the empty ordinal
 
 private
-  emptyOrder : Order.Order ⊥
+  emptyOrder : Order.Order 𝟘
   emptyOrder = record
     { _<_ = λ ()
-    ; trans = λ {x} → ⊥-elim x
+    ; trans = λ {x} → 𝟘-elim x
     ; wf = λ ()
     ; compare = λ ()
     ; enum = λ _ → nothing
@@ -131,10 +125,10 @@ empty = Exact.presentation emptyOrder
 
 from-empty : (Q : 𝒫 ℓ) → Maps.Initial empty Q
 from-empty Q = record
-  { map = λ x → ⊥-elim (lower x)
-  ; resp = λ {x} → ⊥-elim (lower x)
-  ; strict = λ {x} → ⊥-elim (lower x)
-  ; lower = λ x → ⊥-elim (lower x)
+  { map = λ x → 𝟘-elim (lower x)
+  ; resp = λ {x} → 𝟘-elim (lower x)
+  ; strict = λ {x} → 𝟘-elim (lower x)
+  ; lower = λ x → 𝟘-elim (lower x)
   }
 
 -- The tower of F from the empty ordinal needs no seed.

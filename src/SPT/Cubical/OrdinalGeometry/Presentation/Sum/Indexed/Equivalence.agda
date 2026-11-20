@@ -11,12 +11,9 @@ module SPT.Cubical.OrdinalGeometry.Presentation.Sum.Indexed.Equivalence
 -- and back by the inverse isomorphism. Both laws hold as equalities of
 -- points, from the laws of the isomorphisms.
 
-open import Agda.Primitive using (Level; lzero)
-open import Data.Product using (Σ; _,_)
-open import Level using (lift; lower)
-open import Relation.Binary.PropositionalEquality using (_≡_; cong)
+open import SPT.Cubical.Base
+open import SPT.Cubical.Foundation.Isomorphisms using (_≅_)
 
-open import SPT.Cubical.Core.Equality.Isomorphism using (_≅_)
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
 import SPT.Cubical.OrdinalGeometry.ExactOrder.Base as Order
@@ -39,8 +36,8 @@ equivalence : {I : Ordinal lzero} {F G : Carrier I → 𝒫 ℓ}
 equivalence {I = I} {F} {G} e = record
   { to = λ x → lift (to (lower x))
   ; from = λ y → lift (from (lower y))
-  ; to-≈ = λ p → lift (cong to (lower p))
-  ; from-≈ = λ p → lift (cong from (lower p))
+  ; to-≈ = λ p → lift (ap to (lower p))
+  ; from-≈ = λ p → lift (ap from (lower p))
   ; to-< = λ p → lift (forth (lower p))
   ; from-< = λ p → lift (back (lower p))
   ; from-to-≈ = λ x → lift (from-to (lower x))
@@ -77,10 +74,10 @@ equivalence {I = I} {F} {G} e = record
   back (Target.within i {a} {b} q) =
     Source.within i (Orders.Iso.strict (backward i) {a} {b} q)
 
-  from-to : (x : Σ (Carrier I) (λ i → Normal.Point (F i))) → from (to x) ≡ x
-  from-to (i , a) = cong (i ,_)
+  from-to : (x : Σ (Carrier I) (λ i → Normal.Point (F i))) → from (to x) ＝ x
+  from-to (i , a) = ap (i ,_)
     (_≅_.backward-forward (Orders.Iso.equivalence (forward i)) a)
 
-  to-from : (y : Σ (Carrier I) (λ i → Normal.Point (G i))) → to (from y) ≡ y
-  to-from (i , b) = cong (i ,_)
+  to-from : (y : Σ (Carrier I) (λ i → Normal.Point (G i))) → to (from y) ＝ y
+  to-from (i , b) = ap (i ,_)
     (_≅_.forward-backward (Orders.Iso.equivalence (forward i)) b)

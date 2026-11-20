@@ -18,18 +18,13 @@ module SPT.Cubical.OrdinalGeometry.Cubical.TypeTopology.Arithmetic where
 --
 -- +ₒ, ×ₒ and 𝟙ₒ are TypeTopology's, built as in Ordinals.Arithmetic from
 -- Ordinals.WellOrderArithmetic (plus, times, prop). Ordinals.Arithmetic
--- itself cannot be imported next to the standard library or Cubical: its
+-- itself cannot be imported next to SPT's base or Cubical: its
 -- dependency Naturals.Addition binds the NATPLUS builtin, which
 -- Agda.Builtin.Nat already binds.
 
-open import Agda.Primitive using (Level)
-open import Data.Nat using (zero)
-open import Data.Product using (_,_)
-open import Data.Sum using (inj₁; inj₂)
-import Data.Unit.Polymorphic as Polymorphic
-open import Level using (lift)
-open import Relation.Binary.PropositionalEquality using (sym; trans; subst)
-import Relation.Binary.PropositionalEquality as Inductive
+open import SPT.Cubical.Base using
+  ( Level; _,_; _⁻¹; _∙_; inl; inr; lift; transport; zero; ⋆ )
+import SPT.Cubical.Base as Inductive
 
 import SPT.Cubical.TypeTopology.MLTT.Identity-Type as TypeTopologyIdentity
 import SPT.Cubical.TypeTopology.MLTT.Plus as TypeTopologyPlus
@@ -144,8 +139,8 @@ private
 ------------------------------------------------------------------------
 -- Sums
 
--- Mathematical shape: (P + Q)′ ≃ P′ +ₒ Q′, inj₁ x ↦ inl [x] and
--- inj₂ y ↦ inr [y].
+-- Mathematical shape: (P + Q)′ ≃ P′ +ₒ Q′, inl x ↦ inl [x] and
+-- inr y ↦ inr [y].
 sum : (P Q : 𝒫 ℓ)
   → Woset.WosetEquiv (orderType (P + Q))
       (woset (ordinal P +ₒ ordinal Q))
@@ -161,28 +156,28 @@ sum P Q =
   _⊏_ = Woset.WosetStr._≺_ (Cubical.snd (woset β))
 
   image : 𝒫.X (P + Q) → Cubical.fst (woset β)
-  image (inj₁ x) = TypeTopologyPlus.inl Quotient.[ x ]
-  image (inj₂ y) = TypeTopologyPlus.inr Quotient.[ y ]
+  image (inl x) = TypeTopologyPlus.inl Quotient.[ x ]
+  image (inr y) = TypeTopologyPlus.inr Quotient.[ y ]
 
   respect : (u v : 𝒫.X (P + Q)) → 𝒫._≈_ (P + Q) u v
     → image u Cubical.≡ image v
-  respect (inj₁ x) (inj₁ x′) p =
+  respect (inl x) (inl x′) p =
     Cubical.cong TypeTopologyPlus.inl (Quotient.eq/ x x′ p)
-  respect (inj₂ y) (inj₂ y′) p =
+  respect (inr y) (inr y′) p =
     Cubical.cong TypeTopologyPlus.inr (Quotient.eq/ y y′ p)
-  respect (inj₁ _) (inj₂ _) (lift ())
-  respect (inj₂ _) (inj₁ _) (lift ())
+  respect (inl _) (inr _) (lift ())
+  respect (inr _) (inl _) (lift ())
 
   forth : Class (P + Q) → Cubical.fst (woset β)
   forth = Quotient.rec (set β) image respect
 
   back : Cubical.fst (woset β) → Class (P + Q)
   back (TypeTopologyPlus.inl a) =
-    Quotient.rec Quotient.squash/ (λ x → Quotient.[ inj₁ x ])
-      (λ x x′ p → Quotient.eq/ (inj₁ x) (inj₁ x′) p) a
+    Quotient.rec Quotient.squash/ (λ x → Quotient.[ inl x ])
+      (λ x x′ p → Quotient.eq/ (inl x) (inl x′) p) a
   back (TypeTopologyPlus.inr b) =
-    Quotient.rec Quotient.squash/ (λ y → Quotient.[ inj₂ y ])
-      (λ y y′ p → Quotient.eq/ (inj₂ y) (inj₂ y′) p) b
+    Quotient.rec Quotient.squash/ (λ y → Quotient.[ inr y ])
+      (λ y y′ p → Quotient.eq/ (inr y) (inr y′) p) b
 
   forth-back : (c : Cubical.fst (woset β)) → forth (back c) Cubical.≡ c
   forth-back (TypeTopologyPlus.inl a) =
@@ -200,7 +195,7 @@ sum P Q =
     → back (forth u) Cubical.≡ u
   back-forth =
     Quotient.elimProp (λ _ → Quotient.squash/ _ _)
-      λ { (inj₁ x) → Cubical.refl ; (inj₂ y) → Cubical.refl }
+      λ { (inl x) → Cubical.refl ; (inr y) → Cubical.refl }
 
   equivalence : Equiv._≃_ (Class (P + Q))
     (Cubical.fst (woset β))
@@ -210,20 +205,20 @@ sum P Q =
 
   forward′ : (u v : 𝒫.X (P + Q)) → 𝒫._<_ (P + Q) u v
     → image u ⊏ image v
-  forward′ (inj₁ x) (inj₁ x′) p =
+  forward′ (inl x) (inl x′) p =
     Less-intro P p
-  forward′ (inj₁ x) (inj₂ y) _ = TypeTopologyUnit.⋆
-  forward′ (inj₂ y) (inj₁ x) (lift ())
-  forward′ (inj₂ y) (inj₂ y′) p =
+  forward′ (inl x) (inr y) _ = TypeTopologyUnit.⋆
+  forward′ (inr y) (inl x) (lift ())
+  forward′ (inr y) (inr y′) p =
     Less-intro Q p
 
   backward′ : (u v : 𝒫.X (P + Q)) → image u ⊏ image v
     → 𝒫._<_ (P + Q) u v
-  backward′ (inj₁ x) (inj₁ x′) t =
+  backward′ (inl x) (inl x′) t =
     Less-witness P t
-  backward′ (inj₁ x) (inj₂ y) _ = Polymorphic.tt
-  backward′ (inj₂ y) (inj₁ x) ()
-  backward′ (inj₂ y) (inj₂ y′) t =
+  backward′ (inl x) (inr y) _ = (lift ⋆)
+  backward′ (inr y) (inl x) ()
+  backward′ (inr y) (inr y′) t =
     Less-witness Q t
 
   forward : (u v : Class (P + Q))
@@ -374,10 +369,10 @@ opaque
       Quotient.rec2 Quotient.squash/
         (λ x y → Quotient.[ lift (Normal.class Q y , Normal.class P x) ])
         (λ x x′ y p → Quotient.eq/ _ _
-          (lift (Inductive.cong (λ z → Normal.class Q y , z)
+          (lift (Inductive.ap (λ z → Normal.class Q y , z)
             (Normal.class-resp P p))))
         (λ x y y′ p → Quotient.eq/ _ _
-          (lift (Inductive.cong (λ z → z , Normal.class P x)
+          (lift (Inductive.ap (λ z → z , Normal.class P x)
             (Normal.class-resp Q p))))
         c d
 
@@ -397,7 +392,7 @@ opaque
     back-forth =
       Quotient.elimProp (λ _ → Quotient.squash/ _ _)
         λ { (lift (q , a)) → Quotient.eq/ _ _
-              (lift (Inductive.cong₂ _,_ (Normal.class-representative Q q)
+              (lift (Inductive.ap₂ _,_ (Normal.class-representative Q q)
                 (Normal.class-representative P a))) }
 
     equivalence : Equiv._≃_ (Class (P · Q))
@@ -413,12 +408,12 @@ opaque
     same : (q q′ : Normal.Point Q)
       → TypeTopologyIdentity._＝_ (class (Normal.representative Q q))
           (class (Normal.representative Q q′))
-      → q Inductive.≡ q′
+      → q Inductive.＝ q′
     same q q′ e =
-      trans (sym (Normal.class-representative Q q))
-        (trans (Normal.class-resp Q (effective Q
+      Normal.class-representative Q q ⁻¹
+        ∙ ((Normal.class-resp Q (effective Q
           (＝→path e)))
-          (Normal.class-representative Q q′))
+          ∙ Normal.class-representative Q q′)
 
     forward′ : (u v : 𝒫.X (P · Q)) → 𝒫._<_ (P · Q) u v
       → image u ⊏ image v
@@ -442,7 +437,7 @@ opaque
           (Less-witness Q r)))
     backward′ (lift (q , a)) (lift (q′ , a′))
       (TypeTopologyPlus.inr (TypeTopologySigma._,_ e r)) =
-      subst (λ z → 𝒫._<_ (P · Q) (lift (q , a)) (lift (z , a′)))
+      transport (λ z → 𝒫._<_ (P · Q) (lift (q , a)) (lift (z , a′)))
         (same q q′ e)
         (lift (Blocks.within q
           (Normal.representative-reflect P {a} {a′}

@@ -25,10 +25,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.OmegaOne.Regularity where
 -- between the points and their presentations; whether Regular needs it
 -- beyond LPO is not settled here.
 
-open import Agda.Primitive using (Level; lzero; lsuc)
-open import Data.Bool using (Bool)
-open import Data.Nat using (ℕ; zero; suc)
-open import Data.Product using (Σ; proj₁; proj₂)
+open import SPT.Cubical.Base using
+  ( Level; lsuc; lzero; pr₁; pr₂; suc; zero; Σ; ℕ; 𝟚 )
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -98,14 +96,14 @@ regular {ℓ} lpo H cut f = Truncation.map bounded
     Simulation.↓Respects≺⁻ H (f n) (Cubical.fst placed)
       (Simulation.≺RespectsEquiv (Cubical.snd (g n))
         (Woset.invWosetEquiv (Cubical.snd placed))
-        (segment {P = Cubical.fst (g n)} {Q = proj₁ strict}
-          (proj₂ strict n)))
+        (segment {P = Cubical.fst (g n)} {Q = pr₁ strict}
+          (pr₂ strict n)))
     where
     strict : Σ (𝒫 ℓ) (λ S → (n : ℕ) → Maps.Segment (Cubical.fst (g n)) S)
     strict = Comparison.bound lpo (λ n → Cubical.fst (g n))
 
-    placed : orderType (proj₁ strict) Simulation.≺ H
-    placed = all-presentations-strict cut (proj₁ strict)
+    placed : orderType (pr₁ strict) Simulation.≺ H
+    placed = all-presentations-strict cut (pr₁ strict)
 
 -- Mathematical shape: LPO → AC_ω → Regular H.
 choice : Stream.LPO → CountableChoice (lsuc ℓ)
@@ -123,7 +121,7 @@ private
   -- which decides s.
   decide : (H : Woset.Woset (lsuc lzero) lzero)
     (cut : IsOmegaOneCut H)
-    (s : ℕ → Bool) (b : Cubical.fst H)
+    (s : ℕ → 𝟚) (b : Cubical.fst H)
     → ((n : ℕ) → Woset.WosetStr._≺_ (Cubical.snd H)
         (Cubical.fst (all-presentations-strict cut (family s n))) b)
     → (S : 𝒫 lzero)

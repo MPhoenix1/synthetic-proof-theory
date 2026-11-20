@@ -16,10 +16,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Supremum.Comparison
 -- These suprema lie strictly below the presented ω₁ of every geometry
 -- (below).
 
-open import Agda.Primitive using (Level; lzero)
-open import Data.Nat using (ℕ)
-open import Data.Product using (Σ; _,_; proj₁; proj₂)
-open import Function.Bundles using (_⇔_; mk⇔)
+open import SPT.Cubical.Base using (Level; _,_; lzero; pr₁; pr₂; Σ; ℕ)
+open import SPT.Cubical.Foundation.LogicalEquivalence using (_⇔_)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -87,19 +85,19 @@ presented lpo F =
 -- Mathematical shape: LPO → Π F : ℕ → 𝒫. MerelyPresented (sup F).
 merely : Stream.LPO → (F : ℕ → 𝒫 ℓ) → MerelyPresented (supremum F)
 merely lpo F =
-  Truncation.∣ Cubical._,_ (proj₁ (presented lpo F))
-    (proj₂ (presented lpo F)) ∣₁
+  Truncation.∣ Cubical._,_ (pr₁ (presented lpo F))
+    (pr₂ (presented lpo F)) ∣₁
 
 -- Mathematical shape: LPO ⇔ Π F : ℕ → 𝒫. MerelyPresented (sup F).
 strength : Stream.LPO
   ⇔ ((F : ℕ → 𝒫 lzero) → MerelyPresented (supremum F))
-strength = mk⇔ (λ lpo → merely lpo) Discriminator.presented
+strength = ((λ lpo → merely lpo) , Discriminator.presented)
 
 -- Mathematical shape: LPO → sup F ≺ ω₁(G).
 below : Stream.LPO → (G : Presented.𝒫ω₁𝒢 ℓ) (F : ℕ → 𝒫 ℓ)
   → supremum F Simulation.≺ ω₁ᴳ G
 below lpo G F =
   Simulation.≺RespectsEquivL (ω₁ᴳ G)
-    (proj₂ (presented lpo F))
+    (pr₂ (presented lpo F))
     (orderType-strictᴳ G
-      (proj₁ (presented lpo F)))
+      (pr₁ (presented lpo F)))

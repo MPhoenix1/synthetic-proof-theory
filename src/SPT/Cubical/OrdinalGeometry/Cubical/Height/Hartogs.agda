@@ -9,8 +9,10 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Height.Hartogs where
 -- equivalence); with choice it is regular, hence inaccessible
 -- (inaccessible).
 
-open import Agda.Primitive using (Level)
-open import Data.Empty using (⊥-elim)
+open import SPT.Cubical.Base using (Level; 𝟘-elim)
+open import SPT.Cubical.Foundation.Accessibility using (acc; is-accessible)
+open import SPT.Cubical.Foundation.Isomorphisms using ()
+  renaming (_≅_ to Isomorphic)
 
 import Cubical.Data.Bool as Bool
 open Bool using (Bool; true; false)
@@ -33,13 +35,10 @@ import Cubical.Relation.Binary.Order.Woset.Simulation as Simulation
 import Cubical.Relation.Nullary as Nullary
 open Nullary using (Dec; yes; no)
 
-open import SPT.Cubical.Core.WellFounded using (Acc; acc)
-open import SPT.Cubical.Core.Equality.Isomorphism using () renaming
-  (_≅_ to Isomorphic)
-import SPT.Cubical.Core.Mahlo.Specification as Mahlo
-open import SPT.Cubical.Core.Mahlo.Decoding using
+import SPT.Cubical.Mahlo.Specification as Mahlo
+open import SPT.Cubical.Mahlo.Decoding using
   (W; sup; child-formers; child-decoding)
-import SPT.Cubical.Core.Mahlo.Ambient as Ambient
+import SPT.Cubical.Mahlo.Ambient as Ambient
 import SPT.Cubical.OrdinalGeometry.Height.Reflection as Reflection
 open import SPT.Cubical.OrdinalGeometry.Height.Simulation using
   (_≅_; branching; ≅-refl; ≅-trans)
@@ -317,7 +316,7 @@ module _ {Ψ : Ambient.Operator ℓ}
               (fibers-below (Cubical.fst e) (λ y → y < x))
 
       -- The canonical tree of α, with labels the lower-set codes.
-      tree : (x : Cubical.fst α) → Acc _<_ x → Trees codes
+      tree : (x : Cubical.fst α) → is-accessible _<_ x → Trees codes
       tree x (acc smaller) =
         sup (lower x) λ q →
           tree (Cubical.fst (Equiv.equivFun (lower-≃ x) q))
@@ -333,7 +332,7 @@ module _ {Ψ : Ambient.Operator ℓ}
       private
         embed = Reflection.embed (Ambient.laws ℓ) codes
 
-        tree-≅ : (x : Cubical.fst α) (a : Acc _<_ x)
+        tree-≅ : (x : Cubical.fst α) (a : is-accessible _<_ x)
           → embed (tree x a) ≅ Heights.rankAt _<_ x a
         tree-≅ x (acc smaller) =
           branching (isomorphic (lower-≃ x))
@@ -429,7 +428,7 @@ module _ {Ψ : Ambient.Operator ℓ}
             pick t (yes found) = Cubical.fst (chosen (Cubical.fst found))
             pick t (no _) =
               sup (Mahlo.Formers.empty formers)
-                (λ z → ⊥-elim (empty-absurd formers laws z))
+                (λ z → 𝟘-elim (empty-absurd formers laws z))
 
             decision : (t : Decode j) → Dec (Equiv.fiber (Cubical.fst e) t)
             decision t =

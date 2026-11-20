@@ -12,13 +12,10 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Representative where
 -- This is a section of the quotient map without any choice principle.
 -- Classes are effective: equal classes have equivalent representatives.
 
-open import Agda.Primitive using (Level)
-open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Maybe using (Maybe; just; nothing)
-import Data.Maybe as Maybe
-open import Data.Product using (Σ; _,_; proj₁; proj₂)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Unit using (⊤; tt)
+open import SPT.Cubical.Base using
+  ( Level; Maybe; _,_; _⊎_; inl; inr; just; nothing; pr₁; pr₂; Σ; ⋆; 𝟘; 𝟘-elim
+  ; 𝟙 )
+import SPT.Cubical.Base as Maybe
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -53,14 +50,14 @@ decide P =
   step : (x y : 𝒫.X P)
     → 𝒫._<_ P x y ⊎ (𝒫._≈_ P x y ⊎ 𝒫._<_ P y x)
     → Nullary.Dec (Less P Quotient.[ x ] Quotient.[ y ])
-  step x y (inj₁ x<y) =
+  step x y (inl x<y) =
     Nullary.yes (Less-intro P x<y)
-  step x y (inj₂ (inj₁ x≈y)) =
-    Nullary.no λ s → ⊥-elim
+  step x y (inr (inl x≈y)) =
+    Nullary.no λ s → 𝟘-elim
       (Presented.Presentation.≈↛< P x≈y
         (Less-witness P s))
-  step x y (inj₂ (inj₂ y<x)) =
-    Nullary.no λ s → ⊥-elim
+  step x y (inr (inr y<x)) =
+    Nullary.no λ s → 𝟘-elim
       (Presented.Presentation.<-asym P
         (Less-witness P s) y<x)
 
@@ -73,14 +70,14 @@ trichotomy P = decidable→trichotomy (orderType P)
 effective : (P : 𝒫 ℓ) {x y : 𝒫.X P}
   → Quotient.[ x ] Cubical.≡ Quotient.[ y ] → 𝒫._≈_ P x y
 effective P {x} {y} p with 𝒫.compare P x y
-... | inj₁ x<y =
-  ⊥-elim (Presented.Presentation.<-irrefl P y
+... | inl x<y =
+  𝟘-elim (Presented.Presentation.<-irrefl P y
     (Less-witness P
       (Cubical.subst (λ a → Less P a Quotient.[ y ]) p
         (Less-intro P x<y))))
-... | inj₂ (inj₁ x≈y) = x≈y
-... | inj₂ (inj₂ y<x) =
-  ⊥-elim (Presented.Presentation.<-irrefl P y
+... | inr (inl x≈y) = x≈y
+... | inr (inr y<x) =
+  𝟘-elim (Presented.Presentation.<-irrefl P y
     (Less-witness P
       (Cubical.subst (Less P Quotient.[ y ]) p
         (Less-intro P y<x))))
@@ -88,11 +85,11 @@ effective P {x} {y} p with 𝒫.compare P x y
 private
   -- An enumerated entry whose class is a, read off from the entry.
   entry : (P : 𝒫 ℓ) (a : Class P) (m : Maybe (𝒫.X P))
-    → Maybe.map (λ x → Quotient.[ x ]) m Cubical.≡ just a
+    → Maybe.maybe-map (λ x → Quotient.[ x ]) m Cubical.≡ just a
     → Σ (𝒫.X P) (λ x → Quotient.[ x ] Cubical.≡ a)
   entry P a nothing p =
-    ⊥-elim (Cubical.subst (λ { nothing → ⊤ ; (just _) → ⊥ }) p tt)
-  entry P a (just x) p = x , Cubical.cong (Maybe.fromMaybe a) p
+    𝟘-elim (Cubical.subst (λ { nothing → 𝟙 ; (just _) → 𝟘 }) p ⋆)
+  entry P a (just x) p = x , Cubical.cong (Maybe.maybe-rec a (λ y → y)) p
 
   -- The member enumerated at the least index of the class.
   chosen : (P : 𝒫 ℓ) (a : Class P)
@@ -100,7 +97,7 @@ private
   chosen P a =
     let hit = enumerationHit (orderType P)
           (trichotomy P) (classEnumeration P) a
-    in entry P a (𝒫.enum P (proj₁ hit)) (proj₂ hit)
+    in entry P a (𝒫.enum P (pr₁ hit)) (pr₂ hit)
 
 -- Mathematical shape: a section of the quotient map,
 --
@@ -109,11 +106,11 @@ private
 -- Nonclaim: the section is canonical for the enumeration of P; another
 -- enumeration of the same order may select other representatives.
 representative : (P : 𝒫 ℓ) → Class P → 𝒫.X P
-representative P a = proj₁ (chosen P a)
+representative P a = pr₁ (chosen P a)
 
 class : (P : 𝒫 ℓ) (a : Class P)
   → Quotient.[ representative P a ] Cubical.≡ a
-class P a = proj₂ (chosen P a)
+class P a = pr₂ (chosen P a)
 
 -- The representative of a class is a member of it.
 member : (P : 𝒫 ℓ) (x : 𝒫.X P)

@@ -4,50 +4,143 @@
 module SPT.Cubical.Everything where
 
 -- One import of every module of the self-contained ordinal geometry and its
--- Cubical results: retained presentations, exact orders, arithmetic and its
--- discriminators, the presented ω₁ with its cut, Hartogs comparison and
--- position fibers, the order-type reflection, closed heights, the rank of
--- their ordinal of ordinals and the fibers of rank, the inaccessible points
--- of Ord(ℓ) with their classical comparison, and the comparison with the
--- copied TypeTopology ordinals.  Checking this module checks the whole
--- development.  It uses `--cubical` because the modules under
+-- Cubical results, on SPT's base and foundation (their cubical-compatible
+-- copies, SPT.Cubical.Base and SPT.Cubical.Foundation): retained presentations,
+-- exact orders, arithmetic and its discriminators, the presented ω₁ with its
+-- cut, Hartogs comparison and position fibers, the order-type reflection,
+-- closed heights, the rank of their ordinal of ordinals and the fibers of rank,
+-- the inaccessible points of Ord(ℓ) with their classical comparison, and the
+-- comparison with the copied TypeTopology ordinals. Checking this module checks
+-- the whole development. It uses `--cubical` because the modules under
 -- `OrdinalGeometry/Cubical` do; every other module is `--cubical-compatible`.
 
 ------------------------------------------------------------------------
--- Core
+-- Base and foundation
 
-import SPT.Cubical.Core.Equality
-import SPT.Cubical.Core.Equality.Contractibility
-import SPT.Cubical.Core.Equality.Cover
-import SPT.Cubical.Core.Equality.Fiber
-import SPT.Cubical.Core.Equality.Isomorphism
-import SPT.Cubical.Core.Generator.Linear.Exponential
-import SPT.Cubical.Core.Generator.Linear.Exponential.Order
-import SPT.Cubical.Core.Generator.Linear.History
-import SPT.Cubical.Core.Generator.Linear.Signature
-import SPT.Cubical.Core.Generator.Signature
-import SPT.Cubical.Core.Generator.Tree
-import SPT.Cubical.Core.Generator.Tree.Child
-import SPT.Cubical.Core.Generator.Tree.Descendant
-import SPT.Cubical.Core.Generator.Tree.Fold
-import SPT.Cubical.Core.Generator.Tree.Map
-import SPT.Cubical.Core.Generator.Tree.Relation
-import SPT.Cubical.Core.Generator.Tree.W
-import SPT.Cubical.Core.Mahlo.Ambient
-import SPT.Cubical.Core.Mahlo.Decoding
-import SPT.Cubical.Core.Mahlo.Specification
-import SPT.Cubical.Core.Nat.FirstSuccess
-import SPT.Cubical.Core.Nat.Least
-import SPT.Cubical.Core.Nat.Order
-import SPT.Cubical.Core.Nat.Pairing
-import SPT.Cubical.Core.Nat.WellFounded
-import SPT.Cubical.Core.WellFounded
-import SPT.Cubical.Core.WellFounded.Lex
-import SPT.Cubical.Core.WellFounded.Pullback
-import SPT.Cubical.Core.WellFounded.Rank
-import SPT.Cubical.Core.WellFounded.Rewrite
-import SPT.Cubical.Core.WellFounded.Subrelation
-import SPT.Cubical.Core.WellFounded.Termination
+import SPT.Cubical.Base
+import SPT.Cubical.Foundation.Accessibility
+import SPT.Cubical.Foundation.Contractible
+import SPT.Cubical.Foundation.Covers
+import SPT.Cubical.Foundation.Covers.WeaklyInitial
+import SPT.Cubical.Foundation.Embeddings
+import SPT.Cubical.Foundation.Equivalences
+import SPT.Cubical.Foundation.ExcludedMiddle
+import SPT.Cubical.Foundation.Extensionality
+import SPT.Cubical.Foundation.Extensionality.Levels
+import SPT.Cubical.Foundation.Fibers
+import SPT.Cubical.Foundation.Fibers.Projection
+import SPT.Cubical.Foundation.Fibers.Structure
+import SPT.Cubical.Foundation.Fibers.Transport
+import SPT.Cubical.Foundation.Groups
+import SPT.Cubical.Foundation.HalfAdjoint
+import SPT.Cubical.Foundation.HalfAdjoint.Extension
+import SPT.Cubical.Foundation.Happly
+import SPT.Cubical.Foundation.Happly.Pointwise
+import SPT.Cubical.Foundation.Hedberg
+import SPT.Cubical.Foundation.Identifications.Formers
+import SPT.Cubical.Foundation.Impredicative.BuraliForti
+import SPT.Cubical.Foundation.Impredicative.Classification
+import SPT.Cubical.Foundation.Impredicative.Classifier
+import SPT.Cubical.Foundation.Impredicative.Classifier.Discriminator
+import SPT.Cubical.Foundation.Impredicative.PropositionalClassifier
+import SPT.Cubical.Foundation.Impredicative.PropositionalClassifier.Exact
+import SPT.Cubical.Foundation.Impredicative.PropositionalResizing
+import SPT.Cubical.Foundation.Impredicative.PropositionalResizing.Truncation
+import SPT.Cubical.Foundation.Impredicative.Realizability.CombinatoryAlgebra
+import SPT.Cubical.Foundation.Impredicative.Realizability.Recursion
+import SPT.Cubical.Foundation.Impredicative.Realizability.Tripos
+import SPT.Cubical.Foundation.Impredicative.Realizability.Two
+import SPT.Cubical.Foundation.Impredicative.SmallIdentifications
+import SPT.Cubical.Foundation.Impredicative.SmallIdentifications.Cayley
+import SPT.Cubical.Foundation.Impredicative.Tripos
+import SPT.Cubical.Foundation.Impredicative.Tripos.Indexed
+import SPT.Cubical.Foundation.Impredicative.WeakResizing
+import SPT.Cubical.Foundation.Induction.Initiality
+import SPT.Cubical.Foundation.Isomorphisms
+import SPT.Cubical.Foundation.Isomorphisms.Sets
+import SPT.Cubical.Foundation.Joins
+import SPT.Cubical.Foundation.Kripke
+import SPT.Cubical.Foundation.Lifting
+import SPT.Cubical.Foundation.Limits.Sequential
+import SPT.Cubical.Foundation.Limits.Sequential.Identity
+import SPT.Cubical.Foundation.Limits.Sequential.Path
+import SPT.Cubical.Foundation.Linear.Exponential
+import SPT.Cubical.Foundation.Linear.Exponential.Order
+import SPT.Cubical.Foundation.Linear.History
+import SPT.Cubical.Foundation.Linear.Signature
+import SPT.Cubical.Foundation.LogicalEquivalence
+import SPT.Cubical.Foundation.Modalities
+import SPT.Cubical.Foundation.Modalities.Biconditional
+import SPT.Cubical.Foundation.Nat.Arithmetic
+import SPT.Cubical.Foundation.Nat.FirstSuccess
+import SPT.Cubical.Foundation.Nat.Identifications
+import SPT.Cubical.Foundation.Nat.Least
+import SPT.Cubical.Foundation.Nat.Order
+import SPT.Cubical.Foundation.Nat.WellFounded
+import SPT.Cubical.Foundation.Propositions
+import SPT.Cubical.Foundation.Propositions.Closure
+import SPT.Cubical.Foundation.Propositions.Extensionality
+import SPT.Cubical.Foundation.Sets
+import SPT.Cubical.Foundation.Sets.Uniqueness
+import SPT.Cubical.Foundation.Signature
+import SPT.Cubical.Foundation.Signature.Coproduct
+import SPT.Cubical.Foundation.Signature.LaxTranslation
+import SPT.Cubical.Foundation.Signature.Polynomial
+import SPT.Cubical.Foundation.Signature.Relabeling
+import SPT.Cubical.Foundation.Signature.Sum
+import SPT.Cubical.Foundation.Signature.Translation
+import SPT.Cubical.Foundation.Size
+import SPT.Cubical.Foundation.Spaces
+import SPT.Cubical.Foundation.Spaces.Maps
+import SPT.Cubical.Foundation.Spaces.Vertical
+import SPT.Cubical.Foundation.Tree
+import SPT.Cubical.Foundation.Tree.Binding
+import SPT.Cubical.Foundation.Tree.Binding.Composition
+import SPT.Cubical.Foundation.Tree.Binding.Laws
+import SPT.Cubical.Foundation.Tree.Binding.Lifting
+import SPT.Cubical.Foundation.Tree.Binding.Moving
+import SPT.Cubical.Foundation.Tree.Binding.Shift
+import SPT.Cubical.Foundation.Tree.Binding.Transport
+import SPT.Cubical.Foundation.Tree.Child
+import SPT.Cubical.Foundation.Tree.Descendant
+import SPT.Cubical.Foundation.Tree.Descendant.Route
+import SPT.Cubical.Foundation.Tree.Fold
+import SPT.Cubical.Foundation.Tree.Fold.Initiality
+import SPT.Cubical.Foundation.Tree.Fold.Relation
+import SPT.Cubical.Foundation.Tree.Fold.Relation.Heterogeneous
+import SPT.Cubical.Foundation.Tree.Fold.Relation.Heterogeneous.LaxTranslation
+import SPT.Cubical.Foundation.Tree.Fold.Substitution
+import SPT.Cubical.Foundation.Tree.LaxTranslation
+import SPT.Cubical.Foundation.Tree.LaxTranslation.Functoriality
+import SPT.Cubical.Foundation.Tree.Map
+import SPT.Cubical.Foundation.Tree.Relabeling
+import SPT.Cubical.Foundation.Tree.Relation
+import SPT.Cubical.Foundation.Tree.Relation.Heterogeneous
+import SPT.Cubical.Foundation.Tree.Routes
+import SPT.Cubical.Foundation.Tree.Substitution
+import SPT.Cubical.Foundation.Tree.W
+import SPT.Cubical.Foundation.Tree.W.Indexed
+import SPT.Cubical.Foundation.Tree.W.Retractions
+import SPT.Cubical.Foundation.Tree.W.Sets
+import SPT.Cubical.Foundation.Truncations
+import SPT.Cubical.Foundation.Two.Connectives
+import SPT.Cubical.Foundation.Two.Decisions
+import SPT.Cubical.Foundation.Two.Truth
+import SPT.Cubical.Foundation.Univalence
+import SPT.Cubical.Foundation.Univalence.Sets
+import SPT.Cubical.Foundation.Vectors.Tabulation
+import SPT.Cubical.Foundation.WellFounded.Lexicographic
+import SPT.Cubical.Foundation.WellFounded.Pullback
+import SPT.Cubical.Foundation.WellFounded.Rewriting
+import SPT.Cubical.Foundation.WellFounded.Stable
+import SPT.Cubical.Foundation.WellFounded.Subrelation
+
+------------------------------------------------------------------------
+-- Mahlo
+
+import SPT.Cubical.Mahlo.Ambient
+import SPT.Cubical.Mahlo.Decoding
+import SPT.Cubical.Mahlo.Specification
 
 ------------------------------------------------------------------------
 -- OrdinalGeometry

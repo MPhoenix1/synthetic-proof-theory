@@ -10,11 +10,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Geometry
 -- well-orders are equal by uniqueness.  So the fiber over ω₁ is not a
 -- proposition, nor contractible.
 
-open import Agda.Primitive using (lzero)
-open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Maybe using (nothing)
-open import Data.Nat using (ℕ; zero)
-open import Data.Product using (_,_; proj₁; proj₂)
+open import SPT.Cubical.Base using
+  ( _,_; lzero; nothing; pr₁; pr₂; zero; ℕ; 𝟘; 𝟘-elim )
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import SPT.Cubical.OrdinalGeometry.Cubical.OmegaOne.Base as Omega
@@ -33,15 +30,15 @@ import Cubical.Functions.Embedding as Embedding
 
 emptyPresentation : Presented.CountableOrdinal𝒫 lzero
 emptyPresentation = record
-  { X = ⊥
-  ; _≈_ = λ _ _ → ⊥
-  ; _<_ = λ _ _ → ⊥
+  { X = 𝟘
+  ; _≈_ = λ _ _ → 𝟘
+  ; _<_ = λ _ _ → 𝟘
   ; ≈-refl = λ ()
-  ; ≈-sym = λ equivalent → ⊥-elim equivalent
-  ; ≈-trans = λ equivalent → ⊥-elim equivalent
-  ; <-trans = λ strict → ⊥-elim strict
-  ; <-respˡ-≈ = λ equivalent strict → ⊥-elim strict
-  ; <-respʳ-≈ = λ equivalent strict → ⊥-elim strict
+  ; ≈-sym = λ equivalent → 𝟘-elim equivalent
+  ; ≈-trans = λ equivalent → 𝟘-elim equivalent
+  ; <-trans = λ strict → 𝟘-elim strict
+  ; <-respˡ-≈ = λ equivalent strict → 𝟘-elim strict
+  ; <-respʳ-≈ = λ equivalent strict → 𝟘-elim strict
   ; <-wf = λ ()
   ; compare = λ ()
   ; enum = λ _ → nothing
@@ -66,14 +63,14 @@ raisedDiagonal family =
   Presented.Diagonal.𝒫 (λ _ → upper)
   , λ index →
       Presented.Embedding.trans
-        (proj₂ selected index)
+        (pr₂ selected index)
         upper<raised
   where
     selected : Presented.Diagonal.Upper family
     selected = Presented.Diagonal.upper family
 
     upper : Presented.CountableOrdinal𝒫 _
-    upper = proj₁ selected
+    upper = pr₁ selected
 
     upper<raised :
       Presented._≺𝒫_
@@ -111,13 +108,13 @@ canonicalDiagonal =
 
 canonicalDiagonal<raised :
   Presented._≺𝒫_
-    (proj₁ canonicalDiagonal)
-    (proj₁
+    (pr₁ canonicalDiagonal)
+    (pr₁
       (Presented.𝒫ω₁𝒢.diagonal
         raisedGeometry emptyFamily))
 canonicalDiagonal<raised =
   Presented.Diagonal.member
-    (λ _ → proj₁ canonicalDiagonal)
+    (λ _ → pr₁ canonicalDiagonal)
     zero
 
 -- The two geometries are not equal: a path would give a path between their
@@ -125,24 +122,24 @@ canonicalDiagonal<raised =
 -- into U⁺ along it would give a strict self-embedding.
 
 canonical≢raised :
-  (canonicalGeometry Cubical.≡ raisedGeometry) → ⊥
+  (canonicalGeometry Cubical.≡ raisedGeometry) → 𝟘
 canonical≢raised geometry-equality =
   Presented.Embedding.irrefl
-    (proj₁ canonicalDiagonal)
+    (pr₁ canonicalDiagonal)
     (Cubical.subst
-      (Presented._≺𝒫_ (proj₁ canonicalDiagonal))
+      (Presented._≺𝒫_ (pr₁ canonicalDiagonal))
       (Cubical.sym upper-equality)
       canonicalDiagonal<raised)
   where
     upper-equality :
-      proj₁ canonicalDiagonal Cubical.≡
-      proj₁
+      pr₁ canonicalDiagonal Cubical.≡
+      pr₁
         (Presented.𝒫ω₁𝒢.diagonal
           raisedGeometry emptyFamily)
     upper-equality =
       Cubical.cong
         (λ geometry →
-          proj₁
+          pr₁
             (Presented.𝒫ω₁𝒢.diagonal geometry emptyFamily))
         geometry-equality
 
@@ -182,7 +179,7 @@ raisedPoint =
 canonicalPoint≢raisedPoint :
   (canonicalPoint Cubical.≡
     raisedPoint)
-  → ⊥
+  → 𝟘
 canonicalPoint≢raisedPoint fiber-equality =
   canonical≢raised
     (Cubical.cong Cubical.fst fiber-equality)
@@ -191,7 +188,7 @@ canonicalPoint≢raisedPoint fiber-equality =
 -- an embedding.  No nontrivial loop is constructed here.
 
 geometryFiber-not-prop :
-  Cubical.isProp GeometryFiber → ⊥
+  Cubical.isProp GeometryFiber → 𝟘
 geometryFiber-not-prop proposition =
   canonicalPoint≢raisedPoint
     (proposition
@@ -200,14 +197,14 @@ geometryFiber-not-prop proposition =
 
 ω₁ᴳ-not-embedding :
   Embedding.isEmbedding
-    (Omega.ω₁ᴳ {lzero}) → ⊥
+    (Omega.ω₁ᴳ {lzero}) → 𝟘
 ω₁ᴳ-not-embedding embedding =
   geometryFiber-not-prop
     (Embedding.isEmbedding→hasPropFibers embedding
       (Omega.ω₁ᴳ canonicalGeometry))
 
 geometryFiber-not-contractible :
-  Cubical.isContr GeometryFiber → ⊥
+  Cubical.isContr GeometryFiber → 𝟘
 geometryFiber-not-contractible contraction =
   canonicalPoint≢raisedPoint
     (Cubical.sym

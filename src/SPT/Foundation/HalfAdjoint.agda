@@ -48,9 +48,6 @@ open import SPT.Base
 open import SPT.Foundation.Isomorphisms using
   (_≅_; forward; backward; backward-forward; forward-backward)
 open import SPT.Foundation.Extensionality using (FunExt)
-open import SPT.Foundation.Identifications using
-  (apd; homotopies-are-natural; identity-homotopies-are-natural;
-   back-and-forth-transport)
 
 ------------------------------------------------------------------------
 -- The adjusted law and the triangle

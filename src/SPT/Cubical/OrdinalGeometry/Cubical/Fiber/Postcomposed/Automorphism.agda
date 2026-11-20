@@ -9,8 +9,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Postcomposed.Automorphism
 -- loops of the fiber of A ∘ q_G at retain(T , t), and so does each finite
 -- iterated loop type of them, one dimension higher.
 
-open import Agda.Primitive using (Level)
-open import Data.Nat using (ℕ)
+open import SPT.Cubical.Base using (Level; suc; ℕ)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import
@@ -93,11 +92,11 @@ iteratedEmbedding :
       (Iterated.iteratedLoopPoint height
         (PointedLoops.PointedAutomorphism pointed)
         (PointedLoops.identityAutomorphism pointed))
-      (Iterated.IteratedLoop (Data.Nat.suc height)
+      (Iterated.IteratedLoop (suc height)
         (Postcomposition.PostcomposedFiber geometry adapter)
         (Postcomposition.retain
           geometry adapter pointed))
-      (Iterated.iteratedLoopPoint (Data.Nat.suc height)
+      (Iterated.iteratedLoopPoint (suc height)
         (Postcomposition.PostcomposedFiber geometry adapter)
         (Postcomposition.retain
           geometry adapter pointed))

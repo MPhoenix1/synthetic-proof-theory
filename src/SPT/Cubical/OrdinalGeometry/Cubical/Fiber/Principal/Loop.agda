@@ -9,9 +9,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Principal.Loop
 -- MerelyPresented is contractible; so the truncation map is not an
 -- embedding.
 
-open import Agda.Primitive using (Level; lzero)
-open import Data.Empty using (⊥)
-open import Data.Unit.Polymorphic as PolyUnit using ()
+open import SPT.Cubical.Base using (Level; Lift; lift; lzero; ⋆; 𝟘; 𝟙)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import SPT.Cubical.OrdinalGeometry.Cubical.OmegaOne.Cut as Cut
@@ -54,7 +52,7 @@ swapPath geometry =
 swapPath-not-refl :
     (geometry : Presented.𝒫ω₁𝒢 lzero)
   → swapPath geometry Cubical.≡ Cubical.refl
-  → ⊥
+  → 𝟘
 swapPath-not-refl
   geometry principal-loop=refl =
   Position.pointedSwapLoop-not-refl
@@ -73,7 +71,7 @@ swapPath-not-refl
 not-set :
     (geometry : Presented.𝒫ω₁𝒢 lzero)
   → Cubical.isSet (Principal.UnitPresentations geometry)
-  → ⊥
+  → 𝟘
 not-set geometry principal-is-set =
   swapPath-not-refl geometry
     (principal-is-set
@@ -87,7 +85,7 @@ not-set geometry principal-is-set =
 not-prop :
     (geometry : Presented.𝒫ω₁𝒢 lzero)
   → Cubical.isProp (Principal.UnitPresentations geometry)
-  → ⊥
+  → 𝟘
 not-prop geometry principal-is-prop =
   not-set geometry
     (Cubical.isProp→isSet principal-is-prop)
@@ -95,7 +93,7 @@ not-prop geometry principal-is-prop =
 not-contractible :
     (geometry : Presented.𝒫ω₁𝒢 lzero)
   → Cubical.isContr (Principal.UnitPresentations geometry)
-  → ⊥
+  → 𝟘
 not-contractible geometry principal-is-contr =
   not-prop geometry
     (Cubical.isContr→isProp principal-is-contr)
@@ -120,7 +118,7 @@ merelyPresented :
 merelyPresented {ℓ} geometry =
   truncation geometry
     (Retraction.retain geometry
-      (PolyUnit.⊤ {ℓ} Cubical., PolyUnit.tt))
+      (Lift ℓ 𝟙 Cubical., lift ⋆))
 
 -- MerelyPresented of the unit segment is contractible.
 
@@ -141,7 +139,7 @@ merelyPresented-isContr geometry =
 truncation-not-embedding :
     (geometry : Presented.𝒫ω₁𝒢 lzero)
   → Embedding.isEmbedding (truncation geometry)
-  → ⊥
+  → 𝟘
 truncation-not-embedding geometry embedding =
   not-prop geometry
     (Embedding.Embedding-into-isProp→isProp

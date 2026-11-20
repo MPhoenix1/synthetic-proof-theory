@@ -7,15 +7,12 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Woset where
 -- trichotomy and a partial enumeration is the order type of a presentation
 -- on its own carrier.  Decidability of the strict order gives trichotomy.
 
-open import Agda.Primitive using (Level)
-open import Data.Maybe using (Maybe; just; nothing)
-import Data.Maybe.Properties as MaybeProperties
-open import Data.Nat using (ℕ)
-open import Data.Product using (Σ; _,_)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-import Relation.Binary.PropositionalEquality as InductiveEquality
+open import SPT.Cubical.Base using
+  ( Level; Maybe; _,_; _⊎_; inl; inr; just; nothing; Σ; ℕ )
+import SPT.Cubical.Base as InductiveEquality
+import SPT.Cubical.Base as MaybeProperties
 
-import SPT.Cubical.Core.WellFounded as Accessibility
+import SPT.Cubical.Foundation.Accessibility as Accessibility
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Countability
   as Countability
@@ -56,7 +53,7 @@ StrictTrichotomy : (order : Woset.Woset ℓ ℓ) → Set ℓ
 StrictTrichotomy order =
   (x y : WosetCarrier order) →
   WosetStrict order x y
-    ⊎ (x Cubical.≡ y ⊎ WosetStrict order y x)
+    ⊎ ((x Cubical.≡ y) ⊎ WosetStrict order y x)
 
 -- Decidability of the strict order, Π x y. Dec(x < y), as a hypothesis.
 
@@ -98,7 +95,7 @@ decidable→trichotomy {ℓ} order decide =
     transitive = Woset.IsWoset.is-trans wos
 
     Tri : A → A → Set ℓ
-    Tri x y = x < y ⊎ (x Cubical.≡ y ⊎ y < x)
+    Tri x y = x < y ⊎ ((x Cubical.≡ y) ⊎ y < x)
 
     lower-forward :
         (x : A)
@@ -111,11 +108,11 @@ decidable→trichotomy {ℓ} order decide =
       → z < y
     lower-forward x smaller-x y x≮y y≮x z z<x
         with smaller-x z z<x y
-    ... | inj₁ z<y = z<y
-    ... | inj₂ (inj₁ z=y) =
+    ... | inl z<y = z<y
+    ... | inr (inl z=y) =
       CubicalEmpty.rec
         (y≮x (Cubical.subst (λ point → point < x) z=y z<x))
-    ... | inj₂ (inj₂ y<z) =
+    ... | inr (inr y<z) =
       CubicalEmpty.rec (y≮x (transitive y z x y<z z<x))
 
     lower-backward :
@@ -129,14 +126,14 @@ decidable→trichotomy {ℓ} order decide =
       → z < x
     lower-backward x y smaller-y x≮y y≮x z z<y
         with smaller-y z z<y
-    ... | inj₁ x<z =
+    ... | inl x<z =
       CubicalEmpty.rec (x≮y (transitive x z y x<z z<y))
-    ... | inj₂ (inj₁ x=z) =
+    ... | inr (inl x=z) =
       CubicalEmpty.rec
         (x≮y
           (Cubical.subst (λ point → point < y)
             (Cubical.sym x=z) z<y))
-    ... | inj₂ (inj₂ z<x) = z<x
+    ... | inr (inr z<x) = z<x
 
     compare :
         (x : A)
@@ -145,12 +142,12 @@ decidable→trichotomy {ℓ} order decide =
       → ((z : A) → z < y → Tri x z)
       → Tri x y
     compare x smaller-x y smaller-y with decide x y
-    ... | Nullary.yes x<y = inj₁ x<y
+    ... | Nullary.yes x<y = inl x<y
     ... | Nullary.no x≮y with decide y x
-    ... | Nullary.yes y<x = inj₂ (inj₂ y<x)
+    ... | Nullary.yes y<x = inr (inr y<x)
     ... | Nullary.no y≮x =
-      inj₂
-        (inj₁
+      inr
+        (inl
           (Extensionality.isWeaklyExtensional→≺Equiv→≡
             _<_
             (Woset.IsWoset.is-weakly-extensional wos)
@@ -171,7 +168,7 @@ cubicalAcc→Acc :
       {R : A → A → Set ℓR}
       {x : A}
   → CubicalAcc.Acc R x
-  → Accessibility.Acc R x
+  → Accessibility.is-accessible R x
 cubicalAcc→Acc (CubicalAcc.acc smaller) =
   Accessibility.acc
     (λ y y<x → cubicalAcc→Acc (smaller y y<x))
@@ -187,14 +184,14 @@ discreteMaybe discreteA (just x) nothing =
     (λ path → just≠nothing (EqualityConversion.pathToEq path))
   where
     just≠nothing :
-      (just x InductiveEquality.≡ nothing) → CubicalEmpty.⊥
+      (just x InductiveEquality.＝ nothing) → CubicalEmpty.⊥
     just≠nothing ()
 discreteMaybe discreteA nothing (just y) =
   Nullary.no
     (λ path → nothing≠just (EqualityConversion.pathToEq path))
   where
     nothing≠just :
-      (nothing InductiveEquality.≡ just y) → CubicalEmpty.⊥
+      (nothing InductiveEquality.＝ just y) → CubicalEmpty.⊥
     nothing≠just ()
 discreteMaybe discreteA (just x) (just y)
     with discreteA x y
@@ -205,7 +202,7 @@ discreteMaybe discreteA (just x) (just y)
     (λ just-x=just-y →
       x≠y
         (EqualityConversion.eqToPath
-          (MaybeProperties.just-injective
+          (MaybeProperties.just-is-injective
             (EqualityConversion.pathToEq just-x=just-y))))
 
 wosetCarrier-discrete :
@@ -214,14 +211,14 @@ wosetCarrier-discrete :
   → Nullary.Discrete (WosetCarrier order)
 wosetCarrier-discrete order trichotomy x y
     with trichotomy x y
-... | inj₁ x<y =
+... | inl x<y =
   Nullary.no
     (CubicalAcc.wf→x<y→x≢y
       (Woset.IsWoset.is-well-founded
         (Woset.WosetStr.isWoset (Cubical.snd order)))
       x<y)
-... | inj₂ (inj₁ x=y) = Nullary.yes x=y
-... | inj₂ (inj₂ y<x) =
+... | inr (inl x=y) = Nullary.yes x=y
+... | inr (inr y<x) =
   Nullary.no
     (λ x=y →
       CubicalAcc.wf→x<y→x≢y

@@ -17,16 +17,7 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Classification.Discriminator
 -- shape is a greatest point exactly when s hits (shaped). Each gives LPO:
 -- formation is the datum classification uses.
 
-open import Agda.Primitive using (Level; lzero)
-open import Data.Bool using (Bool)
-open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Nat using (ℕ; zero; suc)
-import Data.Nat.Properties as NatProperties
-open import Data.Product using (Σ; _,_; proj₁; proj₂)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Level using (lift)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; sym; trans; subst)
+open import SPT.Cubical.Base
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -54,7 +45,7 @@ private
 
   -- Nothing lies above the top of Q + 1.
   topless : (Q : 𝒫 ℓ) {y : 𝒫.X (Maps.Successor.next Q)}
-    → 𝒫._<_ (Maps.Successor.next Q) Entry.top y → ⊥
+    → 𝒫._<_ (Maps.Successor.next Q) Entry.top y → 𝟘
   topless Q ()
 
 ------------------------------------------------------------------------
@@ -63,7 +54,7 @@ private
 -- A strong successor of Q has a greatest point: the image of the top of
 -- Q + 1.
 topmost : {Q P : 𝒫 ℓ} → Strong Q P
-  → Σ (𝒫.X P) (λ t → (y : 𝒫.X P) → 𝒫._<_ P t y → ⊥)
+  → Σ (𝒫.X P) (λ t → (y : 𝒫.X P) → 𝒫._<_ P t y → 𝟘)
 topmost {Q = Q} {P = P} st = E.from Entry.top , λ y p → topless Q
   (𝒫.<-respˡ-≈ (Maps.Successor.next Q) (E.to-from-≈ Entry.top) (E.to-< p))
   where
@@ -85,12 +76,12 @@ unbounded {ℓ} {P = P} s sup t = at (Limit.coverage C (E.to t))
   stage : (n : ℕ) → 𝒫.X (Increasing.stage s n) → 𝒫.X (Increasing.limit s)
   stage n = Maps.Initial.map (Limit.stage C n)
 
-  at : Σ ℕ (λ k → Σ (𝒫.X (Increasing.stage s k)) (λ x → stage k x ≡ E.to t))
+  at : Σ ℕ (λ k → Σ (𝒫.X (Increasing.stage s k)) (λ x → stage k x ＝ E.to t))
     → Σ (𝒫.X P) (λ w → 𝒫._<_ P t w)
   at (k , x , p) = E.from (stage (suc k) B.ceiling) ,
     𝒫.<-respˡ-≈ P (E.from-to-≈ t) (E.from-<
-      (subst (λ v → 𝒫._<_ (Increasing.limit s) v (stage (suc k) B.ceiling))
-        (trans (Limit.compatible C k x) p)
+      (transport (λ v → 𝒫._<_ (Increasing.limit s) v (stage (suc k) B.ceiling))
+        (Limit.compatible C k x ∙ p)
         (Maps.Initial.strict (Limit.stage C (suc k)) (B.below x))))
     where
     module B = Presented._≺𝒫_ (Maps.Segment.bound (Increasing.step s k))
@@ -100,27 +91,27 @@ unbounded {ℓ} {P = P} s sup t = at (Limit.coverage C (E.to t))
 
 private
   -- A greatest point of ω + possible s is a point of possible s.
-  greatest : (s : ℕ → Bool) (t : 𝒫.X (ascent s))
-    → ((y : 𝒫.X (ascent s)) → 𝒫._<_ (ascent s) t y → ⊥) → Stream.Hit s
-  greatest s (inj₁ (lift n)) none =
-    ⊥-elim (none (inj₁ (lift (suc n))) (lift (NatProperties.n<1+n n)))
-  greatest s (inj₂ h) _ = h
+  greatest : (s : ℕ → 𝟚) (t : 𝒫.X (ascent s))
+    → ((y : 𝒫.X (ascent s)) → 𝒫._<_ (ascent s) t y → 𝟘) → Stream.Hit s
+  greatest s (inl (lift n)) none =
+    𝟘-elim (none (inl (lift (suc n))) (lift (≤ℕˢ-refl (suc n))))
+  greatest s (inr h) _ = h
 
   -- A point of possible s is the greatest point of ω + possible s.
-  last : (s : ℕ → Bool) (h : Stream.Hit s) (y : 𝒫.X (ascent s))
-    → 𝒫._<_ (ascent s) (inj₂ h) y → ⊥
-  last s h (inj₁ _) (lift ())
-  last s h (inj₂ _) ()
+  last : (s : ℕ → 𝟚) (h : Stream.Hit s) (y : 𝒫.X (ascent s))
+    → 𝒫._<_ (ascent s) (inr h) y → 𝟘
+  last s h (inl _) (lift ())
+  last s h (inr _) ()
 
 -- Mathematical shape: (Π P. P inhabited → Classified P) → LPO.
 inhabited : ((P : 𝒫 lzero) → 𝒫.X P → Classified P) → Stream.LPO
-inhabited classify s with classify (ascent s) (inj₁ (lift zero))
-... | Classification.zero z = ⊥-elim (empty z (inj₁ (lift zero)))
+inhabited classify s with classify (ascent s) (inl (lift zero))
+... | Classification.zero z = 𝟘-elim (empty z (inl (lift zero)))
 ... | Classification.successor Q st =
-  inj₁ (greatest s (proj₁ (topmost st)) (proj₂ (topmost st)))
-... | Classification.limit σ sup = inj₂ (Stream.absent s λ h →
-  last s h (proj₁ (unbounded σ sup (inj₂ h)))
-    (proj₂ (unbounded σ sup (inj₂ h))))
+  inl (greatest s (pr₁ (topmost st)) (pr₂ (topmost st)))
+... | Classification.limit σ sup = inr (Stream.absent s λ h →
+  last s h (pr₁ (unbounded σ sup (inr h)))
+    (pr₂ (unbounded σ sup (inr h))))
 
 -- Mathematical shape: (Π P. Classified P) → LPO.
 classified : ((P : 𝒫 lzero) → Classified P) → Stream.LPO
@@ -130,39 +121,40 @@ classified classify = inhabited (λ P _ → classify P)
 -- Local shapes
 
 private
-  summit : (ℕ → Bool) → 𝒫 lzero
+  summit : (ℕ → 𝟚) → 𝒫 lzero
   summit s = Maps.Successor.next (ascent s)
 
   -- A greatest point below the top of (ω + possible s) + 1 is a point of
   -- possible s: above n lies n + 1.
-  crest : (s : ℕ → Bool) (y : 𝒫.X (summit s))
+  crest : (s : ℕ → 𝟚) (y : 𝒫.X (summit s))
     → 𝒫._<_ (summit s) y Entry.top
     → ((z : 𝒫.X (summit s)) → 𝒫._<_ (summit s) z Entry.top
         → 𝒫._<_ (summit s) z y ⊎ 𝒫._≈_ (summit s) z y)
     → Stream.Hit s
-  crest s (Entry.point (inj₂ h)) _ _ = h
-  crest s (Entry.point (inj₁ (lift n))) _ below
-    with below (Entry.point (inj₁ (lift (suc n)))) Entry.point<top
-  ... | inj₁ (Entry.point< (lift p)) =
-    ⊥-elim (NatProperties.<-asym p (NatProperties.n<1+n n))
-  ... | inj₂ (Entry.point≈ (lift p)) =
-    ⊥-elim (NatProperties.<-irrefl (sym p) (NatProperties.n<1+n n))
+  crest s (Entry.point (inr h)) _ _ = h
+  crest s (Entry.point (inl (lift n))) _ below
+    with below (Entry.point (inl (lift (suc n)))) Entry.point<top
+  ... | inl (Entry.point< (lift p)) =
+    𝟘-elim (<ℕˢ-irrefl n (<ℕˢ-trans (≤ℕˢ-refl (suc n)) p))
+  ... | inr (Entry.point≈ (lift p)) =
+    𝟘-elim
+      (<ℕˢ-irrefl n (transport (λ k → n <ℕˢ k) p (≤ℕˢ-refl (suc n))))
   crest s Entry.top () _
 
   -- Nothing below the top lies above a point of possible s.
-  beyond : (s : ℕ → Bool) (h : Stream.Hit s) (u : 𝒫.X (summit s))
+  beyond : (s : ℕ → 𝟚) (h : Stream.Hit s) (u : 𝒫.X (summit s))
     → 𝒫._<_ (summit s) u Entry.top
-    → 𝒫._<_ (summit s) (Entry.point (inj₂ h)) u → ⊥
+    → 𝒫._<_ (summit s) (Entry.point (inr h)) u → 𝟘
   beyond s h (Entry.point t) _ (Entry.point< p) = last s h t p
   beyond s h Entry.top () _
 
 -- Mathematical shape: (Π W x. Local W x) → LPO.
 shaped : ((W : 𝒫 lzero) (x : 𝒫.X W) → Local W x) → Stream.LPO
 shaped shape s with shape (summit s) Entry.top
-... | Shapes.none nothing =
-  ⊥-elim (nothing (Entry.point (inj₁ (lift zero))) Entry.point<top)
-... | Shapes.greatest y p below = inj₁ (crest s y p below)
-... | Shapes.ascending c _ under cofinal = inj₂ (Stream.absent s λ h →
-  beyond s h (c (proj₁ (cofinal (Entry.point (inj₂ h)) Entry.point<top)))
-    (under (proj₁ (cofinal (Entry.point (inj₂ h)) Entry.point<top)))
-    (proj₂ (cofinal (Entry.point (inj₂ h)) Entry.point<top)))
+... | Shapes.none nowhere =
+  𝟘-elim (nowhere (Entry.point (inl (lift zero))) Entry.point<top)
+... | Shapes.greatest y p below = inl (crest s y p below)
+... | Shapes.ascending c _ under cofinal = inr (Stream.absent s λ h →
+  beyond s h (c (pr₁ (cofinal (Entry.point (inr h)) Entry.point<top)))
+    (under (pr₁ (cofinal (Entry.point (inr h)) Entry.point<top)))
+    (pr₂ (cofinal (Entry.point (inr h)) Entry.point<top)))

@@ -17,8 +17,6 @@ module SPT.Foundation.Propositions where
 -- Σ-is-prop).
 
 open import SPT.Base
-open import SPT.Foundation.Identifications using
-  (apd; transport-is-post-composition; left-transpose)
 
 is-proposition : {ℓ : Level} → Set ℓ → Set ℓ
 is-proposition A = (x y : A) → x ＝ y

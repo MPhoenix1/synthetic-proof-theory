@@ -10,9 +10,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.TypeTopology.PositionLoss
 -- pointed automorphisms as loops, has unbounded higher structure, and so
 -- has no finite h-level.
 
-open import Agda.Primitive using (Level; lzero)
-open import Data.Empty using (⊥)
-import Data.Nat.Base as Nat
+open import SPT.Cubical.Base using (Level; lzero; 𝟘)
+import SPT.Cubical.Base as Nat
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import
@@ -157,7 +156,7 @@ cell-nontrivial :
     Iterated.iteratedLoopPoint (Nat.suc height)
       (PositionFiber geometry)
       (basePoint geometry)
-  → ⊥
+  → 𝟘
 cell-nontrivial geometry height =
   Unbounded.cell-nontrivial geometry
     Bridge.toOrdinal height
@@ -170,7 +169,7 @@ positionFiber-not-finite-hlevel :
     (height : Nat.ℕ)
   → HLevels.isOfHLevel height
       (PositionFiber geometry)
-  → ⊥
+  → 𝟘
 positionFiber-not-finite-hlevel geometry height =
   Unbounded.fiber-not-finite-hlevel geometry
     Bridge.toOrdinal height
@@ -180,7 +179,7 @@ projection-not-finite-hlevel :
     (height : Nat.ℕ)
   → HLevels.isOfHLevelFun height
       (projection geometry)
-  → ⊥
+  → 𝟘
 projection-not-finite-hlevel geometry height =
   Unbounded.projection-not-finite-hlevel geometry
     Bridge.toOrdinal height
@@ -189,7 +188,7 @@ projection-not-embedding :
     (geometry : Presented.𝒫ω₁𝒢 lzero)
   → Embedding.isEmbedding
       (projection geometry)
-  → ⊥
+  → 𝟘
 projection-not-embedding geometry embedding =
   projection-not-finite-hlevel
     geometry (Nat.suc Nat.zero)

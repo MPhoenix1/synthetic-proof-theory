@@ -14,9 +14,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Supremum.Chain where
 -- image of a stage (coverage) and simulations are unique. A surjective
 -- simulation is an equivalence of well-ordered sets.
 
-open import Agda.Primitive using (Level)
-open import Data.Nat using (ℕ)
-open import Data.Product using (_,_)
+open import SPT.Cubical.Base using (Level; _,_; ℕ)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)

@@ -13,8 +13,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Simulation where
 -- ceiling c identifies ord(P) with the principal segment of
 -- ord(Q) below [c], so it is a bounded simulation ≺.
 
-open import Agda.Primitive using (Level)
-open import Data.Product using (_,_)
+open import SPT.Cubical.Base using (Level; _,_)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)

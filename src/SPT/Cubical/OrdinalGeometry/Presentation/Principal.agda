@@ -8,13 +8,9 @@ module SPT.Cubical.OrdinalGeometry.Presentation.Principal where
 -- a successor P + 1, and principal segments addressed by a position of an
 -- ω₁ geometry together with an optional point.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Maybe.Base using (Maybe; nothing; just)
-open import Data.Nat.Base using (zero)
-open import Data.Product using (Σ; _,_; proj₁; proj₂)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import SPT.Cubical.Base hiding (lower)
+open import SPT.Cubical.Foundation.Isomorphisms using (_≅_)
 
-open import SPT.Cubical.Core.Equality.Isomorphism using (_≅_)
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import SPT.Cubical.OrdinalGeometry.Presentation.CountablyPresented as Geometry
 import SPT.Cubical.OrdinalGeometry.Presentation.CountablyPresented.LowerCone
@@ -38,17 +34,17 @@ module Segments {ℓ : Level} (P : Presented.CountableOrdinal𝒫 ℓ) where
   lower = L.𝒫
 
   carrier-β : (x : P.X)
-    → Presented.CountableOrdinal𝒫.X (lower x) ≡ Σ P.X (λ y → y P.< x)
+    → Presented.CountableOrdinal𝒫.X (lower x) ＝ Σ P.X (λ y → y P.< x)
   carrier-β x = refl
 
   inclusion : (x : P.X) → lower x Presented.≺𝒫 P
   inclusion x = record
-    { to = proj₁
+    { to = pr₁
     ; to-≈ = λ q → q
     ; to-< = λ q → q
     ; reflects-< = λ q → q
     ; ceiling = x
-    ; below = proj₂
+    ; below = pr₂
     }
 
   module Inside (x y : P.X) (p : y P.< x) where
@@ -62,11 +58,11 @@ module Segments {ℓ : Level} (P : Presented.CountableOrdinal𝒫 ℓ) where
     module N = Presented.CountableOrdinal𝒫 principal
 
     nested-β : N.X
-      ≡ Σ (Σ P.X (λ z → z P.< x)) (λ u → proj₁ u P.< y)
+      ＝ Σ (Σ P.X (λ z → z P.< x)) (λ u → pr₁ u P.< y)
     nested-β = refl
 
     Extra : L.T y → Set ℓ
-    Extra u = proj₁ u P.< x
+    Extra u = pr₁ u P.< x
 
     split : N.X → Σ (L.T y) Extra
     split ((z , r) , q) = (z , q) , r
@@ -83,15 +79,15 @@ module Segments {ℓ : Level} (P : Presented.CountableOrdinal𝒫 ℓ) where
       }
 
     down : N.X → L.T y
-    down u = proj₁ (split u)
+    down u = pr₁ (split u)
 
     up : L.T y → N.X
-    up u = join (u , P.<-trans (proj₂ u) p)
+    up u = join (u , P.<-trans (pr₂ u) p)
 
-    down-up : (u : L.T y) → down (up u) ≡ u
+    down-up : (u : L.T y) → down (up u) ＝ u
     down-up u = refl
 
-    section : (λ u → down (up u)) ≡ (λ u → u)
+    section : (λ u → down (up u)) ＝ (λ u → u)
     section = refl
 
     restriction : lower y Presented.≃𝒫 principal
@@ -102,24 +98,24 @@ module Segments {ℓ : Level} (P : Presented.CountableOrdinal𝒫 ℓ) where
       ; from-≈ = λ q → q
       ; to-< = λ q → q
       ; from-< = λ q → q
-      ; from-to-≈ = λ u → P.≈-refl (proj₁ u)
-      ; to-from-≈ = λ u → P.≈-refl (proj₁ (proj₁ u))
+      ; from-to-≈ = λ u → P.≈-refl (pr₁ u)
+      ; to-from-≈ = λ u → P.≈-refl (pr₁ (pr₁ u))
       }
 
-    point-β : (u : L.T y) → proj₁ (proj₁ (up u)) ≡ proj₁ u
+    point-β : (u : L.T y) → pr₁ (pr₁ (up u)) ＝ pr₁ u
     point-β u = refl
 
-    witness-β : (u : L.T y) → proj₂ (up u) ≡ proj₂ u
+    witness-β : (u : L.T y) → pr₂ (up u) ＝ pr₂ u
     witness-β u = refl
 
     strict : lower y Presented.≺𝒫 lower x
     strict = record
-      { to = λ u → proj₁ (up u)
+      { to = λ u → pr₁ (up u)
       ; to-≈ = λ q → q
       ; to-< = λ q → q
       ; reflects-< = λ q → q
       ; ceiling = y , p
-      ; below = proj₂
+      ; below = pr₂
       }
 
 -- In P + 1, the predecessors of the new top are exactly the points of P,
@@ -188,7 +184,7 @@ module Successor {ℓ : Level} (P : Presented.CountableOrdinal𝒫 ℓ) where
     module N = Presented.CountableOrdinal𝒫 (L.lower (point x))
 
     to : D.X → N.X
-    to u = point (proj₁ u) , S.point< (proj₂ u)
+    to u = point (pr₁ u) , S.point< (pr₂ u)
 
     from : N.X → D.X
     from (S.point y , S.point< q) = y , q
@@ -216,14 +212,14 @@ module Successor {ℓ : Level} (P : Presented.CountableOrdinal𝒫 ℓ) where
       ; from-≈ = from-≈
       ; to-< = S.point<
       ; from-< = from-<
-      ; from-to-≈ = λ u → P.≈-refl (proj₁ u)
+      ; from-to-≈ = λ u → P.≈-refl (pr₁ u)
       ; to-from-≈ = λ { (S.point y , S.point< q) → S.point≈ (P.≈-refl y) }
       }
 
-    point-β : (u : D.X) → proj₁ (to u) ≡ point (proj₁ u)
+    point-β : (u : D.X) → pr₁ (to u) ＝ point (pr₁ u)
     point-β u = refl
 
-    witness-β : (u : D.X) → proj₂ (from (to u)) ≡ proj₂ u
+    witness-β : (u : D.X) → pr₂ (from (to u)) ＝ pr₂ u
     witness-β u = refl
 
 ------------------------------------------------------------------------
@@ -239,7 +235,7 @@ module Address {ℓ : Level} (geometry : Presented.𝒫ω₁𝒢 ℓ) where
   Ordinal = Omega.Position geometry
 
   Carrier : Ordinal → Set ℓ
-  Carrier α = Presented.CountableOrdinal𝒫.X (proj₁ α)
+  Carrier α = Presented.CountableOrdinal𝒫.X (pr₁ α)
 
   Point : Set (lsuc ℓ)
   Point = Σ Ordinal (λ α → Maybe (Carrier α))
@@ -247,39 +243,39 @@ module Address {ℓ : Level} (geometry : Presented.𝒫ω₁𝒢 ℓ) where
   Pred : Point → Set ℓ
   Pred (α , nothing) = Carrier α
   Pred (α , just x) = Σ (Carrier α) λ y →
-    Presented.CountableOrdinal𝒫._<_ (proj₁ α) y x
+    Presented.CountableOrdinal𝒫._<_ (pr₁ α) y x
 
   domain : Point → Presented.CountableOrdinal𝒫 ℓ
-  domain (α , nothing) = proj₁ α
-  domain (α , just x) = Segments.lower (proj₁ α) x
+  domain (α , nothing) = pr₁ α
+  domain (α , just x) = Segments.lower (pr₁ α) x
 
   carrier-β : (j : Point)
-    → Presented.CountableOrdinal𝒫.X (domain j) ≡ Pred j
+    → Presented.CountableOrdinal𝒫.X (domain j) ＝ Pred j
   carrier-β (α , nothing) = refl
   carrier-β (α , just x) = refl
 
   inclusion : (α : Ordinal) (x : Carrier α)
     → domain (α , just x) Presented.≺𝒫 domain (α , nothing)
-  inclusion α = Segments.inclusion (proj₁ α)
+  inclusion α = Segments.inclusion (pr₁ α)
 
   -- Nested restriction at a position keeps the inner strict witness and
   -- returns the outer one separately.
   module Inside (α : Ordinal) (x y : Carrier α)
-    (p : Presented.CountableOrdinal𝒫._<_ (proj₁ α) y x) where
+    (p : Presented.CountableOrdinal𝒫._<_ (pr₁ α) y x) where
 
     private
-      module Nested = Segments.Inside (proj₁ α) x y p
+      module Nested = Segments.Inside (pr₁ α) x y p
 
     address : Point
     address =
-      Omega.position geometry (Segments.lower (proj₁ α) x) , just (y , p)
+      Omega.position geometry (Segments.lower (pr₁ α) x) , just (y , p)
 
     restriction : domain (α , just y) Presented.≃𝒫 domain address
     restriction = Nested.restriction
 
     exact : Pred address
       ≅ Σ (Pred (α , just y)) λ u →
-          Presented.CountableOrdinal𝒫._<_ (proj₁ α) (proj₁ u) x
+          Presented.CountableOrdinal𝒫._<_ (pr₁ α) (pr₁ u) x
     exact = Nested.exact
 
   -- The successor's top names a supplied presentation as a principal

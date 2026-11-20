@@ -9,10 +9,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Postcomposed
 -- small universe as a split retract.  Recovery reads the presentation of
 -- the position, so it needs no property of A.
 
-open import Agda.Primitive using (Level)
-open import Data.Maybe using (just; nothing)
-open import Data.Nat using (ℕ; zero)
-open import Data.Unit.Polymorphic as PolyUnit using ()
+open import SPT.Cubical.Base using
+  ( Level; Lift; just; lift; nothing; zero; ℕ; ⋆; 𝟙 )
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import
@@ -92,10 +90,10 @@ recover :
     (adapter : Woset.Woset ℓ ℓ → Target)
   → PostcomposedFiber geometry adapter
   → Position.PointedType ℓ
-recover geometry adapter fiber-point
+recover {ℓ} geometry adapter fiber-point
     with Presented.CountableOrdinal𝒫.enum
       (Cubical.fst (Cubical.fst fiber-point)) zero
-... | nothing = PolyUnit.⊤ Cubical., PolyUnit.tt
+... | nothing = Lift ℓ 𝟙 Cubical., lift ⋆
 ... | just point =
   Presented.CountableOrdinal𝒫.X (Cubical.fst (Cubical.fst fiber-point))
   Cubical., point

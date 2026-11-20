@@ -9,18 +9,9 @@ module SPT.Cubical.OrdinalGeometry.ExactOrder.OrderedSum where
 -- order equivalences lift through sums, including an equivalent new index
 -- order with corresponding dependent fibers.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Empty.Polymorphic using (⊥)
-open import Data.Maybe using (nothing; just)
-open import Data.Nat using (ℕ; zero)
-open import Data.Product using (Σ; _,_; proj₁)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Unit.Polymorphic using (⊤; tt)
-open import Level using (Lift; lift; lower)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; refl; cong; sym; subst)
+open import SPT.Cubical.Base
+open import SPT.Cubical.Foundation.Accessibility using (acc; is-accessible)
 
-open import SPT.Cubical.Core.WellFounded using (Acc; acc)
 import SPT.Cubical.OrdinalGeometry.ExactOrder.Base as Order
 import SPT.Cubical.OrdinalGeometry.ExactOrder.Maps as Maps
 
@@ -37,8 +28,8 @@ record Ordinal (ℓ : Level) : Set (lsuc ℓ) where
 open Ordinal public
 
 empty : Ordinal ℓ
-empty = ordinal ⊥ record
-  { _<_ = λ _ _ → ⊥
+empty {ℓ} = ordinal (Lift ℓ 𝟘) record
+  { _<_ = λ _ _ → Lift ℓ 𝟘
   ; trans = λ ()
   ; wf = λ ()
   ; compare = λ ()
@@ -47,13 +38,13 @@ empty = ordinal ⊥ record
   }
 
 unit : Ordinal ℓ
-unit = ordinal ⊤ record
-  { _<_ = λ _ _ → ⊥
+unit {ℓ} = ordinal (Lift ℓ 𝟙) record
+  { _<_ = λ _ _ → Lift ℓ 𝟘
   ; trans = λ ()
   ; wf = λ _ → acc (λ _ ())
-  ; compare = λ { tt tt → inj₂ (inj₁ refl) }
-  ; enum = λ _ → just tt
-  ; covers = λ { tt → zero , refl }
+  ; compare = λ { (lift ⋆) (lift ⋆) → inr (inl refl) }
+  ; enum = λ _ → just (lift ⋆)
+  ; covers = λ { (lift ⋆) → zero , refl }
   }
 
 natural : Ordinal ℓ
@@ -70,16 +61,16 @@ natural {ℓ} = ordinal (Lift ℓ ℕ) record
   _<_ : Lift ℓ ℕ → Lift ℓ ℕ → Set ℓ
   x < y = Lift ℓ (Order.Order._<_ Order.natural (lower x) (lower y))
 
-  accessible : (n : ℕ) → Acc (Order.Order._<_ Order.natural) n
-    → Acc _<_ (lift n)
+  accessible : (n : ℕ) → is-accessible (Order.Order._<_ Order.natural) n
+    → is-accessible _<_ (lift n)
   accessible n (acc smaller) = acc λ { (lift m) (lift p) →
     accessible m (smaller m p) }
 
-  compare : (x y : Lift ℓ ℕ) → x < y ⊎ (x ≡ y ⊎ y < x)
+  compare : (x y : Lift ℓ ℕ) → x < y ⊎ ((x ＝ y) ⊎ y < x)
   compare (lift m) (lift n) with Order.Order.compare Order.natural m n
-  ... | inj₁ p = inj₁ (lift p)
-  ... | inj₂ (inj₁ p) = inj₂ (inj₁ (cong lift p))
-  ... | inj₂ (inj₂ p) = inj₂ (inj₂ (lift p))
+  ... | inl p = inl (lift p)
+  ... | inr (inl p) = inr (inl (ap lift p))
+  ... | inr (inr p) = inr (inr (lift p))
 
 sum : (P : Ordinal ℓ) → (Carrier P → Ordinal ℓ) → Ordinal ℓ
 sum P Q = ordinal (Σ (Carrier P) (λ a → Carrier (Q a)))
@@ -105,12 +96,12 @@ join P Q = Order.Sum.join (order P) (λ a → order (Q a))
 
 join-split : (P : Ordinal ℓ) (Q : Carrier P → Ordinal ℓ)
   (z : Carrier (sum P Q)) (p : Pred (sum P Q) z)
-  → join P Q z (split P Q z p) ≡ p
+  → join P Q z (split P Q z p) ＝ p
 join-split P Q = Order.Sum.join-split (order P) (λ a → order (Q a))
 
 split-join : (P : Ordinal ℓ) (Q : Carrier P → Ordinal ℓ)
   (z : Carrier (sum P Q)) (p : Parts P Q z)
-  → split P Q z (join P Q z p) ≡ p
+  → split P Q z (join P Q z p) ＝ p
 split-join P Q = Order.Sum.split-join (order P) (λ a → order (Q a))
 
 ------------------------------------------------------------------------
@@ -140,11 +131,11 @@ iso P Q R e = record
   from : Carrier (sum P R) → Carrier (sum P Q)
   from (a , b) = a , Maps.Iso.backward (e a) b
 
-  from-to : (x : Carrier (sum P Q)) → from (to x) ≡ x
-  from-to (a , b) = cong (a ,_) (Maps.Iso.backward-forward (e a) b)
+  from-to : (x : Carrier (sum P Q)) → from (to x) ＝ x
+  from-to (a , b) = ap (a ,_) (Maps.Iso.backward-forward (e a) b)
 
-  to-from : (x : Carrier (sum P R)) → to (from x) ≡ x
-  to-from (a , b) = cong (a ,_) (Maps.Iso.forward-backward (e a) b)
+  to-from : (x : Carrier (sum P R)) → to (from x) ＝ x
+  to-from (a , b) = ap (a ,_) (Maps.Iso.forward-backward (e a) b)
 
   strict : ∀ {x y} → x Source.< y → to x Target.< to y
   strict (Source.earlier p) = Target.earlier p
@@ -153,7 +144,7 @@ iso P Q R e = record
 iso-index : (P : Ordinal ℓ) (Q R : Carrier P → Ordinal ℓ)
   (e : (a : Carrier P) → Maps.Iso (order (Q a)) (order (R a)))
   (x : Carrier (sum P Q))
-  → proj₁ (Maps.Iso.forward (iso P Q R e) x) ≡ proj₁ x
+  → pr₁ (Maps.Iso.forward (iso P Q R e) x) ＝ pr₁ x
 iso-index P Q R e (a , b) = refl
 
 ------------------------------------------------------------------------
@@ -185,15 +176,15 @@ congruence P Q e R S d = record
   module Increasing = Maps.Strict
     (order (sum P R)) (order (sum Q S)) to strict
 
-  cover : (x : Carrier P) (y : Carrier Q) → Maps.Iso.forward e x ≡ y
+  cover : (x : Carrier P) (y : Carrier Q) → Maps.Iso.forward e x ＝ y
     → (w : Carrier (S y))
-    → Σ (Carrier (sum P R)) (λ z → to z ≡ (y , w))
+    → Σ (Carrier (sum P R)) (λ z → to z ＝ (y , w))
   cover x .(Maps.Iso.forward e x) refl w =
     (x , Maps.Iso.backward (d x) w) ,
-    cong (Maps.Iso.forward e x ,_) (Maps.Iso.forward-backward (d x) w)
+    ap (Maps.Iso.forward e x ,_) (Maps.Iso.forward-backward (d x) w)
 
   covers : (w : Carrier (sum Q S))
-    → Σ (Carrier (sum P R)) (λ z → to z ≡ w)
+    → Σ (Carrier (sum P R)) (λ z → to z ＝ w)
   covers (y , w) = cover (Maps.Iso.backward e y) y
     (Maps.Iso.forward-backward e y) w
 
@@ -203,7 +194,7 @@ congruence-β : (P Q : Ordinal ℓ) (e : Maps.Iso (order P) (order Q))
     (order (R x)) (order (S (Maps.Iso.forward e x))))
   (x : Carrier P) (z : Carrier (R x))
   → Maps.Iso.forward (congruence P Q e R S d) (x , z)
-    ≡ (Maps.Iso.forward e x , Maps.Iso.forward (d x) z)
+    ＝ (Maps.Iso.forward e x , Maps.Iso.forward (d x) z)
 congruence-β P Q e R S d x z = refl
 
 congruence-index : (P Q : Ordinal ℓ) (e : Maps.Iso (order P) (order Q))
@@ -211,8 +202,8 @@ congruence-index : (P Q : Ordinal ℓ) (e : Maps.Iso (order P) (order Q))
   (d : (x : Carrier P) → Maps.Iso
     (order (R x)) (order (S (Maps.Iso.forward e x))))
   (z : Carrier (sum P R))
-  → proj₁ (Maps.Iso.forward (congruence P Q e R S d) z)
-    ≡ Maps.Iso.forward e (proj₁ z)
+  → pr₁ (Maps.Iso.forward (congruence P Q e R S d) z)
+    ＝ Maps.Iso.forward e (pr₁ z)
 congruence-index P Q e R S d (x , z) = refl
 
 -- Pulling the entire family back along the inverse preserves its sum.
@@ -222,5 +213,5 @@ reindex : (P Q : Ordinal ℓ) (e : Maps.Iso (order P) (order Q))
       (order (sum Q (λ y → R (Maps.Iso.backward e y))))
 reindex P Q e R = congruence P Q e R
   (λ y → R (Maps.Iso.backward e y))
-  (λ x → subst (λ y → Maps.Iso (order (R x)) (order (R y)))
-    (sym (Maps.Iso.backward-forward e x)) (identity (R x)))
+  (λ x → transport (λ y → Maps.Iso (order (R x)) (order (R y)))
+    (Maps.Iso.backward-forward e x ⁻¹) (identity (R x)))

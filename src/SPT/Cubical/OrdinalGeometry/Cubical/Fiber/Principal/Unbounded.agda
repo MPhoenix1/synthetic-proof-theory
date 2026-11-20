@@ -8,9 +8,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Principal.Unbounded
 -- nontrivial cell in every iterated loop space; so the space has no finite
 -- h-level.
 
-open import Agda.Primitive using (lzero)
-open import Data.Empty using (⊥)
-import Data.Nat.Base as Nat
+open import SPT.Cubical.Base using (lzero; 𝟘)
+import SPT.Cubical.Base as Nat
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import
@@ -112,7 +111,7 @@ cell-nontrivial :
       Iterated.iteratedLoopPoint (Nat.suc height)
         (Principal.UnitPresentations geometry)
         (basePoint geometry)
-  → ⊥
+  → 𝟘
 cell-nontrivial geometry height =
   Iterated.preserves-nonbase
     (iteratedEmbedding geometry height)
@@ -127,7 +126,7 @@ not-hlevel :
     (height : Nat.ℕ)
   → HLevels.isOfHLevel (Nat.suc (Nat.suc height))
       (Principal.UnitPresentations geometry)
-  → ⊥
+  → 𝟘
 not-hlevel
     geometry height principal-hlevel =
   cell-nontrivial geometry height
@@ -148,7 +147,7 @@ not-finite-hlevel :
     (height : Nat.ℕ)
   → HLevels.isOfHLevel height
       (Principal.UnitPresentations geometry)
-  → ⊥
+  → 𝟘
 not-finite-hlevel
     geometry Nat.zero principal-contractible =
   not-hlevel geometry Nat.zero

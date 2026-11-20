@@ -7,15 +7,15 @@ module SPT.Foundation.Impredicative.Classification where
 --
 --   Classifies F G = Π (x : A). Σ (i : I). (F x → G i) × (G i → F x).
 --
--- No inverse laws are asked. Two impredicative principles for a Tarski family
--- (U , T) are classifications. Resizing: every type of the level of U is
--- classified by T (`Resizing`). A classifier: a code `proxies` and a family
--- `proxy` of codes over its decoding, such that T ∘ proxy classifies every
--- decoding of T (`Classifier`); `chosen`, `encode` and `decode` read off the
--- classification of a code. At the family of all types of one level,
--- (Set ℓ , λ X → X), resizing says that every type of the next level has maps
--- both ways with a type of level ℓ, and a classifier classifies all types of
--- level ℓ. After Core's FiberCoding.Classifier.
+-- No inverse laws are asked. Two impredicative principles for a Tarski
+-- family (U , T) are classifications. Resizing: every type of the level of
+-- U is classified by T (`Resizing`). A classifier: a code `proxies` and a
+-- family `proxy` of codes over its decoding, such that T ∘ proxy classifies
+-- every decoding of T (`Classifier`); `chosen`, `encode` and `decode` read
+-- off the classification of a code. At the family of all types of one
+-- level, (Set ℓ , λ X → X), resizing says that every type of the next level
+-- has maps both ways with a type of level ℓ, and a classifier classifies
+-- all types of level ℓ.
 
 open import SPT.Base
 

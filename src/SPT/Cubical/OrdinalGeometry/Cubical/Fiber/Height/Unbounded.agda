@@ -11,10 +11,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Height.Unbounded where
 -- of the merely inhabited types.  So the fiber of rank over α + 1 has no
 -- finite h-level, and neither has rank as a map.
 
-open import Agda.Primitive using (Level)
-open import Data.Empty using (⊥)
-open import Level using (Lift; lift; lower)
-import Data.Nat.Base as Nat
+open import SPT.Cubical.Base using (Level; Lift; lift; lower; 𝟘)
+import SPT.Cubical.Base as Nat
 
 import Cubical.Algebra.AbGroup.Instances.Int as IntegerAbGroup
 import Cubical.Foundations.Equiv as Equiv
@@ -95,7 +93,7 @@ translation q =
 translation-shift : (t : HigherType)
   → translation (shift-loop {ℓ} t) Cubical.≡ t
 translation-shift {ℓ} t =
-  Cubical.cong (lower {ℓ = ℓ})
+  Cubical.cong (lower {κ = ℓ})
     (Univalence.uaβ (shift t) (lift higherTypePoint))
   Cubical.∙
   higherTranslation-zero-input t
@@ -135,7 +133,7 @@ universe-cell n =
 universe-cell-nontrivial : (n : Nat.ℕ)
   → universe-cell {ℓ} n Cubical.≡
       iteratedLoopPoint (Nat.suc n) (InhabitedType ℓ) base
-  → ⊥
+  → 𝟘
 universe-cell-nontrivial n =
   iteratedLoopEmbedding-nonbase n shift-embedding
     (higherCell n) (higherCell-nontrivial n)
@@ -153,14 +151,14 @@ cell e n =
 
 cell-nontrivial : {B : Set ℓ′} {b : B}
     (e : PointedSplitEmbedding (InhabitedType ℓ) base B b) (n : Nat.ℕ)
-  → cell e n Cubical.≡ iteratedLoopPoint (Nat.suc n) B b → ⊥
+  → cell e n Cubical.≡ iteratedLoopPoint (Nat.suc n) B b → 𝟘
 cell-nontrivial e n =
   iteratedLoopEmbedding-nonbase (Nat.suc n) e
     (universe-cell n) (universe-cell-nontrivial n)
 
 not-hlevel : {B : Set ℓ′} {b : B}
     (e : PointedSplitEmbedding (InhabitedType ℓ) base B b) (n : Nat.ℕ)
-  → HLevels.isOfHLevel (Nat.suc (Nat.suc n)) B → ⊥
+  → HLevels.isOfHLevel (Nat.suc (Nat.suc n)) B → 𝟘
 not-hlevel {b = b} e n hlevel =
   cell-nontrivial e n
     (iteratedLoop-isProp n b hlevel (cell e n) _)
@@ -169,7 +167,7 @@ not-hlevel {b = b} e n hlevel =
 -- one would give two.
 not-finite-hlevel : {B : Set ℓ′} {b : B}
     (e : PointedSplitEmbedding (InhabitedType ℓ) base B b) (n : Nat.ℕ)
-  → HLevels.isOfHLevel n B → ⊥
+  → HLevels.isOfHLevel n B → 𝟘
 not-finite-hlevel e Nat.zero contractible =
   not-hlevel e Nat.zero
     (HLevels.isOfHLevelSuc 1 (HLevels.isOfHLevelSuc 0 contractible))
@@ -187,13 +185,13 @@ fiber-embedding : (α : Woset.Woset ℓ ℓ)
 fiber-embedding α = pointed-split-embedding (embedding α) Cubical.refl
 
 fiber-not-finite-hlevel : (α : Woset.Woset ℓ ℓ) (n : Nat.ℕ)
-  → HLevels.isOfHLevel n (Fiber α) → ⊥
+  → HLevels.isOfHLevel n (Fiber α) → 𝟘
 fiber-not-finite-hlevel α = not-finite-hlevel (fiber-embedding α)
 
 -- Mathematical shape: rank has no finite h-level as a map; its fiber over
 -- 1 = rank leaf + 1 has none.
 rank-not-finite-hlevel : (n : Nat.ℕ)
-  → HLevels.isOfHLevelFun n (rank {ℓ}) → ⊥
+  → HLevels.isOfHLevelFun n (rank {ℓ}) → 𝟘
 rank-not-finite-hlevel {ℓ} n hlevel =
   fiber-not-finite-hlevel (rank (leaf {ℓ})) n
     (hlevel (successor (rank leaf)))

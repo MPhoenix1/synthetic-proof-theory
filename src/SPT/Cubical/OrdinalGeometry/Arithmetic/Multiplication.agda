@@ -14,14 +14,7 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Multiplication where
 -- P · − acts on initial maps, respects ≃𝒫, and commutes with chain
 -- completions. An initial map of exact indices moves constant blocks.
 
-open import Agda.Primitive using (Level; lzero)
-open import Data.Empty using (⊥-elim)
-open import Data.Nat using (ℕ; zero)
-open import Data.Product using (Σ; _,_; proj₁; proj₂)
-open import Data.Sum using (inj₁; inj₂)
-open import Level using (lift)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; refl; cong; cong₂; trans)
+open import SPT.Cubical.Base hiding (_+_; lower)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -77,9 +70,9 @@ blocks {A = A} {B} {C} {I} {J} K f = record
   strict (Source.within i p) = Target.within (F.map i) p
 
   lower : (x : Σ A (λ _ → C)) (y : Σ B (λ _ → C)) → Target._<_ y (map x)
-    → Σ (Σ A (λ _ → C)) (λ z → map z ≡ y)
+    → Σ (Σ A (λ _ → C)) (λ z → map z ＝ y)
   lower (i , c) (j , d) (Target.earlier p) with F.lower i j p
-  ... | i′ , q = (i′ , d) , cong (_, d) q
+  ... | i′ , q = (i′ , d) , ap (_, d) q
   lower (i , c) (.(F.map i) , d) (Target.within .(F.map i) p) =
     (i , d) , refl
 
@@ -99,7 +92,7 @@ opaque
 
   -- Every point of P · Q is a point of some copy.
   view : (P Q : 𝒫 ℓ) (v : 𝒫.X (P · Q)) → Σ (Normal.Point Q) (λ q →
-    Σ (Normal.Point P) (λ a → v ≡ point P Q q a))
+    Σ (Normal.Point P) (λ a → v ＝ point P Q q a))
   view P Q (lift (q , a)) = q , a , refl
 
   -- Points of an earlier copy lie below.
@@ -117,7 +110,7 @@ opaque
     → Normal.Strict Q q q′
   reflect P Q a (lift (Order.Sum.earlier p)) = p
   reflect P Q a (lift (Order.Sum.within _ p)) =
-    ⊥-elim (Order.Order.irrefl (Normal.order P) a p)
+    𝟘-elim (Order.Order.irrefl (Normal.order P) a p)
 
   -- P · − on initial maps.
   initial : (P : 𝒫 ℓ) → Maps.Initial Q Q′ → Maps.Initial (P · Q) (P · Q′)
@@ -142,7 +135,7 @@ opaque
     where
     covers : (u : 𝒫.X (P · Z)) → Σ (𝒫.X Z) (λ x →
       𝒫._≈_ (P · Z) (Maps.Initial.map (z (P · Z)) x) u)
-    covers (lift (j , a)) = ⊥-elim (empty z (Normal.representative Z j))
+    covers (lift (j , a)) = 𝟘-elim (empty z (Normal.representative Z j))
 
   -- Mathematical shape: P · (Q + 1) ≃ P · Q + P. The copies at old points
   -- of Q + 1 form P · Q; the copy at the top is the last P.
@@ -177,26 +170,26 @@ opaque
       Entry.point<top
 
     map : 𝒫.X ((P · Q) + P) → 𝒫.X (P · N)
-    map (inj₁ (lift (q , a))) = lift (up q , a)
-    map (inj₂ x) = lift (peak , Normal.class P x)
+    map (inl (lift (q , a))) = lift (up q , a)
+    map (inr x) = lift (peak , Normal.class P x)
 
     resp : ∀ {u v} → 𝒫._≈_ ((P · Q) + P) u v
       → 𝒫._≈_ (P · N) (map u) (map v)
-    resp {inj₁ _} {inj₁ _} (lift e) =
-      lift (cong (λ w → up (proj₁ w) , proj₂ w) e)
-    resp {inj₁ _} {inj₂ _} ()
-    resp {inj₂ _} {inj₁ _} ()
-    resp {inj₂ x} {inj₂ y} p = lift (cong (peak ,_) (Normal.class-resp P p))
+    resp {inl _} {inl _} (lift e) =
+      lift (ap (λ w → up (pr₁ w) , pr₂ w) e)
+    resp {inl _} {inr _} ()
+    resp {inr _} {inl _} ()
+    resp {inr x} {inr y} p = lift (ap (peak ,_) (Normal.class-resp P p))
 
     strict : ∀ {u v} → 𝒫._<_ ((P · Q) + P) u v
       → 𝒫._<_ (P · N) (map u) (map v)
-    strict {inj₁ (lift (q , a))} {inj₁ (lift (q′ , b))}
+    strict {inl (lift (q , a))} {inl (lift (q′ , b))}
       (lift (Source.earlier p)) = lift (Target.earlier (up-strict {q} {q′} p))
-    strict {inj₁ (lift (q , a))} {inj₁ (lift (.q , b))}
+    strict {inl (lift (q , a))} {inl (lift (.q , b))}
       (lift (Source.within .q p)) = lift (Target.within (up q) p)
-    strict {inj₁ (lift (q , a))} {inj₂ x} p = lift (Target.earlier (up-peak q))
-    strict {inj₂ _} {inj₁ _} ()
-    strict {inj₂ x} {inj₂ y} p =
+    strict {inl (lift (q , a))} {inr x} p = lift (Target.earlier (up-peak q))
+    strict {inr _} {inl _} ()
+    strict {inr x} {inr y} p =
       lift (Target.within peak (Normal.class-strict P p))
 
     embedding : Maps.Embedding ((P · Q) + P) (P · N)
@@ -212,12 +205,12 @@ opaque
       → Σ (𝒫.X ((P · Q) + P)) (λ u → 𝒫._≈_ (P · N) (map u) y)
     covers (lift (j , a))
       with Normal.representative N j | Normal.class-representative N j
-    ... | Entry.point y | e = inj₁ (lift (Normal.class Q y , a)) ,
-      lift (cong (_, a) (trans
-        (Normal.class-resp N (Entry.point≈ (Normal.representative-class Q y)))
-        e))
-    ... | Entry.top | e = inj₂ (Normal.representative P a) ,
-      lift (cong₂ _,_ e (Normal.class-representative P a))
+    ... | Entry.point y | e = inl (lift (Normal.class Q y , a)) ,
+      lift (ap (_, a) (
+        Normal.class-resp N (Entry.point≈ (Normal.representative-class Q y))
+        ∙ e))
+    ... | Entry.top | e = inr (Normal.representative P a) ,
+      lift (ap₂ _,_ e (Normal.class-representative P a))
 
 -- Mathematical shape: S is-suc-of Q → P · S ≃ P · Q + P.
 successor-law : (P : 𝒫 ℓ) → Successor Q S
@@ -239,13 +232,13 @@ private
   -- A normalized point of a completion comes from one stage.
   reached : (C : Limit.Chain ℓ) (j : Normal.Point (Limit.completion C))
     → Σ ℕ (λ n → Σ (Normal.Point (Limit.Chain.stage C n)) (λ u →
-        NormalMaps.map (Limit.stage C n) u ≡ j))
+        NormalMaps.map (Limit.stage C n) u ＝ j))
   reached C j
     with Limit.coverage C (Normal.representative (Limit.completion C) j)
   ... | n , x , p = n , Normal.class (Limit.Chain.stage C n) x ,
-    trans (NormalMaps.map-β (Limit.stage C n) x)
-      (trans (cong (Normal.class (Limit.completion C)) p)
-        (Normal.class-representative (Limit.completion C) j))
+    NormalMaps.map-β (Limit.stage C n) x
+      ∙ (ap (Normal.class (Limit.completion C)) p
+        ∙ Normal.class-representative (Limit.completion C) j)
 
 opaque
   unfolding _·_ initial
@@ -262,7 +255,7 @@ opaque
           𝒫._≈_ (P · Limit.completion C)
             (Maps.Initial.map (initial P (Limit.stage C n)) x) y))
     covers (lift (j , a)) with reached C j
-    ... | n , u , e = n , lift (u , a) , lift (cong (_, a) e)
+    ... | n , u , e = n , lift (u , a) , lift (ap (_, a) e)
 
 -- Mathematical shape: A is-lim-of Qₙ → B is-sup-of (P · Qₙ) → P · A ≃ B.
 limit-law : (P : 𝒫 ℓ) (s : Increasing ℓ) {A B : 𝒫 ℓ}

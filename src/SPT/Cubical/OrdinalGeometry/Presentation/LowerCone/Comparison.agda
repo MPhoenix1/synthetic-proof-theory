@@ -14,8 +14,7 @@ module SPT.Cubical.OrdinalGeometry.Presentation.LowerCone.Comparison where
 -- is how the second cone enumerates its points; a predecessor goes to an
 -- occurrence whose value is equivalent to it.
 
-open import Agda.Primitive using (Level)
-open import Data.Product using (_,_; proj₁; proj₂)
+open import SPT.Cubical.Base
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -42,11 +41,11 @@ to P b = Predecessors.fromOccurrence (from𝒫 P) b
 
 from : (P : 𝒫 ℓ) (b : 𝒫.X P)
   → Predecessors.T (from𝒫 P) b → Lower.Carrier P b
-from P b (x , x<b) = proj₁ (Lower.represent P b x x<b)
+from P b (x , x<b) = pr₁ (Lower.represent P b x x<b)
 
 from-value : (P : 𝒫 ℓ) (b : 𝒫.X P) (z : Predecessors.T (from𝒫 P) b)
-  → 𝒫._≈_ P (Lower.value P b (from P b z)) (proj₁ z)
-from-value P b (x , x<b) = proj₂ (Lower.represent P b x x<b)
+  → 𝒫._≈_ P (Lower.value P b (from P b z)) (pr₁ z)
+from-value P b (x , x<b) = pr₂ (Lower.represent P b x x<b)
 
 ------------------------------------------------------------------------
 -- The equivalence

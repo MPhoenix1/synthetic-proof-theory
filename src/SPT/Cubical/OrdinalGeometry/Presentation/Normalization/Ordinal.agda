@@ -11,10 +11,9 @@ module SPT.Cubical.OrdinalGeometry.Presentation.Normalization.Ordinal where
 -- - its cone embeds into the cone at that class (carry);
 -- - the points below it go pointwise below the image (descend).
 
-open import Agda.Primitive using (lzero)
-open import Data.Product using (_,_; proj₁; proj₂)
+open import SPT.Cubical.Base
+open import SPT.Cubical.Foundation.Accessibility using (is-accessible)
 
-open import SPT.Cubical.Core.WellFounded using (Acc)
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
 import SPT.Cubical.OrdinalGeometry.Presentation.Map as Maps
@@ -48,7 +47,7 @@ below L c = Index.ordinal (Order.Order.Pred (Normal.order L) c)
 
 -- Accessibility of the normalized points.
 Accessible : (L : 𝒫 lzero) → Normal.Point L → Set
-Accessible L = Acc (Order.Order._<_ (Normal.order L))
+Accessible L = is-accessible (Order.Order._<_ (Normal.order L))
 
 accessible : (L : 𝒫 lzero) (c : Normal.Point L) → Accessible L c
 accessible L = Order.Order.wf (Normal.order L)
@@ -66,7 +65,7 @@ private
   shift : (Q : 𝒫 lzero) {y y′ : 𝒫.X Q} → 𝒫._≈_ Q y y′
     → Maps.Embedding (∂ Q y) (∂ Q y′)
   shift Q q = record
-    { map = λ u → proj₁ u , 𝒫.<-respʳ-≈ Q q (proj₂ u)
+    { map = λ u → pr₁ u , 𝒫.<-respʳ-≈ Q q (pr₂ u)
     ; resp = λ p → p
     ; strict = λ p → p
     }
@@ -92,9 +91,9 @@ descend : {L L′ : 𝒫 lzero} (e : Maps.Embedding L L′) (c : Normal.Point L)
   → Orders.Embedding (Index.order (below L c))
       (Index.order (below L′ (Orders.Embedding.map (points-map e) c)))
 descend e c = record
-  { map = λ b → Orders.Embedding.map E (proj₁ b)
-      , Orders.Embedding.strict E {proj₁ b} {c} (proj₂ b)
+  { map = λ b → Orders.Embedding.map E (pr₁ b)
+      , Orders.Embedding.strict E {pr₁ b} {c} (pr₂ b)
   ; strict = λ {u} {v} q →
-      Orders.Embedding.strict E {proj₁ u} {proj₁ v} q
+      Orders.Embedding.strict E {pr₁ u} {pr₁ v} q
   }
   where E = points-map e

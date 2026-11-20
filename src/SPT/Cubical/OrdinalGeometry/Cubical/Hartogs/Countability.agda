@@ -8,11 +8,9 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Hartogs.Countability where
 -- with decidable range gives a partial enumeration; under excluded middle,
 -- for sets, the two notions coincide.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Maybe using (Maybe; just; nothing)
-import Data.Maybe.Properties as MaybeProperties
-open import Data.Nat using (ℕ)
-open import Data.Product using (Σ; _,_)
+open import SPT.Cubical.Base using
+  ( Level; Maybe; _,_; just; lsuc; nothing; Σ; ℕ )
+import SPT.Cubical.Base as MaybeProperties
 
 import SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Countability
   as Countability
@@ -111,7 +109,7 @@ private
   partialEnumerationCode-injective
       discreteA enumeration {left} {right} code-path =
     EqualityConversion.eqToPath
-      (MaybeProperties.just-injective
+      (MaybeProperties.just-is-injective
         (EqualityConversion.pathToEq
           (Cubical._∙_
             (Cubical.sym left-hit)

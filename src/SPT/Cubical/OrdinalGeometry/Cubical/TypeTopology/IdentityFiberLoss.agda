@@ -10,9 +10,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.TypeTopology.IdentityFiberLoss
 -- an embedding in TypeTopology's sense.  Paths and ＝ are compared by
 -- explicit maps and a retraction.
 
-open import Agda.Primitive using (Level; lzero)
-open import Data.Empty using (⊥)
-import Data.Nat.Base as Nat
+open import SPT.Cubical.Base using (Level; lzero; 𝟘)
+import SPT.Cubical.Base as Nat
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import
@@ -103,7 +102,7 @@ identityFiber-not-finite-hlevel :
     (height : Nat.ℕ)
   → HLevels.isOfHLevel height
       (PositionIdentityFiber geometry)
-  → ⊥
+  → 𝟘
 identityFiber-not-finite-hlevel
     geometry height identity-fiber-hlevel =
   PositionLoss.positionFiber-not-finite-hlevel
@@ -144,7 +143,7 @@ module HLevelComparison
       (geometry : Presented.𝒫ω₁𝒢 lzero)
       (height : Nat.ℕ)
     → PositionIdentityFiber geometry is-of-hlevel height
-    → ⊥
+    → 𝟘
   identityFiber-not-finite-TT-hlevel
       geometry height identity-fiber-hlevel =
     identityFiber-not-finite-hlevel
@@ -159,7 +158,7 @@ projection-not-TT-embedding :
     (geometry : Presented.𝒫ω₁𝒢 lzero)
   → TypeTopologyEmbedding.is-embedding
       (PositionLoss.projection geometry)
-  → ⊥
+  → 𝟘
 projection-not-TT-embedding
     geometry embedding =
   identityFiber-not-finite-hlevel

@@ -93,29 +93,31 @@ in `SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal`.
   ordinal of ordinals and of reflections, and the Mahlo comparison;
   `TypeTopology`: the bridge to TypeTopology's ordinals, its univalence,
   and its ordinal of ordinals.
-- `Core`: supporting constructions. `Mahlo`: the Mahlo rule, reflections
-  over a Tarski family with the decoding laws of their formers, and the
-  universe as a parent; `WellFounded`: accessibility,
-  well-founded relations, lexicographic orders, and termination of
-  rewriting by ranks; `Nat`: orders on ℕ, least witnesses, a pairing of
-  ℕ × ℕ with ℕ, and first successes of partial sequences; `Equality`:
-  propositions and sets, contractibility, fibers, isomorphisms of types
-  A ≅ B, and covers; `Generator`: trees and linear histories over
-  signatures.
+- `Mahlo`: the Mahlo rule, reflections over a Tarski family with the
+  decoding laws of their formers, and the universe as a parent.
+- `Base` and `Foundation`: SPT's base and foundation, on which every other
+  module stands: each module of [src/SPT/Base](src/SPT/Base) and
+  [src/SPT/Foundation](src/SPT/Foundation) copied with
+  `--cubical-compatible` under the name `SPT.Cubical.Base…` or
+  `SPT.Cubical.Foundation…`, among them identity types, Σ, sums, ℕ with
+  its orders and pairing, accessibility and well-founded relations,
+  lexicographic orders, isomorphisms of types A ≅ B, fibers and covers,
+  first successes of partial sequences, and trees and linear histories
+  over signatures. [Base.agda](src/SPT/Cubical/Base.agda) is the base's
+  index.
 - `TypeTopology`: files copied from TypeTopology; see [NOTICE](NOTICE).
 - [Everything.agda](src/SPT/Cubical/Everything.agda): imports every module.
 
 ## Checking
 
-Requirements: Agda 2.8.0, with `standard-library-2.3` and `cubical-0.9`
-registered as libraries.
+Requirements: Agda 2.8.0, with `cubical-0.9` registered as a library.
 
 The repository is one Agda library, [SPT.agda-lib](SPT.agda-lib):
 
 ```text
 name: SPT
 include: src
-depend: standard-library cubical-0.9
+depend: cubical-0.9
 flags: --safe
 ```
 

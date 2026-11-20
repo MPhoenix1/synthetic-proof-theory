@@ -14,8 +14,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Simulation.Converse
 -- comes from the lifting of g, without truncation. A bounded simulation
 -- ≺ gives a segment whose ceiling represents its bound.
 
-open import Agda.Primitive using (Level)
-open import Data.Product using (_,_)
+open import SPT.Cubical.Base using (Level; _,_)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)

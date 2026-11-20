@@ -20,9 +20,9 @@ open Truncation using (∥_∥₁; ∣_∣₁)
 import Cubical.Relation.Binary.Order.Woset.Base as Woset
 import Cubical.Relation.Binary.Order.Woset.Simulation as Simulation
 
-import SPT.Cubical.Core.Mahlo.Specification as Mahlo
-open import SPT.Cubical.Core.Mahlo.Decoding using (W; sup)
-import SPT.Cubical.Core.Mahlo.Ambient as Ambient
+import SPT.Cubical.Mahlo.Specification as Mahlo
+open import SPT.Cubical.Mahlo.Decoding using (W; sup)
+import SPT.Cubical.Mahlo.Ambient as Ambient
 import SPT.Cubical.OrdinalGeometry.Height.Reflection as Reflection
 open import SPT.Cubical.OrdinalGeometry.Cubical.Reflection.Ordinals using
   (successor; successor-segments)

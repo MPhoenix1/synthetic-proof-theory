@@ -2,17 +2,19 @@
 
 module SPT.Foundation.Impredicative.BuraliForti where
 
--- Burali-Forti for stably well-founded orders, read through double negation.
--- An order type is a ¬¬-stable predicate on the orders of level ℓ that is
--- doubly not the class of an order under ¬¬-isomorphism (`Order-Types`);
--- the order types form a ¬¬-separated set. Ordered by being, doubly not,
--- isomorphic to segments of one another, they are stably well-founded
--- (`order-types-are-stably-well-founded`). Under propositional resizing they
--- are not small (`order-types-are-not-small`): a small presentation of them
--- is an order, whose segments have types increasing strictly and below its
--- own. So under propositional extensionality at ℓ and univalence at ℓ + 1,
--- small identifications give a large separated set (`separated-largeness`)
--- and are contradictory (`small-identifications-are-contradictory`).
+-- Burali-Forti for stably well-founded orders, read through double
+-- negation. An order type is a ¬¬-stable predicate on the orders of level ℓ
+-- that is doubly not the class of an order under ¬¬-isomorphism
+-- (`Order-Types`); the order types form a ¬¬-separated set. Ordered by
+-- being, doubly not, isomorphic to segments of one another, they are stably
+-- well-founded (`order-types-are-stably-well-founded`). Under function
+-- extensionality at ℓ and ℓ + 1, propositional extensionality at ℓ and
+-- propositional resizing (`Hypotheses`) they are not small
+-- (`order-types-are-not-small`): a small presentation of them is an order,
+-- whose segments have types increasing strictly and below its own. So under
+-- propositional extensionality at ℓ and univalence at ℓ + 1, small
+-- identifications give a large separated set (`separated-largeness`) and
+-- are contradictory (`small-identifications-are-contradictory`).
 
 open import SPT.Base
 open import SPT.Foundation.Extensionality using (FunExt; Π-is-proposition)

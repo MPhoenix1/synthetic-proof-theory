@@ -8,13 +8,52 @@ module SPT.Base.Identity where
 -- in the renaming; so it is also the standard library's `_≡_`, and the two
 -- share every identification. SPT uses no `rewrite`. Nothing here assumes K:
 -- an identification is matched against `refl` only where its endpoints are
--- free to be unified.
+-- free to be unified, and path induction (`identity-elim`) computes at `refl`.
 --
--- Identifications are applied by functions (`ap`, `ap₂`), transported along
--- type families (`transport`), composed (`p ∙ q`) and inverted (`p ⁻¹`).
--- Composition is associative and has `refl` as unit and `p ⁻¹` as inverse, up
--- to identification. The notation `x ＝⟨ p ⟩ y ＝⟨ q ⟩ z ∎` writes a chain of
--- identifications.
+-- Identifications are applied by functions (`ap`, `ap₂`, and `apd` for a
+-- dependent function, over transport), transported along type families
+-- (`transport`, and `transport₂` in a family of two arguments), composed
+-- (`p ∙ q`) and inverted (`p ⁻¹`). Composition is associative and has `refl`
+-- as unit and `p ⁻¹` as inverse, up to identification; functions act on it
+-- functorially (`ap-∙`, `ap-⁻¹`, `ap-∘`), and a constant function sends every
+-- identification to `refl` (`ap-const`). The notation
+-- `x ＝⟨ p ⟩ y ＝⟨ q ⟩ z ∎` writes a chain of identifications.
+--
+-- Transport along a composite is the composite of the transports
+-- (`transport-∙`), along an application it is transport along the action of
+-- the function (`transport-ap`), in a constant family it is the identity
+-- (`transport-const`), and back along the inverse it returns the point
+-- (`forth-and-back-transport`, `back-and-forth-transport`); it is injective
+-- (`transport-is-injective`) and commutes with maps of fibers
+-- (`fiberwise-maps-commute-with-transport`). In families of identifications
+-- it composes (`transport-fiber`, `transport-is-post-composition`),
+--
+--   transport (λ a → f a ＝ c) e u ＝ ap f e ⁻¹ ∙ u,
+--   transport (λ w → x ＝ w) p q ＝ q ∙ p,
+--
+-- and a predicate `L` on the fibers of a family `F` is carried along with
+-- the point (`dependent-transport`):
+--
+--   L x u → L y (transport F p u).
+--
+-- Composites cancel: the inverse of a composite reverses its factors
+-- (`inverse-of-composite`), a factor next to its inverse cancels on the
+-- right of a composite and in its middle (`right-factor-cancels`,
+-- `middle-factor-cancels` and their inverse forms), composition is right
+-- cancellable (`right-cancellable`), and a composite determines its second
+-- factor (`left-transpose`, `inverse-difference-cancels`,
+-- `trivial-difference`). Equations between composites with images and
+-- unit factors are rearranged by `cancel-ap`, `inverse-ap`, `move-end`,
+-- `move-unit` and `pentagonal`, and a path is identified with its round trip
+-- through a retraction (`path-around-retraction`).
+--
+-- A homotopy between functions `f g : A → B` is an identification
+-- `H a : f a ＝ g a` at every point; it is written as that dependent
+-- function type, with no notation of its own. Homotopies are natural
+-- (`homotopies-are-natural`), and a homotopy `H` from `h : A → A` to the
+-- identity commutes with `h` (`identity-homotopies-are-natural`):
+--
+--   H x ∙ ap g p ＝ ap f p ∙ H y,     H (h x) ＝ ap h (H x).
 
 open import Agda.Builtin.Equality public
   using (refl)
@@ -122,3 +161,221 @@ module _ {ℓ κ : Level} {A : Set ℓ} (P : A → Set κ) where
   transport-∙ : {x y z : A} (p : x ＝ y) (q : y ＝ z) (u : P x) →
     transport P (p ∙ q) u ＝ transport P q (transport P p u)
   transport-∙ refl q u = refl
+
+------------------------------------------------------------------------
+-- Dependent functions, applications and constant families
+
+module _ {ℓ κ : Level} {A : Set ℓ} {P : A → Set κ} where
+
+  apd : (f : (x : A) → P x) {x y : A} (p : x ＝ y) →
+    transport P p (f x) ＝ f y
+  apd f refl = refl
+
+module _ {ℓ κ μ : Level} {A : Set ℓ} {B : Set κ} (P : B → Set μ) where
+
+  transport-ap : (f : A → B) {x y : A} (p : x ＝ y) (u : P (f x)) →
+    transport (λ a → P (f a)) p u ＝ transport P (ap f p) u
+  transport-ap f refl u = refl
+
+module _ {ℓ κ : Level} {A : Set ℓ} (P : A → Set κ) where
+
+  forth-and-back-transport : {x y : A} (p : x ＝ y) (u : P x) →
+    transport P (p ⁻¹) (transport P p u) ＝ u
+  forth-and-back-transport refl u = refl
+
+  back-and-forth-transport : {x y : A} (p : x ＝ y) (u : P y) →
+    transport P p (transport P (p ⁻¹) u) ＝ u
+  back-and-forth-transport refl u = refl
+
+module _ {ℓ κ : Level} {A : Set ℓ} {B : Set κ} where
+
+  transport-const : {x y : A} (p : x ＝ y) (b : B) →
+    transport (λ _ → B) p b ＝ b
+  transport-const refl b = refl
+
+  ap-const : (b : B) {x y : A} (p : x ＝ y) → ap (λ _ → b) p ＝ refl
+  ap-const b refl = refl
+
+------------------------------------------------------------------------
+-- Transport in families of identifications
+
+module _ {ℓ κ : Level} {A : Set ℓ} {C : Set κ} where
+
+  transport-fiber : (f : A → C) {x y : A} (e : x ＝ y) {c : C}
+    (u : f x ＝ c) → transport (λ a → f a ＝ c) e u ＝ ap f e ⁻¹ ∙ u
+  transport-fiber f refl u = refl
+
+module _ {ℓ : Level} {A : Set ℓ} where
+
+  transport-is-post-composition : {x y z : A} (q : x ＝ y) (p : y ＝ z) →
+    transport (λ w → x ＝ w) p q ＝ q ∙ p
+  transport-is-post-composition q refl = refl-right-neutral q ⁻¹
+
+------------------------------------------------------------------------
+-- Transposition
+
+module _ {ℓ : Level} {A : Set ℓ} where
+
+  left-transpose : {x y z : A} (r : x ＝ y) (p : y ＝ z) (s : x ＝ z) →
+    r ∙ p ＝ s → p ＝ r ⁻¹ ∙ s
+  left-transpose refl p s e = e
+
+  inverse-difference-cancels : {x y z : A} (r : x ＝ z) (q : y ＝ z) →
+    (r ∙ q ⁻¹) ⁻¹ ∙ r ＝ q
+  inverse-difference-cancels refl refl = refl
+
+  trivial-difference : {x y : A} (r p : x ＝ y) → r ⁻¹ ∙ p ＝ refl → r ＝ p
+  trivial-difference refl p e = e ⁻¹
+
+------------------------------------------------------------------------
+-- Homotopies are natural
+
+module _ {ℓ κ : Level} {A : Set ℓ} {B : Set κ} where
+
+  homotopies-are-natural : (f g : A → B) (H : (a : A) → f a ＝ g a)
+    {x y : A} (p : x ＝ y) → H x ∙ ap g p ＝ ap f p ∙ H y
+  homotopies-are-natural f g H {x} refl = refl-right-neutral (H x)
+
+module _ {ℓ : Level} {A : Set ℓ} where
+
+  identity-homotopies-are-natural : (h : A → A) (H : (a : A) → h a ＝ a)
+    (x : A) → H (h x) ＝ ap h (H x)
+  identity-homotopies-are-natural h H x =
+    H (h x)
+      ＝⟨ refl-right-neutral (H (h x)) ⁻¹ ⟩
+    H (h x) ∙ refl
+      ＝⟨ ap (λ q → H (h x) ∙ q) (right-inverse (H x) ⁻¹) ⟩
+    H (h x) ∙ (H x ∙ H x ⁻¹)
+      ＝⟨ ∙assoc (H (h x)) (H x) (H x ⁻¹) ⁻¹ ⟩
+    (H (h x) ∙ H x) ∙ H x ⁻¹
+      ＝⟨ ap (λ q → (H (h x) ∙ q) ∙ H x ⁻¹) (ap-id (H x) ⁻¹) ⟩
+    (H (h x) ∙ ap id (H x)) ∙ H x ⁻¹
+      ＝⟨ ap (λ q → q ∙ H x ⁻¹) (homotopies-are-natural h id H (H x)) ⟩
+    (ap h (H x) ∙ H x) ∙ H x ⁻¹
+      ＝⟨ ∙assoc (ap h (H x)) (H x) (H x ⁻¹) ⟩
+    ap h (H x) ∙ (H x ∙ H x ⁻¹)
+      ＝⟨ ap (λ q → ap h (H x) ∙ q) (right-inverse (H x)) ⟩
+    ap h (H x) ∙ refl
+      ＝⟨ refl-right-neutral (ap h (H x)) ⟩
+    ap h (H x) ∎
+
+------------------------------------------------------------------------
+-- Transport in two arguments
+
+module _ {ℓ κ μ : Level} {A : Set ℓ} {B : Set κ} (P : A → B → Set μ) where
+
+  transport₂ : {x x′ : A} {y y′ : B} → x ＝ x′ → y ＝ y′ → P x y → P x′ y′
+  transport₂ refl refl u = u
+
+------------------------------------------------------------------------
+-- Cancellation
+
+module _ {ℓ : Level} {A : Set ℓ} where
+
+  inverse-of-composite : {x y z : A} (u : x ＝ y) (v : y ＝ z) →
+    (u ∙ v) ⁻¹ ＝ v ⁻¹ ∙ u ⁻¹
+  inverse-of-composite refl v = refl-right-neutral (v ⁻¹) ⁻¹
+
+  right-factor-cancels : {x y z : A} (u : x ＝ y) (v : y ＝ z) →
+    u ∙ v ∙ v ⁻¹ ＝ u
+  right-factor-cancels u refl =
+    refl-right-neutral (u ∙ refl) ∙ refl-right-neutral u
+
+  inverse-right-factor-cancels : {x y z : A} (u : x ＝ y) (v : z ＝ y) →
+    u ∙ v ⁻¹ ∙ v ＝ u
+  inverse-right-factor-cancels u refl =
+    refl-right-neutral (u ∙ refl) ∙ refl-right-neutral u
+
+  middle-factor-cancels : {x y z w : A} (t : x ＝ y) (r : y ＝ z)
+    (u : y ＝ w) → (t ∙ r) ∙ (r ⁻¹ ∙ u) ＝ t ∙ u
+  middle-factor-cancels t refl u = ap (λ e → e ∙ u) (refl-right-neutral t)
+
+  inverse-middle-factor-cancels : {x y z w : A} (t : x ＝ y) (r : z ＝ y)
+    (u : y ＝ w) → (t ∙ r ⁻¹) ∙ (r ∙ u) ＝ t ∙ u
+  inverse-middle-factor-cancels t refl u =
+    ap (λ e → e ∙ u) (refl-right-neutral t)
+
+  right-cancellable : {x y z : A} (a b : x ＝ y) (c : y ＝ z) →
+    a ∙ c ＝ b ∙ c → a ＝ b
+  right-cancellable a b refl e =
+    refl-right-neutral a ⁻¹ ∙ (e ∙ refl-right-neutral b)
+
+------------------------------------------------------------------------
+-- Dependent transport
+
+module _
+  {ℓ κ μ : Level} {A : Set ℓ} (F : A → Set κ) (L : (x : A) → F x → Set μ)
+  where
+
+  dependent-transport :
+    {x y : A} (p : x ＝ y) (u : F x) → L x u → L y (transport F p u)
+  dependent-transport refl u l = l
+
+------------------------------------------------------------------------
+-- Fiberwise maps and transport
+
+module _ {ℓ κ μ : Level} {A : Set ℓ} {P : A → Set κ} {Q : A → Set μ} where
+
+  fiberwise-maps-commute-with-transport :
+    (f : (x : A) → P x → Q x) {x y : A} (p : x ＝ y) (u : P x) →
+    f y (transport P p u) ＝ transport Q p (f x u)
+  fiberwise-maps-commute-with-transport f refl u = refl
+
+module _ {ℓ κ : Level} {A : Set ℓ} (P : A → Set κ) where
+
+  transport-is-injective : {x y : A} (p : x ＝ y) {u v : P x} →
+    transport P p u ＝ transport P p v → u ＝ v
+  transport-is-injective refl e = e
+
+------------------------------------------------------------------------
+-- Pasting: images and their inverses
+
+module _ {k m : Level} {S : Set k} {Y : Set m} (f : S → Y) where
+
+  cancel-ap : {s₁ s₂ : S} {y : Y} (a : s₁ ＝ s₂) (r : f s₁ ＝ y) →
+    ap f a ∙ ((ap f (a ⁻¹) ∙ r) ∙ refl) ＝ r
+  cancel-ap refl r = refl-right-neutral r
+
+  inverse-ap : {s₁ s₂ : S} {y : Y} (a : s₁ ＝ s₂) (r : f s₁ ＝ y) →
+    r ⁻¹ ∙ ap f a ＝ ((ap f (a ⁻¹) ∙ r) ∙ refl) ⁻¹
+  inverse-ap refl refl = refl
+
+------------------------------------------------------------------------
+-- Pasting: moving factors
+
+module _ {k : Level} {X : Set k} where
+
+  move-end : {y₀ y₁ y₂ y₃ y₄ : X}
+    (e : y₁ ＝ y₀) (i : y₁ ＝ y₂) (c : y₂ ＝ y₃) (v : y₀ ＝ y₄)
+    (u : y₄ ＝ y₃) → e ⁻¹ ∙ (i ∙ c) ＝ v ∙ u →
+    e ⁻¹ ∙ (i ∙ refl) ＝ (v ∙ u) ∙ c ⁻¹
+  move-end refl refl refl refl u refl = refl
+
+  move-unit : {y₀ y₁ y₂ : X} (i : y₀ ＝ y₁)
+    (r : y₁ ＝ y₂) (d : y₀ ＝ y₂) → i ∙ r ＝ d → d ⁻¹ ∙ (i ∙ refl) ＝ r ⁻¹
+  move-unit refl refl d refl = refl
+
+  pentagonal : {y₁ y₂ y₃ y₄ y₅ : X}
+    (m : y₁ ＝ y₂) (a : y₂ ＝ y₃) (h : y₃ ＝ y₄) (c : y₁ ＝ y₅)
+    (f : y₅ ＝ y₄) → m ∙ (a ∙ h) ＝ c ∙ f →
+    c ∙ (f ∙ h ⁻¹) ＝ ((a ⁻¹ ∙ (m ⁻¹ ∙ refl)) ∙ refl) ⁻¹
+  pentagonal refl refl refl refl f refl = refl
+
+------------------------------------------------------------------------
+-- A path through a retraction
+
+module _ {ℓ μ : Level} {X : Set ℓ} {Y : Set μ} (i : X → Y) (o : Y → X)
+  (ε : (u : Y) → i (o u) ＝ u) where
+
+  path-around-retraction : {u v : Y} (e : u ＝ v) →
+    ε u ⁻¹ ∙ (ap i (ap o e) ∙ ε v) ＝ e
+  path-around-retraction {u} refl = left-inverse (ε u)
+
+------------------------------------------------------------------------
+-- Path induction
+
+module _ {ℓ κ : Level} where
+
+  identity-elim : {X : Set ℓ} {x : X} (P : (y : X) → x ＝ y → Set κ) →
+    P x refl → {y : X} (e : x ＝ y) → P y e
+  identity-elim P d refl = d

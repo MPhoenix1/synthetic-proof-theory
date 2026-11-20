@@ -14,14 +14,7 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Classification where
 -- the limit of their domains; this classifies ω, the products D · Q with
 -- Q a limit, and ω^P for P a successor.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Empty using (⊥-elim)
-open import Data.Nat using (ℕ; suc)
-import Data.Nat as Nat
-import Data.Nat.Properties as NatProperties
-open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
-open import Level using (lift)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+open import SPT.Cubical.Base hiding (_+_; nothing)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -176,12 +169,12 @@ ascent {Q = Q} s sup = c , up , every
       (Maps.Uniqueness.pointwise (member k)
         (Maps.compose (Limit.stage S.chain k)
           (Maps.equivalence (Presented.≃𝒫-sym e))) x)
-      (subst (λ w → 𝒫._≈_ Q (E.from w) y) (sym p) (E.from-to-≈ y))
+      (transport (λ w → 𝒫._≈_ Q (E.from w) y) (p ⁻¹) (E.from-to-≈ y))
 
 -- ω is the limit of the finite ordinals, the domains of its points.
 naturals : Σ (Increasing ℓ) (λ s → Supremum (Increasing.stage s) (omega {ℓ}))
-naturals = cofinal omega (λ n → lift n) (λ n → lift (NatProperties.n<1+n n))
-  (λ y → suc (Level.lower y) , lift (NatProperties.n<1+n (Level.lower y)))
+naturals = cofinal omega (λ n → lift n) (λ n → lift (≤ℕˢ-refl (suc n)))
+  (λ y → suc (lower y) , lift (≤ℕˢ-refl (suc (lower y))))
 
 ------------------------------------------------------------------------
 -- Sums, products and ω^
@@ -211,10 +204,10 @@ sum P (limit s sup) _ = respect
 product-limit : (D : 𝒫 ℓ) → 𝒫.X D → (s : Increasing ℓ)
   → Supremum (Increasing.stage s) Q → Classified (D · Q)
 product-limit {Q = Q} D d s sup =
-  limit (proj₁ ascending) (proj₂ ascending)
+  limit (pr₁ ascending) (pr₂ ascending)
   where
   c : ℕ → 𝒫.X Q
-  c = proj₁ (ascent s sup)
+  c = pr₁ (ascent s sup)
 
   δ : Normal.Point D
   δ = Normal.class D d
@@ -228,16 +221,16 @@ product-limit {Q = Q} D d s sup =
   up : (n : ℕ) → 𝒫._<_ (D · Q) (x n) (x (suc n))
   up n = Multiplication.earlier D Q {κ n} {κ (suc n)} δ δ
     (Normal.class-strict Q {x = c n} {y = c (suc n)}
-      (proj₁ (proj₂ (ascent s sup)) n))
+      (pr₁ (pr₂ (ascent s sup)) n))
 
   reach : (v : 𝒫.X (D · Q))
     → Σ (Normal.Point Q) (λ q → Σ (Normal.Point D) (λ a →
-        v ≡ point D Q q a))
+        v ＝ point D Q q a))
     → Σ ℕ (λ n → 𝒫._<_ (D · Q) v (x n))
   reach .(point D Q q a) (q , a , refl) =
-    let n , p = proj₂ (proj₂ (ascent s sup)) (Normal.representative Q q)
+    let n , p = pr₂ (pr₂ (ascent s sup)) (Normal.representative Q q)
     in n , Multiplication.earlier D Q {q} {κ n} a δ
-      (subst (λ r → Normal.Strict Q r (κ n))
+      (transport (λ r → Normal.Strict Q r (κ n))
         (Normal.class-representative Q q)
         (Normal.class-strict Q {x = Normal.representative Q q} {y = c n} p))
 
@@ -253,7 +246,7 @@ private
     respect (Presented.≃𝒫-sym (Multiplication.zero-law D Q z)) (zero z)
   inhabited D d cD (successor Q₀ st) = respect
     (Presented.≃𝒫-sym (Multiplication.successor-law D (Strong.successor st)))
-    (sum (D · Q₀) cD (λ z → ⊥-elim (empty z d)))
+    (sum (D · Q₀) cD (λ z → 𝟘-elim (empty z d)))
   inhabited D d cD (limit s sup) = product-limit D d s sup
 
 -- D · Q is classified when D and Q are: zero when D is, and otherwise
@@ -267,9 +260,9 @@ product {D = D} cD@(successor D₀ st) cQ = inhabited D
   (Presented._≺𝒫_.ceiling
     (Maps.Segment.bound (Successor.above (Strong.successor st)))) cD cQ
 product {D = D} cD@(limit t sup) cQ = inhabited D
-  (Maps.Initial.map (Supremum.member sup (suc Nat.zero))
+  (Maps.Initial.map (Supremum.member sup (suc zero))
     (Presented._≺𝒫_.ceiling
-      (Maps.Segment.bound (Increasing.step t Nat.zero)))) cD cQ
+      (Maps.Segment.bound (Increasing.step t zero)))) cD cQ
 
 -- ω^P is classified when P is: a successor when P is zero, the limit of
 -- ω^P₀ · n when P is a successor of P₀, and a limit when P is one.
@@ -280,7 +273,7 @@ power (successor P₀ st) = respect
   (Presented.≃𝒫-sym (Exponential.successor-law (Strong.successor st)))
   (product-limit (Power.exp P₀)
     (Presented._≺𝒫_.ceiling (Maps.Segment.bound (Power.positive P₀)))
-    (proj₁ naturals) (proj₂ naturals))
+    (pr₁ naturals) (pr₂ naturals))
 power (limit s sup) = respect
   (Presented.≃𝒫-sym (Exponential.limit-law s sup (Increasing.supremum s′)))
   (completed s′)

@@ -15,24 +15,21 @@ module SPT.Cubical.OrdinalGeometry.Height.Reflection where
 -- child.  No particular parent or reflector is assumed, so the same
 -- statements hold inside every reflected child that carries a reflector.
 
-open import Agda.Primitive using (Level; _⊔_)
-open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; refl; sym; cong; subst)
+open import SPT.Cubical.Base
+open import SPT.Cubical.Foundation.Tree.Relation using (node-rel)
 
-import SPT.Cubical.Core.Generator.Tree as Tree
-open import SPT.Cubical.Core.Generator.Tree.Relation using (node-rel)
-import SPT.Cubical.Core.Mahlo.Specification as Mahlo
-open import SPT.Cubical.Core.Mahlo.Decoding using (W; sup; DecodingLaws)
+import SPT.Cubical.Foundation.Tree as Tree
+import SPT.Cubical.Mahlo.Specification as Mahlo
+open import SPT.Cubical.Mahlo.Decoding using (W; sup; DecodingLaws)
 open import SPT.Cubical.OrdinalGeometry.Height.Simulation using
   (Closed; _⊑_; _⊏_; _≈_; below; under; ⊑-refl; ⊑-⊏-trans; ≈-sym; ≈→⊑)
 
 private
-  coe : ∀ {ℓ} {X Y : Set ℓ} → X ≡ Y → X → Y
+  coe : ∀ {ℓ} {X Y : Set ℓ} → X ＝ Y → X → Y
   coe refl x = x
 
-  coe-sym : ∀ {ℓ} {X Y : Set ℓ} (q : X ≡ Y) (y : Y) →
-    coe q (coe (sym q) y) ≡ y
+  coe-sym : ∀ {ℓ} {X Y : Set ℓ} (q : X ＝ Y) (y : Y) →
+    coe q (coe (q ⁻¹) y) ＝ y
   coe-sym refl y = refl
 
 module _ {κ ℓ : Level} {C : Set κ} {D : C → Set ℓ}
@@ -49,20 +46,20 @@ module _ {κ ℓ : Level} {C : Set κ} {D : C → Set ℓ}
   -- unfold reads the decoding of the tree code of P as the P-trees by
   -- tree-β; where tree-β is refl it is the identity.
   Trees : Mahlo.Family D → Set ℓ
-  Trees P = W (D (proj₁ P)) (λ x → D (proj₂ P x))
+  Trees P = W (D (pr₁ P)) (λ x → D (pr₂ P x))
 
   embed : (P : Mahlo.Family D) → Trees P → Closed C D
-  embed P (sup z f) = Tree.node (proj₂ P z) (λ y → embed P (f y))
+  embed P (sup z f) = Tree.node (pr₂ P z) (λ y → embed P (f y))
 
   unfold : (P : Mahlo.Family D) → D (Mahlo.Formers.tree Q P) → Trees P
-  unfold P = coe (DecodingLaws.tree-β laws (proj₁ P) (proj₂ P))
+  unfold P = coe (DecodingLaws.tree-β laws (pr₁ P) (pr₂ P))
 
   fold : (P : Mahlo.Family D) → Trees P → D (Mahlo.Formers.tree Q P)
-  fold P = coe (sym (DecodingLaws.tree-β laws (proj₁ P) (proj₂ P)))
+  fold P = coe (DecodingLaws.tree-β laws (pr₁ P) (pr₂ P) ⁻¹)
 
   unfold-fold : (P : Mahlo.Family D) (w : Trees P) →
-    unfold P (fold P w) ≡ w
-  unfold-fold P = coe-sym (DecodingLaws.tree-β laws (proj₁ P) (proj₂ P))
+    unfold P (fold P w) ＝ w
+  unfold-fold P = coe-sym (DecodingLaws.tree-β laws (pr₁ P) (pr₂ P))
 
   boundary : Mahlo.Family D → Closed C D
   boundary P =
@@ -73,7 +70,7 @@ module _ {κ ℓ : Level} {C : Set κ} {D : C → Set ℓ}
     embed P w ⊏ boundary P
   embed-below P w =
     under (fold P w)
-      (subst (λ v → embed P w ⊑ embed P v) (sym (unfold-fold P w))
+      (transport (λ v → embed P w ⊑ embed P v) (unfold-fold P w ⁻¹)
         (⊑-refl (embed P w)))
 
   -- Everything below Ω_P lies below some P-tree.
@@ -121,20 +118,20 @@ module _ {κ ℓ : Level} {C : Set κ} {D : C → Set ℓ}
       ⊏ Ω R
   regular R a f below-Ω =
     ⊑-⊏-trans
-      (below λ y → under y (proj₂ (bounded R (below-Ω y))))
-      (unbounded R (sup a (λ y → proj₁ (bounded R (below-Ω y)))))
+      (below λ y → under y (pr₂ (bounded R (below-Ω y))))
+      (unbounded R (sup a (λ y → pr₁ (bounded R (below-Ω y)))))
 
   ----------------------------------------------------------------------
   -- Closure under the reflected operator
 
   -- The trees of the image of a child family G, as child trees: a node of
-  -- shape x takes the child code proj₂ G x.
+  -- shape x takes the child code pr₂ G x.
   relabel : {Ψ : Mahlo.Operator D} (R : Mahlo.Reflection Q Ψ)
     (G : Mahlo.Family
       (Mahlo.Closure.Decode (Mahlo.Reflection.closure R))) →
     Trees (Mahlo.Closure.map (Mahlo.Reflection.closure R) G) →
     ChildTrees R
-  relabel R G (sup x k) = sup (proj₂ G x) (λ y → relabel R G (k y))
+  relabel R G (sup x k) = sup (pr₂ G x) (λ y → relabel R G (k y))
 
   relabel-≈ : {Ψ : Mahlo.Operator D} (R : Mahlo.Reflection Q Ψ)
     (G : Mahlo.Family
@@ -151,10 +148,10 @@ module _ {κ ℓ : Level} {C : Set κ} {D : C → Set ℓ}
       (Mahlo.Closure.Decode (Mahlo.Reflection.closure R))) →
     ChildTrees R
   named R G =
-    sup (proj₁ name) λ p →
+    sup (pr₁ name) λ p →
       relabel R G
         (unfold (Mahlo.Closure.map (Mahlo.Reflection.closure R) G)
-          (coe (cong D (proj₂ name)) p))
+          (coe (ap D (pr₂ name)) p))
     where
       name = Mahlo.Closure.tree (Mahlo.Reflection.closure R) G
 
@@ -164,11 +161,11 @@ module _ {κ ℓ : Level} {C : Set κ} {D : C → Set ℓ}
     boundary (Mahlo.Closure.map (Mahlo.Reflection.closure R) G)
       ⊑ embed (codes R) (named R G)
   named-⊒ R G = below λ q →
-    under (coe (sym (cong D (proj₂ name))) q)
-      (subst
+    under (coe (ap D (pr₂ name) ⁻¹) q)
+      (transport
         (λ q′ → embed P (unfold P q)
           ⊑ embed (codes R) (relabel R G (unfold P q′)))
-        (sym (coe-sym (cong D (proj₂ name)) q))
+        (coe-sym (ap D (pr₂ name)) q ⁻¹)
         (≈→⊑ (≈-sym (relabel-≈ R G (unfold P q)))))
     where
       name = Mahlo.Closure.tree (Mahlo.Reflection.closure R) G
@@ -189,7 +186,7 @@ module _ {κ ℓ : Level} {C : Set κ} {D : C → Set ℓ}
       (Mahlo.Closure.Decode (Mahlo.Reflection.closure R))) →
     boundary (Ψ (Mahlo.Closure.map (Mahlo.Reflection.closure R) F)) ⊏ Ω R
   closed R F =
-    subst (λ P → boundary P ⊏ Ω R)
+    transport (λ P → boundary P ⊏ Ω R)
       (Mahlo.Closure.inner-β (Mahlo.Reflection.closure R) F)
       (family-below R
         (Mahlo.Closure.inner (Mahlo.Reflection.closure R) F))
@@ -207,7 +204,7 @@ module _ {κ ℓ : Level} {C : Set κ} {D : C → Set ℓ}
         → D c
       forth : D c →
         D (Mahlo.Closure.interpret (Mahlo.Reflection.closure R) code)
-      back-forth : (z : D c) → back (forth z) ≡ z
+      back-forth : (z : D c) → back (forth z) ＝ z
 
   -- A tree is named when every node label is named.
   Named : {Ψ : Mahlo.Operator D} (R : Mahlo.Reflection Q Ψ) →
@@ -227,8 +224,8 @@ module _ {κ ℓ : Level} {C : Set κ} {D : C → Set ℓ}
   copy-⊒ R (Tree.hole ()) n
   copy-⊒ R (Tree.node c f) (N , Ns) = below λ z →
     under (Naming.forth N z)
-      (subst (λ w → f z ⊑ embed (codes R) (copy R (f w) (Ns w)))
-        (sym (Naming.back-forth N z))
+      (transport (λ w → f z ⊑ embed (codes R) (copy R (f w) (Ns w)))
+        (Naming.back-forth N z ⁻¹)
         (copy-⊒ R (f z) (Ns z)))
 
   -- Mathematical shape: every named tree lies below Ω.

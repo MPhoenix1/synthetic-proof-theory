@@ -17,11 +17,6 @@ module SPT.Foundation.Fibers.Structure where
 -- The fiber of the base projection of a pullback is the fiber of its first
 -- map: the projection fiber isomorphism of SPT.Foundation.Fibers.Projection
 -- at the family of the pullback.
---
--- Ported from TTOA.Core.Equality.Fiber.Structure. Its `Reconstruction.all`
--- and `Composition.exact` are the two isomorphisms here, with its
--- `flatten` and `expand` named; its `Pullback.at` is the reversed
--- projection fiber isomorphism.
 
 open import SPT.Base
 open import SPT.Foundation.Isomorphisms using (_≅_)

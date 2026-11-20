@@ -15,14 +15,7 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Division.Discriminator where
 -- Division asks for cannot be dropped: divisions of arbitrary
 -- presentations give LPO.
 
-open import Agda.Primitive using (lzero)
-open import Data.Bool using (Bool; false)
-open import Data.Empty using (⊥)
-open import Data.Nat using (ℕ)
-open import Data.Product using (Σ; _,_; proj₁; proj₂)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Unit using (tt)
-open import Relation.Binary.PropositionalEquality using (_≡_)
+open import SPT.Cubical.Base hiding (_+_)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -47,13 +40,13 @@ private
         𝒫._<_ (two · Q) y (point two Q v (Normal.class two Entry.top)))
   doubled Q v = Presented._≃𝒫_.to
     (Cone.product two Q v (Normal.class two Entry.top))
-    (inj₂ (Entry.point tt , 𝒫.<-respʳ-≈ two
+    (inr (Entry.point ⋆ , 𝒫.<-respʳ-≈ two
       (𝒫.≈-sym two (Normal.representative-class two Entry.top))
       Entry.point<top))
 
   -- The ceiling of the remainder decides s.
-  decide : (s : ℕ → Bool) → Division (Stream.possible s) two
-    → Stream.Hit s ⊎ ((n : ℕ) → s n ≡ false)
+  decide : (s : ℕ → 𝟚) → Division (Stream.possible s) two
+    → Stream.Hit s ⊎ ((n : ℕ) → s n ＝ ₀)
   decide s d = at B.ceiling B.below (Maps.Segment.covers (Division.below d))
     where
     Q : 𝒫 lzero
@@ -68,20 +61,20 @@ private
     at : (c : 𝒫.X two) → ((x : 𝒫.X R) → 𝒫._<_ two (B.to x) c)
       → ((y : 𝒫.X two) → 𝒫._<_ two y c
           → Σ (𝒫.X R) (λ x → 𝒫._≈_ two (B.to x) y))
-      → Stream.Hit s ⊎ ((n : ℕ) → s n ≡ false)
+      → Stream.Hit s ⊎ ((n : ℕ) → s n ＝ ₀)
     at Entry.top _ covers =
-      inj₁ (E.to (inj₂ (proj₁ (covers (Entry.point tt) Entry.point<top))))
-    at (Entry.point _) below _ = inj₂ (Stream.absent s λ h → split (E.from h))
+      inl (E.to (inr (pr₁ (covers (Entry.point ⋆) Entry.point<top))))
+    at (Entry.point _) below _ = inr (Stream.absent s λ h → split (E.from h))
       where
       -- A point of the empty remainder is impossible, and a point of the
       -- multiple gives two comparable points of possible s.
-      split : 𝒫.X ((two · Q) + R) → ⊥
-      split (inj₂ x) = bottom (below x)
-      split (inj₁ u) = E.to-<
-        {x = inj₁ (proj₁ (doubled Q (proj₁ (view two Q u))))}
-        {y = inj₁ (point two Q (proj₁ (view two Q u))
+      split : 𝒫.X ((two · Q) + R) → 𝟘
+      split (inr x) = bottom (below x)
+      split (inl u) = E.to-<
+        {x = inl (pr₁ (doubled Q (pr₁ (view two Q u))))}
+        {y = inl (point two Q (pr₁ (view two Q u))
           (Normal.class two Entry.top))}
-        (proj₂ (doubled Q (proj₁ (view two Q u))))
+        (pr₂ (doubled Q (pr₁ (view two Q u))))
 
 -- Mathematical shape: (Π P D. D inhabited → Division P D) → LPO.
 division : ((P D : 𝒫 lzero) → 𝒫.X D → Division P D) → Stream.LPO

@@ -10,24 +10,16 @@ module SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal where
 -- equivalence of presentations, the impossibility of enumerating all
 -- presentations, and the ω₁ geometry: one point above every presentation.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Maybe using (Maybe; just; nothing)
-open import Data.Nat using (ℕ; zero; suc)
-open import Data.Product using (_×_; Σ; _,_; proj₁; proj₂)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Relation.Nullary.Negation using (¬_)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; refl; subst)
-  renaming (sym to ≡-sym)
-
-open import SPT.Cubical.Core.WellFounded using
-  (Acc; acc; acc-ind; WellFounded; acc↛loop)
-import SPT.Cubical.Core.WellFounded.Lex as Lex
-open import SPT.Cubical.Core.Nat.Order using
-  (_<ℕᶜ_; <ℕᶜ-trans; cmpℕᶜ)
-open import SPT.Cubical.Core.Nat.WellFounded using (wfℕᶜ)
-open import SPT.Cubical.Core.Nat.Pairing using (pair; unpair; unpair-pair)
+open import SPT.Cubical.Base
+open import SPT.Cubical.Foundation.Accessibility using
+  ( acc; accessible-induction; accessible-points-have-no-loops; is-accessible
+  ; is-well-founded )
+open import SPT.Cubical.Foundation.Nat.Order using (_<ℕᶜ_; <ℕᶜ-trans; cmpℕᶜ)
+open import SPT.Cubical.Foundation.Nat.WellFounded using (wfℕᶜ)
+open import SPT.Cubical.Foundation.WellFounded.Lexicographic using
+  ( dependent-lexicographic; earlier; within
+  ; dependent-lexicographic-is-transitive
+  ; dependent-lexicographic-is-well-founded )
 
 ------------------------------------------------------------------------
 -- Presentations
@@ -46,6 +38,9 @@ open import SPT.Cubical.Core.Nat.Pairing using (pair; unpair; unpair-pair)
 -- Irreflexivity, asymmetry and extensionality modulo ≈ are derived below.
 
 record CountableOrdinal𝒫 (ℓ : Level) : Set (lsuc ℓ) where
+
+  infix 6 _≈_
+  infix 30 _<_
 
   field
 
@@ -88,11 +83,11 @@ record CountableOrdinal𝒫 (ℓ : Level) : Set (lsuc ℓ) where
       → x < y′
 
     <-wf :
-      WellFounded _<_
+      is-well-founded _<_
 
     compare :
       (x y : X)
-      → x < y ⊎ (x ≈ y ⊎ y < x)
+      → Trichotomy _≈_ _<_ x y
 
     enum :
       ℕ → Maybe X
@@ -101,7 +96,7 @@ record CountableOrdinal𝒫 (ℓ : Level) : Set (lsuc ℓ) where
       (x : X)
       → Σ ℕ λ n →
           Σ X λ r →
-            (enum n ≡ just r)
+            (enum n ＝ just r)
             × (r ≈ x)
 
 ------------------------------------------------------------------------
@@ -115,7 +110,7 @@ module Presentation {ℓ : Level} (P : CountableOrdinal𝒫 ℓ) where
       (x : X)
     → ¬ x < x
   <-irrefl x =
-    acc↛loop (<-wf x)
+    accessible-points-have-no-loops (<-wf x)
 
   <-asym :
       ∀ {x y}
@@ -137,7 +132,7 @@ module Presentation {ℓ : Level} (P : CountableOrdinal𝒫 ℓ) where
   --
   -- implies x ≈ y (`≈↓→≈`), by `compare`.
 
-  infix 4 _≈↓_
+  infix 6 _≈↓_
 
   _≈↓_ : X → X → Set ℓ
   x ≈↓ y =
@@ -151,12 +146,12 @@ module Presentation {ℓ : Level} (P : CountableOrdinal𝒫 ℓ) where
     → x ≈ y
   ≈↓→≈ {x} {y} (x→y , y→x)
       with compare x y
-  ... | inj₁ x<y =
-    ⊥-elim (<-irrefl x (y→x x x<y))
-  ... | inj₂ (inj₁ x≈y) =
+  ... | inl x<y =
+    𝟘-elim (<-irrefl x (y→x x x<y))
+  ... | inr (inl x≈y) =
     x≈y
-  ... | inj₂ (inj₂ y<x) =
-    ⊥-elim (<-irrefl y (x→y y y<x))
+  ... | inr (inr y<x) =
+    𝟘-elim (<-irrefl y (x→y y y<x))
 
 ------------------------------------------------------------------------
 -- Bounded strict embeddings
@@ -169,7 +164,7 @@ module Presentation {ℓ : Level} (P : CountableOrdinal𝒫 ℓ) where
 --
 -- The image need not be downward closed.
 
-infix 4 _≺𝒫_
+infix 30 _≺𝒫_
 
 record _≺𝒫_
     {ℓ : Level}
@@ -234,7 +229,8 @@ module Diagonal where
       top :
         Entry
 
-    infix 4 _≈_ _<_
+    infix 6 _≈_
+    infix 30 _<_
 
     data _≈_ : Entry → Entry → Set ℓ where
 
@@ -316,33 +312,33 @@ module Diagonal where
 
     compare :
         (x y : Entry)
-      → x < y ⊎ (x ≈ y ⊎ y < x)
+      → Trichotomy _≈_ _<_ x y
     compare (point x) (point y)
         with Pₙ.compare x y
-    ... | inj₁ x<y =
-      inj₁ (point< x<y)
-    ... | inj₂ (inj₁ x≈y) =
-      inj₂ (inj₁ (point≈ x≈y))
-    ... | inj₂ (inj₂ y<x) =
-      inj₂ (inj₂ (point< y<x))
+    ... | inl x<y =
+      inl (point< x<y)
+    ... | inr (inl x≈y) =
+      inr (inl (point≈ x≈y))
+    ... | inr (inr y<x) =
+      inr (inr (point< y<x))
     compare (point x) top =
-      inj₁ point<top
+      inl point<top
     compare top (point y) =
-      inj₂ (inj₂ point<top)
+      inr (inr point<top)
     compare top top =
-      inj₂ (inj₁ top≈)
+      inr (inl top≈)
 
     private
       point-acc :
           ∀ {x}
-        → Acc Pₙ._<_ x
-        → Acc _<_ (point x)
+        → is-accessible Pₙ._<_ x
+        → is-accessible _<_ (point x)
       point-acc (acc smaller) =
         acc λ where
           (point y) (point< y<x) →
             point-acc (smaller y y<x)
 
-    <-wf : WellFounded _<_
+    <-wf : is-well-founded _<_
     <-wf (point x) =
       point-acc (Pₙ.<-wf x)
     <-wf top =
@@ -362,7 +358,8 @@ module Diagonal where
     X : Set ℓ
     X = Σ ℕ (Successor.Entry P)
 
-    infix 4 _≈⁺_ _<⁺_ _≈_ _<_
+    infix 6 _≈⁺_ _≈_
+    infix 30 _<⁺_ _<_
 
     private
       _≈⁺_ :
@@ -388,20 +385,12 @@ module Diagonal where
         → x ≈⁺ y
         → (n , x) ≈ (n , y)
 
-    module Order =
-      Lex.Dependent
+    _<_ : X → X → Set ℓ
+    _<_ =
+      dependent-lexicographic
         (Successor.Entry P)
         _<ℕᶜ_
         (λ n → Successor._<_ P n)
-
-    _<_ : X → X → Set ℓ
-    _<_ = Order._<_
-
-    pattern earlier m<n =
-      Order.earlier m<n
-
-    pattern within n x<y =
-      Order.within n x<y
 
     ≈-refl :
         (x : X)
@@ -430,9 +419,12 @@ module Diagonal where
       → y < z
       → x < z
     <-trans =
-      Order.trans
+      dependent-lexicographic-is-transitive
+        (Successor.Entry P)
+        _<ℕᶜ_
+        (λ n → Successor._<_ P n)
         (λ {a} {b} {c} a<b b<c →
-          <ℕᶜ-trans {a} {b} {c} a<b b<c)
+          <ℕᶜ-trans a b c a<b b<c)
         (Successor.<-trans P)
 
     <-respˡ-≈ :
@@ -457,39 +449,38 @@ module Diagonal where
 
     compare :
         (x y : X)
-      → x < y ⊎ (x ≈ y ⊎ y < x)
+      → Trichotomy _≈_ _<_ x y
     compare (m , x) (n , y)
         with cmpℕᶜ m n
-    ... | inj₁ m<n =
-      inj₁ (earlier m<n)
-    ... | inj₂ (inj₁ refl) =
+    ... | inl m<n =
+      inl (earlier m<n)
+    ... | inr (inl refl) =
       lift-same (Successor.compare P m x y)
       where
         lift-same :
-            x <⁺ y
-              ⊎ (x ≈⁺ y
-                ⊎ y <⁺ x)
-          → (m , x) < (m , y)
-              ⊎ ((m , x) ≈ (m , y)
-                ⊎ (m , y) < (m , x))
-        lift-same (inj₁ x<y) =
-          inj₁ (within m x<y)
-        lift-same (inj₂ (inj₁ x≈y)) =
-          inj₂ (inj₁ (same x≈y))
-        lift-same (inj₂ (inj₂ y<x)) =
-          inj₂ (inj₂ (within m y<x))
-    ... | inj₂ (inj₂ n<m) =
-      inj₂ (inj₂ (earlier n<m))
+            Trichotomy _≈⁺_ _<⁺_ x y
+          → Trichotomy _≈_ _<_ (m , x) (m , y)
+        lift-same (inl x<y) =
+          inl (within m x<y)
+        lift-same (inr (inl x≈y)) =
+          inr (inl (same x≈y))
+        lift-same (inr (inr y<x)) =
+          inr (inr (within m y<x))
+    ... | inr (inr n<m) =
+      inr (inr (earlier n<m))
 
-    <-wf : WellFounded _<_
+    <-wf : is-well-founded _<_
     <-wf =
-      Order.wf
+      dependent-lexicographic-is-well-founded
+        (Successor.Entry P)
+        _<ℕᶜ_
+        (λ n → Successor._<_ P n)
         wfℕᶜ
         (Successor.<-wf P)
 
     enum : ℕ → Maybe X
     enum code
-        with unpair code
+        with ℕ-unpair code
     ... | n , zero =
       just (n , Successor.top)
     ... | n , suc i
@@ -501,10 +492,10 @@ module Diagonal where
 
     enum-top :
         (n : ℕ)
-      → enum (pair n zero)
-        ≡ just (n , Successor.top)
+      → enum (ℕ-pair n zero)
+        ＝ just (n , Successor.top)
     enum-top n
-        rewrite unpair-pair n zero =
+        rewrite ℕ-unpair-pair n zero =
       refl
 
     module _ (n i : ℕ) where
@@ -514,11 +505,11 @@ module Diagonal where
 
       enum-point :
           (x : Pₙ.X)
-        → Pₙ.enum i ≡ just x
-        → enum (pair n (suc i))
-          ≡ just (n , Successor.point x)
+        → Pₙ.enum i ＝ just x
+        → enum (ℕ-pair n (suc i))
+          ＝ just (n , Successor.point x)
       enum-point x selected
-          rewrite unpair-pair n (suc i)
+          rewrite ℕ-unpair-pair n (suc i)
                 | selected =
         refl
 
@@ -526,17 +517,17 @@ module Diagonal where
         (x : X)
       → Σ ℕ λ code →
           Σ X λ r →
-            (enum code ≡ just r)
+            (enum code ＝ just r)
             × (r ≈ x)
     covers (n , Successor.top) =
-      pair n zero
+      ℕ-pair n zero
       , (n , Successor.top)
       , enum-top n
       , same Successor.top≈
     covers (n , Successor.point x)
         with CountableOrdinal𝒫.covers (P n) x
     ... | i , r , selected , r≈x =
-      pair n (suc i)
+      ℕ-pair n (suc i)
       , (n , Successor.point r)
       , enum-point n i r selected
       , same (Successor.point≈ r≈x)
@@ -571,15 +562,15 @@ module Diagonal where
         → x Pₙ.< y
       reflects {x} {y} embedded
           with Pₙ.compare x y
-      ... | inj₁ x<y =
+      ... | inl x<y =
         x<y
-      ... | inj₂ (inj₁ x≈y) =
-        ⊥-elim
+      ... | inr (inl x≈y) =
+        𝟘-elim
           (Presentation.≈↛< 𝒫
             (same (Successor.point≈ x≈y))
             embedded)
-      ... | inj₂ (inj₂ y<x) =
-        ⊥-elim
+      ... | inr (inr y<x) =
+        𝟘-elim
           (Presentation.<-asym 𝒫
             embedded
             (within n (Successor.point< y<x)))
@@ -647,8 +638,8 @@ module Embedding where
         ∀ {ℓ}
           {P Q : CountableOrdinal𝒫 ℓ}
           (e : P ≺𝒫 Q)
-      → Acc (CountableOrdinal𝒫._<_ Q) (ceiling e)
-      → Acc _≺𝒫_ P
+      → is-accessible (CountableOrdinal𝒫._<_ Q) (ceiling e)
+      → is-accessible _≺𝒫_ P
     accFromCeiling e (acc smaller) =
       acc λ R R≺P →
         accFromCeiling
@@ -662,7 +653,7 @@ module Embedding where
 
   wf :
       ∀ {ℓ}
-    → WellFounded (_≺𝒫_ {ℓ})
+    → is-well-founded (_≺𝒫_ {ℓ})
   wf Q =
     acc λ P P≺Q →
       accFromCeiling P≺Q
@@ -681,7 +672,7 @@ module Embedding where
         (x : P′.X)
       → ¬ (to e x P′.< x)
     self↛descending e x =
-      acc-ind
+      accessible-induction
         (λ y →
           ¬ (to e y P′.< y))
         (λ y smaller toy<y →
@@ -714,7 +705,7 @@ module Embedding where
 --
 -- Two presentations of the same order need not be equal as records.
 
-infix 4 _≃𝒫_
+infix 5 _≃𝒫_
 
 record _≃𝒫_
     {ℓ : Level}
@@ -911,7 +902,7 @@ module _
       {P Q : CountableOrdinal𝒫 ℓ}
   → P ≃𝒫 Q
   → P ≺𝒫 Q
-  → ⊥
+  → 𝟘
 ≃𝒫↛≺𝒫 {Q = Q} e bounded =
   Embedding.irrefl Q
     (≃𝒫→self≺𝒫 e bounded)
@@ -926,19 +917,19 @@ module Exact where
     → Set (lsuc ℓ)
   Covers {ℓ} F =
     (P : CountableOrdinal𝒫 ℓ) →
-      Σ ℕ λ n → F n ≡ P
+      Σ ℕ λ n → F n ＝ P
 
   noEnumeration :
       ∀ {ℓ}
     → (Σ (ℕ → CountableOrdinal𝒫 ℓ) Covers)
-    → ⊥
+    → 𝟘
   noEnumeration (F , covers)
       with Diagonal.upper F
   ... | Q , F≺Q
       with covers Q
   ... | n , Fₙ≡Q =
     Embedding.irrefl Q
-      (subst
+      (transport
         (λ P → P ≺𝒫 Q)
         Fₙ≡Q
         (F≺Q n))
@@ -961,7 +952,7 @@ module Equivalent where
   noEnumeration :
       ∀ {ℓ}
     → (Σ (ℕ → CountableOrdinal𝒫 ℓ) Covers)
-    → ⊥
+    → 𝟘
   noEnumeration (F , covers)
       with Diagonal.upper F
   ... | Q , F≺Q
@@ -972,7 +963,7 @@ module Equivalent where
 ------------------------------------------------------------------------
 -- Cofinal families
 
-infix 4 _≼𝒫_
+infix 30 _≼𝒫_
 
 _≼𝒫_ :
     ∀ {ℓ}
@@ -980,7 +971,7 @@ _≼𝒫_ :
   → CountableOrdinal𝒫 ℓ
   → Set (lsuc ℓ)
 P ≼𝒫 Q =
-  P ≡ Q ⊎ P ≺𝒫 Q
+  (P ＝ Q) ⊎ P ≺𝒫 Q
 
 -- Nor is any family cofinal for P ≼𝒫 Q = (P = Q) + (P ≺𝒫 Q).
 
@@ -997,18 +988,18 @@ module Cofinality where
   noFamily :
       ∀ {ℓ}
     → (Σ (ℕ → CountableOrdinal𝒫 ℓ) Covers)
-    → ⊥
+    → 𝟘
   noFamily (F , cofinal)
       with Diagonal.upper F
   ... | Q , F≺Q
       with cofinal Q
-  ... | n , inj₁ Q≡Fₙ =
+  ... | n , inl Q≡Fₙ =
     Embedding.irrefl Q
-      (subst
+      (transport
         (λ P → P ≺𝒫 Q)
-        (≡-sym Q≡Fₙ)
+        (Q≡Fₙ ⁻¹)
         (F≺Q n))
-  ... | n , inj₂ Q≺Fₙ =
+  ... | n , inr Q≺Fₙ =
     Embedding.irrefl Q
       (Embedding.trans Q≺Fₙ (F≺Q n))
 
@@ -1036,7 +1027,7 @@ module Boundary where
       ∀ {ℓ} {predecessor : Point ℓ}
     → Strict predecessor boundary
     → Σ (CountableOrdinal𝒫 ℓ) λ P →
-        predecessor ≡ embed P
+        predecessor ＝ embed P
   spectrum (below P) =
     P , refl
 
@@ -1067,7 +1058,7 @@ module Boundary where
 -- with the diagonal and the impossibility of enumerating presentations:
 --
 --   𝒫ω₁𝒢(ℓ) = Boundary.Upper(ℓ)
---            × Π(x < upper). Σ P. x ≡ embed(P)
+--            × Π(x < upper). Σ P. x ＝ embed(P)
 --            × Π(f : ℕ → CountableOrdinal𝒫(ℓ)). Diagonal.Upper(f)
 --            × ¬ Σ f. Equivalent.Covers(f).
 --
@@ -1081,9 +1072,9 @@ record 𝒫ω₁𝒢 (ℓ : Level) : Set (lsuc ℓ) where
 
     spectrum :
         ∀ {predecessor}
-      → Boundary.Strict predecessor (proj₁ upper)
+      → Boundary.Strict predecessor (pr₁ upper)
       → Σ (CountableOrdinal𝒫 ℓ) λ P →
-          predecessor ≡ Boundary.embed P
+          predecessor ＝ Boundary.embed P
 
     diagonal :
       (F : ℕ → CountableOrdinal𝒫 ℓ)
@@ -1091,7 +1082,7 @@ record 𝒫ω₁𝒢 (ℓ : Level) : Set (lsuc ℓ) where
 
     noCover :
       (Σ (ℕ → CountableOrdinal𝒫 ℓ) Equivalent.Covers)
-      → ⊥
+      → 𝟘
 
 module ω₁ where
 
@@ -1114,34 +1105,34 @@ module ω₁ where
         → (predecessor : Boundary.Point ℓ)
         → ( Boundary.Strict
               predecessor
-              (proj₁ (𝒫ω₁𝒢.upper geometry))
+              (pr₁ (𝒫ω₁𝒢.upper geometry))
             → Σ (CountableOrdinal𝒫 ℓ) λ P →
-                predecessor ≡ Boundary.embed P
+                predecessor ＝ Boundary.embed P
           )
           ×
           ( (Σ (CountableOrdinal𝒫 ℓ) λ P →
-                predecessor ≡ Boundary.embed P)
+                predecessor ＝ Boundary.embed P)
             → Boundary.Strict
                 predecessor
-                (proj₁ (𝒫ω₁𝒢.upper geometry))
+                (pr₁ (𝒫ω₁𝒢.upper geometry))
           )
     spectrum geometry predecessor =
       𝒫ω₁𝒢.spectrum geometry
       , λ where
           (P , predecessor-computes) →
-            subst
+            transport
               (λ source →
                 Boundary.Strict
                   source
-                  (proj₁ (𝒫ω₁𝒢.upper geometry)))
-              (≡-sym predecessor-computes)
-              (proj₂ (𝒫ω₁𝒢.upper geometry) P)
+                  (pr₁ (𝒫ω₁𝒢.upper geometry)))
+              (predecessor-computes ⁻¹)
+              (pr₂ (𝒫ω₁𝒢.upper geometry) P)
 
     ----------------------------------------------------------------------
     -- Positions
 
     upper : ∀ {ℓ} → 𝒫ω₁𝒢 ℓ → Boundary.Point ℓ
-    upper geometry = proj₁ (𝒫ω₁𝒢.upper geometry)
+    upper geometry = pr₁ (𝒫ω₁𝒢.upper geometry)
 
     -- A position is a presentation with its route below the upper point,
     --
@@ -1161,7 +1152,7 @@ module ω₁ where
         → Position geometry
     position geometry P =
       P
-      , proj₂ (𝒫ω₁𝒢.upper geometry) P
+      , pr₂ (𝒫ω₁𝒢.upper geometry) P
 
     -- Every strict predecessor of the upper point is the embedding of a
     -- position.
@@ -1174,12 +1165,12 @@ module ω₁ where
             predecessor
             (upper geometry)
         → Σ (Position geometry) λ position →
-            predecessor ≡ Boundary.embed (proj₁ position)
+            predecessor ＝ Boundary.embed (pr₁ position)
     covers geometry predecessor<upper
         with 𝒫ω₁𝒢.spectrum geometry predecessor<upper
     ... | P , predecessor-computes =
       ( P
-      , subst
+      , transport
           (λ source →
             Boundary.Strict source (upper geometry))
           predecessor-computes

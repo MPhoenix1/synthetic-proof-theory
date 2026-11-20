@@ -3,27 +3,25 @@
 
 module SPT.Cubical.OrdinalGeometry.Height.Ordinals where
 
--- The ordinal of ordinals as a height: the ω₁ geometry one level up, with
--- all heights in place of presentations.  A height of level ℓ is a closed
--- Core tree whose labels are the types of level ℓ, each node branching
--- over its label.  Ord(ℓ) is the height of level ℓ + 1 whose children are
--- exactly the heights of level ℓ, lifted.  Every height lies below it as a
--- child (upper), everything below it lies below a height (bounded), and it
--- is least (least).  Every small family of heights has its fan as an exact
--- upper bound (fan), no small family is cofinal (not-cofinal), and so
--- Ord(ℓ) lies below no height of level ℓ (not-small): the Burali-Forti
--- argument for heights.  Every small well-founded relation has a canonical
--- height, strictly monotone (rank), whose whole lies below Ord(ℓ).
+-- The ordinal of ordinals as a height: the ω₁ geometry one level up, with all
+-- heights in place of presentations. A height of level ℓ is a closed tree
+-- (Foundation.Tree) whose labels are the types of level ℓ, each node branching
+-- over its label. Ord(ℓ) is the height of level ℓ + 1 whose children are
+-- exactly the heights of level ℓ, lifted. Every height lies below it as a child
+-- (upper), everything below it lies below a height (bounded), and it is least
+-- (least). Every small family of heights has its fan as an exact upper bound
+-- (fan), no small family is cofinal (not-cofinal), and so Ord(ℓ) lies below no
+-- height of level ℓ (not-small): the Burali-Forti argument for heights. Every
+-- small well-founded relation has a canonical height, strictly monotone (rank),
+-- whose whole lies below Ord(ℓ).
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Product using (Σ; _,_; proj₁; proj₂)
-open import Level using (Lift; lift; lower)
-open import Relation.Nullary.Negation using (¬_)
+open import SPT.Cubical.Base
+open import SPT.Cubical.Foundation.Accessibility using
+  ( acc; is-accessible; is-well-founded )
+open import SPT.Cubical.Foundation.Tree.Child using (node-child)
+open import SPT.Cubical.Foundation.Tree.Relation using (node-rel)
 
-open import SPT.Cubical.Core.WellFounded using (Acc; acc; WellFounded)
-import SPT.Cubical.Core.Generator.Tree as Tree
-open import SPT.Cubical.Core.Generator.Tree.Child using (node-child)
-open import SPT.Cubical.Core.Generator.Tree.Relation using (node-rel)
+import SPT.Cubical.Foundation.Tree as Tree
 open import SPT.Cubical.OrdinalGeometry.Height.Simulation using
   (Closed; _◃_; _⊑_; _⊏_; _≈_; below; under; ◃→⊏; ⊏-⊑-trans; ⊏-irrefl;
    ≈→⊑)
@@ -35,7 +33,7 @@ private
 ------------------------------------------------------------------------
 -- Heights of a universe
 
--- Mathematical shape: Height(ℓ) = W (A : Set ℓ). A, closed Core trees.
+-- Mathematical shape: Height(ℓ) = W (A : Set ℓ). A, closed trees.
 Height : (ℓ : Level) → Set (lsuc ℓ)
 Height ℓ = Closed (Set ℓ) (λ A → A)
 
@@ -102,34 +100,34 @@ not-small t p =
 
 module _ {A : Set ℓ} (_<_ : A → A → Set ℓ) where
 
-  -- Mathematical shape: rank(x) = node (Σ y. y < x) (rank ∘ proj₁).
-  rankAt : (x : A) → Acc _<_ x → Height ℓ
+  -- Mathematical shape: rank(x) = node (Σ y. y < x) (rank ∘ pr₁).
+  rankAt : (x : A) → is-accessible _<_ x → Height ℓ
   rankAt x (acc smaller) =
     Tree.node (Σ A λ y → y < x)
-      λ p → rankAt (proj₁ p) (smaller (proj₁ p) (proj₂ p))
+      λ p → rankAt (pr₁ p) (smaller (pr₁ p) (pr₂ p))
 
   -- Ranks do not depend on the accessibility witness, up to structural
   -- equality.
-  rankAt-≈ : (x : A) (a b : Acc _<_ x) → rankAt x a ≈ rankAt x b
+  rankAt-≈ : (x : A) (a b : is-accessible _<_ x) → rankAt x a ≈ rankAt x b
   rankAt-≈ x (acc smaller) (acc smaller′) =
     node-rel λ p →
-      rankAt-≈ (proj₁ p) (smaller (proj₁ p) (proj₂ p))
-        (smaller′ (proj₁ p) (proj₂ p))
+      rankAt-≈ (pr₁ p) (smaller (pr₁ p) (pr₂ p))
+        (smaller′ (pr₁ p) (pr₂ p))
 
-  rank : WellFounded _<_ → A → Height ℓ
+  rank : is-well-founded _<_ → A → Height ℓ
   rank wf x = rankAt x (wf x)
 
   -- y < x gives rank y ⊏ rank x: rank y is a child of rank x, up to the
   -- accessibility witness.
-  rank-strict : (wf : WellFounded _<_) {x y : A} → y < x
+  rank-strict : (wf : is-well-founded _<_) {x y : A} → y < x
     → rank wf y ⊏ rank wf x
   rank-strict wf {x} {y} p with wf x
   ... | acc smaller =
     under (y , p) (≈→⊑ (rankAt-≈ y (wf y) (smaller y p)))
 
   -- The height of the whole relation, and its place below Ord(ℓ).
-  whole : WellFounded _<_ → Height ℓ
+  whole : is-well-founded _<_ → Height ℓ
   whole wf = Tree.node A (rank wf)
 
-  whole-below : (wf : WellFounded _<_) → lift-height (whole wf) ◃ Ord ℓ
+  whole-below : (wf : is-well-founded _<_) → lift-height (whole wf) ◃ Ord ℓ
   whole-below wf = upper (whole wf)

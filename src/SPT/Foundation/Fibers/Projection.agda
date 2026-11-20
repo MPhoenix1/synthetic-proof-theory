@@ -9,8 +9,6 @@ module SPT.Foundation.Fibers.Projection where
 --
 -- the backward map transporting the second component along the
 -- identification of the fiber (`projection-fiber-isomorphism`).
---
--- After TTOA.Core.Equality.Fiber.Total (`fiber`).
 
 open import SPT.Base
 open import SPT.Foundation.Fibers using (fiber)

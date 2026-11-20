@@ -10,11 +10,8 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Higher.PointedUniverse
 -- point lies in the other, and transporting a marked point recovers the
 -- translation.
 
-open import Agda.Primitive using (lzero)
-open import Data.Bool using (Bool; false; true)
-open import Data.Empty using (⊥)
-open import Data.Product using (_×_; _,_; proj₂)
-import Data.Nat.Base as Nat
+open import SPT.Cubical.Base using (_,_; _×_; lzero; pr₂; ₀; ₁; 𝟘; 𝟚)
+import SPT.Cubical.Base as Nat
 
 import
   SPT.Cubical.OrdinalGeometry.Cubical.Fiber.Position
@@ -91,16 +88,16 @@ higherTranslation-zero-input translation =
 -- The pointed type and its twists
 
 RigidCarrier : Set
-RigidCarrier = Bool × Higher.HigherType
+RigidCarrier = 𝟚 × Higher.HigherType
 
 rigidBase : RigidCarrier
-rigidBase = false , Higher.higherTypePoint
+rigidBase = ₀ , Higher.higherTypePoint
 
 rigidMarkedPoint : RigidCarrier
-rigidMarkedPoint = true , Higher.higherTypePoint
+rigidMarkedPoint = ₁ , Higher.higherTypePoint
 
 truePoint : Higher.HigherType → RigidCarrier
-truePoint whole = true , whole
+truePoint whole = ₁ , whole
 
 RigidPointedType : Position.PointedType lzero
 RigidPointedType = RigidCarrier Cubical., rigidBase
@@ -108,20 +105,20 @@ RigidPointedType = RigidCarrier Cubical., rigidBase
 twistIso :
     Higher.HigherType
   → Isomorphism.Iso RigidCarrier RigidCarrier
-Isomorphism.Iso.fun (twistIso translation) (false , whole) = false , whole
-Isomorphism.Iso.fun (twistIso translation) (true , whole) =
-  true , Isomorphism.Iso.fun (higherTranslationIso translation) whole
-Isomorphism.Iso.inv (twistIso translation) (false , whole) = false , whole
-Isomorphism.Iso.inv (twistIso translation) (true , whole) =
-  true , Isomorphism.Iso.inv (higherTranslationIso translation) whole
-Isomorphism.Iso.rightInv (twistIso translation) (false , whole) =
+Isomorphism.Iso.fun (twistIso translation) (₀ , whole) = ₀ , whole
+Isomorphism.Iso.fun (twistIso translation) (₁ , whole) =
+  ₁ , Isomorphism.Iso.fun (higherTranslationIso translation) whole
+Isomorphism.Iso.inv (twistIso translation) (₀ , whole) = ₀ , whole
+Isomorphism.Iso.inv (twistIso translation) (₁ , whole) =
+  ₁ , Isomorphism.Iso.inv (higherTranslationIso translation) whole
+Isomorphism.Iso.rightInv (twistIso translation) (₀ , whole) =
   Cubical.refl
-Isomorphism.Iso.rightInv (twistIso translation) (true , whole) =
+Isomorphism.Iso.rightInv (twistIso translation) (₁ , whole) =
   Cubical.cong truePoint
     (Isomorphism.Iso.rightInv (higherTranslationIso translation) whole)
-Isomorphism.Iso.leftInv (twistIso translation) (false , whole) =
+Isomorphism.Iso.leftInv (twistIso translation) (₀ , whole) =
   Cubical.refl
-Isomorphism.Iso.leftInv (twistIso translation) (true , whole) =
+Isomorphism.Iso.leftInv (twistIso translation) (₁ , whole) =
   Cubical.cong truePoint
     (Isomorphism.Iso.leftInv (higherTranslationIso translation) whole)
 
@@ -154,7 +151,7 @@ recoverHigher :
       RigidPointedType
   → Higher.HigherType
 recoverHigher loop =
-  proj₂
+  pr₂
     (Cubical.transport
       (Cubical.cong Cubical.fst loop)
       rigidMarkedPoint)
@@ -164,7 +161,7 @@ recover-twistPointedPath :
   → recoverHigher (twistPointedPath translation)
       Cubical.≡ translation
 recover-twistPointedPath translation =
-  Cubical.cong proj₂
+  Cubical.cong pr₂
     (Univalence.uaβ (twistEquivalence translation) rigidMarkedPoint)
   Cubical.∙
   higherTranslation-zero-input translation
@@ -188,9 +185,9 @@ twistZeroFunctionPath :
     Equiv.equivFun (twistEquivalence Higher.higherTypePoint)
       Cubical.≡
     (λ point → point)
-twistZeroFunctionPath interval (false , whole) = false , whole
-twistZeroFunctionPath interval (true , whole) =
-  true
+twistZeroFunctionPath interval (₀ , whole) = ₀ , whole
+twistZeroFunctionPath interval (₁ , whole) =
+  ₁
   ,
   (λ height →
     EMGroup.rUnitₖ
@@ -273,7 +270,7 @@ pointedUniverseCell-nontrivial :
       Iterated.iteratedLoopPoint (Nat.suc height)
         (Position.PointedType lzero)
         RigidPointedType
-  → ⊥
+  → 𝟘
 pointedUniverseCell-nontrivial height =
   Iterated.preserves-nonbase
     (higherEmbedding height)

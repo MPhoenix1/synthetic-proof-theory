@@ -14,16 +14,7 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Successor.Discriminator where
 --   or the top (segment).
 -- Monotonicity for ≃𝒫 and for strict bounds ≺𝒫 holds (Successor).
 
-open import Agda.Primitive using (lzero)
-open import Data.Bool using (Bool; false)
-open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Nat using (ℕ; zero)
-open import Data.Product using (_,_)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Unit using (tt)
-open import Level using (lift)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; refl; sym; subst)
+open import SPT.Cubical.Base hiding (_+_)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -44,72 +35,72 @@ private
     (Adjoin.constant ∅) zero
 
   -- The entries of possible s + 1.
-  module Possible (s : ℕ → Bool) = Presented.Diagonal.Successor
+  module Possible (s : ℕ → 𝟚) = Presented.Diagonal.Successor
     (Adjoin.constant (Stream.possible s)) zero
 
   -- The entries of (1 + possible s) + 1.
-  module Joined (s : ℕ → Bool) = Presented.Diagonal.Successor
+  module Joined (s : ℕ → 𝟚) = Presented.Diagonal.Successor
     (Adjoin.constant (Stream.one + Stream.possible s))
     zero
 
   -- The least point of possible s + 1 decides s.
-  least-point : (s : ℕ → Bool)
+  least-point : (s : ℕ → 𝟚)
     (m : Maps.Initial (Maps.Successor.next ∅)
       (Maps.Successor.next (Stream.possible s)))
-    (u : Possible.Entry s) → Maps.Initial.map m Z.top ≡ u
-    → Stream.Hit s ⊎ ((n : ℕ) → s n ≡ false)
-  least-point s m (Possible.point h) _ = inj₁ h
-  least-point s m Possible.top eq = inj₂ (Stream.absent s clash)
+    (u : Possible.Entry s) → Maps.Initial.map m Z.top ＝ u
+    → Stream.Hit s ⊎ ((n : ℕ) → s n ＝ ₀)
+  least-point s m (Possible.point h) _ = inl h
+  least-point s m Possible.top eq = inr (Stream.absent s clash)
     where
-    clash : Stream.Hit s → ⊥
+    clash : Stream.Hit s → 𝟘
     clash h with Maps.Initial.lower m Z.top (Possible.point h)
-      (subst (Possible._<_ s (Possible.point h)) (sym eq)
+      (transport (Possible._<_ s (Possible.point h)) (eq ⁻¹)
         Possible.point<top)
     ... | Z.point x , _ = empty vacant x
-    ... | Z.top , q = top≉point (subst (λ u → Possible._≈_ s u _) eq q)
+    ... | Z.top , q = top≉point (transport (λ u → Possible._≈_ s u _) eq q)
       where
       top≉point : Possible._≈_ s Possible.top (Possible.point h)
-        → ⊥
+        → 𝟘
       top≉point ()
 
   -- Nothing lies below the first point of 1 + possible s.
-  first-least : (s : ℕ → Bool) (y : 𝒫.X (Stream.one + Stream.possible s))
-    → 𝒫._<_ (Stream.one + Stream.possible s) y (inj₁ tt) → ⊥
-  first-least s (inj₁ tt) ()
-  first-least s (inj₂ h) (lift ())
+  first-least : (s : ℕ → 𝟚) (y : 𝒫.X (Stream.one + Stream.possible s))
+    → 𝒫._<_ (Stream.one + Stream.possible s) y (inl ⋆) → 𝟘
+  first-least s (inl ⋆) ()
+  first-least s (inr h) (lift ())
 
   -- ∅ < 1 + possible s, with ceiling the first point.
-  first : (s : ℕ → Bool) → Maps.Segment ∅ (Stream.one + Stream.possible s)
+  first : (s : ℕ → 𝟚) → Maps.Segment ∅ (Stream.one + Stream.possible s)
   first s = record
     { bound = record
-        { to = λ x → ⊥-elim (empty vacant x)
-        ; to-≈ = λ {x} _ → ⊥-elim (empty vacant x)
-        ; to-< = λ {x} _ → ⊥-elim (empty vacant x)
-        ; reflects-< = λ {x} _ → ⊥-elim (empty vacant x)
-        ; ceiling = inj₁ tt
-        ; below = λ x → ⊥-elim (empty vacant x)
+        { to = λ x → 𝟘-elim (empty vacant x)
+        ; to-≈ = λ {x} _ → 𝟘-elim (empty vacant x)
+        ; to-< = λ {x} _ → 𝟘-elim (empty vacant x)
+        ; reflects-< = λ {x} _ → 𝟘-elim (empty vacant x)
+        ; ceiling = inl ⋆
+        ; below = λ x → 𝟘-elim (empty vacant x)
         }
-    ; covers = λ y p → ⊥-elim (first-least s y p)
+    ; covers = λ y p → 𝟘-elim (first-least s y p)
     }
 
   -- The ceiling of ∅ + 1 inside (1 + possible s) + 1 decides s.
-  next-point : (s : ℕ → Bool)
+  next-point : (s : ℕ → 𝟚)
     (σ : Maps.Segment (Maps.Successor.next ∅)
       (Maps.Successor.next (Stream.one + Stream.possible s)))
     (c : Joined.Entry s)
-    → Presented._≺𝒫_.ceiling (Maps.Segment.bound σ) ≡ c
-    → Stream.Hit s ⊎ ((n : ℕ) → s n ≡ false)
-  next-point s σ (Joined.point (inj₂ h)) _ = inj₁ h
-  next-point s σ (Joined.point (inj₁ tt)) eq =
-    ⊥-elim (low (B.to Z.top) (subst (Joined._<_ s (B.to Z.top)) eq
+    → Presented._≺𝒫_.ceiling (Maps.Segment.bound σ) ＝ c
+    → Stream.Hit s ⊎ ((n : ℕ) → s n ＝ ₀)
+  next-point s σ (Joined.point (inr h)) _ = inl h
+  next-point s σ (Joined.point (inl ⋆)) eq =
+    𝟘-elim (low (B.to Z.top) (transport (Joined._<_ s (B.to Z.top)) eq
       (B.below Z.top)))
     where
     module B = Presented._≺𝒫_ (Maps.Segment.bound σ)
-    low : (u : Joined.Entry s) → Joined._<_ s u (Joined.point (inj₁ tt))
-      → ⊥
+    low : (u : Joined.Entry s) → Joined._<_ s u (Joined.point (inl ⋆))
+      → 𝟘
     low (Joined.point v) (Joined.point< p) = first-least s v p
     low Joined.top ()
-  next-point s σ Joined.top eq = inj₂ (Stream.absent s clash)
+  next-point s σ Joined.top eq = inr (Stream.absent s clash)
     where
     module B = Presented._≺𝒫_ (Maps.Segment.bound σ)
 
@@ -118,14 +109,14 @@ private
       → Joined._≈_ s (B.to Z.top) (Joined.point y)
     from-top y
       with Maps.Segment.covers σ (Joined.point y)
-        (subst (Joined._<_ s (Joined.point y)) (sym eq)
+        (transport (Joined._<_ s (Joined.point y)) (eq ⁻¹)
           Joined.point<top)
-    ... | Z.point x , _ = ⊥-elim (empty vacant x)
+    ... | Z.point x , _ = 𝟘-elim (empty vacant x)
     ... | Z.top , q = q
 
-    clash : Stream.Hit s → ⊥
-    clash h with Joined.≈-trans s (Joined.≈-sym s (from-top (inj₁ tt)))
-      (from-top (inj₂ h))
+    clash : Stream.Hit s → 𝟘
+    clash h with Joined.≈-trans s (Joined.≈-sym s (from-top (inl ⋆)))
+      (from-top (inr h))
     ... | Joined.point≈ (lift ())
 
 -- Mathematical shape: (Π P Q. P ≤ Q → P + 1 ≤ Q + 1) → LPO.

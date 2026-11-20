@@ -11,6 +11,12 @@ module SPT.Base.Maybe where
 -- otherwise. These are types with at most one point, `𝟙` or `𝟘`, decided by
 -- inspecting the value, never both; a value that is just has its point
 -- (`from-just`), and is `just` of it.
+--
+-- Partial values under a map: `maybe-map f` sends `just a` to `just (f a)`
+-- and `nothing` to `nothing`. A partial value is read with a default
+-- (`maybe-rec`):
+--
+--   maybe-rec b f nothing = b,   maybe-rec b f (just a) = f a.
 
 open import Agda.Builtin.Maybe public
 
@@ -72,3 +78,16 @@ module _ {ℓ : Level} {A : Set ℓ} where
   nothing-from-refutation : (m : Maybe A) → ¬ is-just m → is-nothing m
   nothing-from-refutation nothing _ = ⋆
   nothing-from-refutation (just a) refutation = refutation ⋆
+
+------------------------------------------------------------------------
+-- Maps and recursion
+
+module _ {ℓ κ : Level} {A : Set ℓ} {B : Set κ} where
+
+  maybe-map : (A → B) → Maybe A → Maybe B
+  maybe-map f nothing = nothing
+  maybe-map f (just a) = just (f a)
+
+  maybe-rec : B → (A → B) → Maybe A → B
+  maybe-rec b f nothing = b
+  maybe-rec b f (just a) = f a

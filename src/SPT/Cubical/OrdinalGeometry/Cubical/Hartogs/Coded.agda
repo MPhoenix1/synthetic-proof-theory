@@ -12,8 +12,7 @@ module SPT.Cubical.OrdinalGeometry.Cubical.Hartogs.Coded where
 -- of a well-order carry along an equivalence of carriers that matches the
 -- relations (transport-laws).
 
-open import Agda.Primitive using (Level)
-open import Level using (Lift; lift; lower)
+open import SPT.Cubical.Base using (Level; Lift; lift; lower)
 
 import Cubical.Data.Bool as Bool
 open Bool using (Bool; true; false)

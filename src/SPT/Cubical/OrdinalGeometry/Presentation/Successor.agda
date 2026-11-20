@@ -6,12 +6,7 @@ module SPT.Cubical.OrdinalGeometry.Presentation.Successor where
 -- The successor P + 1 of a presentation: P with one new point, the
 -- ceiling, above all of it.
 
-open import Agda.Primitive using (Level)
-open import Data.Maybe using (Maybe; just)
-import Data.Maybe as Maybe
-open import Data.Nat using (ℕ; zero; suc)
-open import Data.Product using (_×_; Σ; _,_)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import SPT.Cubical.Base
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 
@@ -77,7 +72,7 @@ enumeration :
 enumeration presentation zero =
   just (ceiling presentation)
 enumeration presentation (suc index) =
-  Maybe.map
+  maybe-map
     (embed presentation)
     (Presented.CountableOrdinal𝒫.enum presentation index)
 
@@ -87,7 +82,7 @@ enumeration-covers :
   → Σ ℕ (λ index →
       Σ (Carrier presentation) (λ representative →
         (enumeration presentation index
-          ≡ just representative)
+          ＝ just representative)
         × Equivalent
             presentation representative entry))
 enumeration-covers presentation
@@ -96,8 +91,8 @@ enumeration-covers presentation
 ... | index , representative , selected , representative≈point =
   suc index
   , embed presentation representative
-  , cong
-      (Maybe.map (embed presentation))
+  , ap
+      (maybe-map (embed presentation))
       selected
   , Presented.Diagonal.Successor.point≈ representative≈point
 enumeration-covers presentation Presented.Diagonal.Successor.top =

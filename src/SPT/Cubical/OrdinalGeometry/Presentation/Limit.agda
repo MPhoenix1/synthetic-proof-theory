@@ -8,18 +8,9 @@ module SPT.Cubical.OrdinalGeometry.Presentation.Limit where
 -- Initial maps into any presented bound extend uniquely to the boundary;
 -- compatible stage embeddings extend to an embedding of the boundary.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Maybe using (Maybe; nothing; just)
-open import Data.Nat using
-  (ℕ; zero; suc; _≤_; _≤′_; ≤′-refl; ≤′-step; _⊔_)
-import Data.Nat.Properties as Nat
-open import Data.Product using (Σ; _×_; _,_; proj₁)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Level using (lift; lower)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; cong)
+open import SPT.Cubical.Base
+open import SPT.Cubical.Foundation.Accessibility using (acc; is-accessible)
 
-open import SPT.Cubical.Core.WellFounded using (Acc; acc)
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
 import SPT.Cubical.OrdinalGeometry.Presentation.Map as Maps
@@ -38,15 +29,15 @@ record Chain (ℓ : Level) : Set (lsuc ℓ) where
     edge : (n : ℕ) → Maps.Initial (stage n) (stage (suc n))
 
 private
-  iterate : (C : Chain ℓ) {m n : ℕ} → m ≤′ n
+  iterate : (C : Chain ℓ) {m n : ℕ} → m ≤ℕ′ n
     → Maps.Initial (Chain.stage C m) (Chain.stage C n)
-  iterate C {m} ≤′-refl = Maps.identity (Chain.stage C m)
-  iterate C (≤′-step {n = n} p) =
+  iterate C {m} ≤ℕ′-refl = Maps.identity (Chain.stage C m)
+  iterate C (≤ℕ′-step {n = n} p) =
     Maps.compose (iterate C p) (Chain.edge C n)
 
-advance : (C : Chain ℓ) {m n : ℕ} → m ≤ n
+advance : (C : Chain ℓ) {m n : ℕ} → m ≤ℕˢ n
   → Maps.Initial (Chain.stage C m) (Chain.stage C n)
-advance C p = iterate C (Nat.≤⇒≤′ p)
+advance C p = iterate C (≤ℕˢ-to-≤ℕ′ p)
 
 -- Stage embeddings into Q that commute with the edges, up to ≈. Unlike
 -- initial maps, embeddings are not unique, so this is a separate datum.
@@ -62,39 +53,39 @@ private
   Occurrence C = Σ ℕ (λ n → 𝒫.X (Chain.stage C n))
 
   image : (C : Chain ℓ) (x : Occurrence C) {k : ℕ}
-    → proj₁ x ≤ k → 𝒫.X (Chain.stage C k)
+    → pr₁ x ≤ℕˢ k → 𝒫.X (Chain.stage C k)
   image C (n , x) p = Maps.Initial.map (advance C p) x
 
   aligned : (C : Chain ℓ) (x : Occurrence C) {k : ℕ}
-    → (p q : proj₁ x ≤ k)
+    → (p q : pr₁ x ≤ℕˢ k)
     → 𝒫._≈_ (Chain.stage C k) (image C x p) (image C x q)
   aligned C (n , x) p q =
     Maps.Uniqueness.pointwise (advance C p) (advance C q) x
 
   followed : (C : Chain ℓ) (x : Occurrence C) {k l : ℕ}
-    → (p : proj₁ x ≤ k) (q : k ≤ l)
+    → (p : pr₁ x ≤ℕˢ k) (q : k ≤ℕˢ l)
     → 𝒫._≈_ (Chain.stage C l)
         (Maps.Initial.map (advance C q) (image C x p))
-        (image C x (Nat.≤-trans p q))
+        (image C x (≤ℕˢ-trans p q))
   followed C (n , x) p q = Maps.Uniqueness.pointwise
     (Maps.compose (advance C p) (advance C q))
-    (advance C (Nat.≤-trans p q)) x
+    (advance C (≤ℕˢ-trans p q)) x
 
   Witness : (C : Chain ℓ)
     → ((n : ℕ) → 𝒫.X (Chain.stage C n) → 𝒫.X (Chain.stage C n) → Set ℓ)
     → Occurrence C → Occurrence C → Set ℓ
-  Witness C R x y = Σ ℕ λ k → Σ (proj₁ x ≤ k) λ p →
-    Σ (proj₁ y ≤ k) λ q → R k (image C x p) (image C y q)
+  Witness C R x y = Σ ℕ λ k → Σ (pr₁ x ≤ℕˢ k) λ p →
+    Σ (pr₁ y ≤ℕˢ k) λ q → R k (image C x p) (image C y q)
 
   Equivalent Strict : (C : Chain ℓ) → Occurrence C → Occurrence C → Set ℓ
   Equivalent C = Witness C (λ n → 𝒫._≈_ (Chain.stage C n))
   Strict C = Witness C (λ n → 𝒫._<_ (Chain.stage C n))
 
   raise-≈ : (C : Chain ℓ) {x y : Occurrence C} {k l : ℕ}
-    → (p : proj₁ x ≤ k) (q : proj₁ y ≤ k) (r : k ≤ l)
+    → (p : pr₁ x ≤ℕˢ k) (q : pr₁ y ≤ℕˢ k) (r : k ≤ℕˢ l)
     → 𝒫._≈_ (Chain.stage C k) (image C x p) (image C y q)
     → 𝒫._≈_ (Chain.stage C l)
-        (image C x (Nat.≤-trans p r)) (image C y (Nat.≤-trans q r))
+        (image C x (≤ℕˢ-trans p r)) (image C y (≤ℕˢ-trans q r))
   raise-≈ C {x} {y} {l = l} p q r h =
     𝒫.≈-trans (Chain.stage C l)
       (𝒫.≈-sym (Chain.stage C l) (followed C x p r))
@@ -102,18 +93,18 @@ private
         (Maps.Initial.resp (advance C r) h) (followed C y q r))
 
   raise-< : (C : Chain ℓ) {x y : Occurrence C} {k l : ℕ}
-    → (p : proj₁ x ≤ k) (q : proj₁ y ≤ k) (r : k ≤ l)
+    → (p : pr₁ x ≤ℕˢ k) (q : pr₁ y ≤ℕˢ k) (r : k ≤ℕˢ l)
     → 𝒫._<_ (Chain.stage C k) (image C x p) (image C y q)
     → 𝒫._<_ (Chain.stage C l)
-        (image C x (Nat.≤-trans p r)) (image C y (Nat.≤-trans q r))
+        (image C x (≤ℕˢ-trans p r)) (image C y (≤ℕˢ-trans q r))
   raise-< C {x} {y} {l = l} p q r h =
     𝒫.<-respˡ-≈ (Chain.stage C l) (followed C x p r)
       (𝒫.<-respʳ-≈ (Chain.stage C l) (followed C y q r)
         (Maps.Initial.strict (advance C r) h))
 
   reflexive : (C : Chain ℓ) (x : Occurrence C) → Equivalent C x x
-  reflexive C (n , x) = n , Nat.≤-refl , Nat.≤-refl ,
-    𝒫.≈-refl (Chain.stage C n) (image C (n , x) Nat.≤-refl)
+  reflexive C (n , x) = n , ≤ℕˢ-refl n , ≤ℕˢ-refl n ,
+    𝒫.≈-refl (Chain.stage C n) (image C (n , x) (≤ℕˢ-refl n))
 
   symmetric : (C : Chain ℓ) {x y : Occurrence C}
     → Equivalent C x y → Equivalent C y x
@@ -123,67 +114,67 @@ private
   transitive : (C : Chain ℓ) {x y z : Occurrence C}
     → Equivalent C x y → Equivalent C y z → Equivalent C x z
   transitive C {x} {y} {z} (k , p , q , r) (l , s , t , u) =
-    (k ⊔ l) , Nat.≤-trans p a , Nat.≤-trans t b ,
+    (k ⊔ℕ l) , ≤ℕˢ-trans p a , ≤ℕˢ-trans t b ,
     𝒫.≈-trans Q (raise-≈ C {x} {y} p q a r)
       (𝒫.≈-trans Q
-        (aligned C y (Nat.≤-trans q a) (Nat.≤-trans s b))
+        (aligned C y (≤ℕˢ-trans q a) (≤ℕˢ-trans s b))
         (raise-≈ C {y} {z} s t b u))
     where
-    a = Nat.m≤m⊔n k l
-    b = Nat.m≤n⊔m k l
-    Q = Chain.stage C (k ⊔ l)
+    a = ≤ℕˢ-⊔ˡ k l
+    b = ≤ℕˢ-⊔ʳ k l
+    Q = Chain.stage C (k ⊔ℕ l)
 
   strict-transitive : (C : Chain ℓ) {x y z : Occurrence C}
     → Strict C x y → Strict C y z → Strict C x z
   strict-transitive C {x} {y} {z} (k , p , q , r) (l , s , t , u) =
-    (k ⊔ l) , Nat.≤-trans p a , Nat.≤-trans t b ,
+    (k ⊔ℕ l) , ≤ℕˢ-trans p a , ≤ℕˢ-trans t b ,
     𝒫.<-trans Q
       (𝒫.<-respʳ-≈ Q
-        (aligned C y (Nat.≤-trans q a) (Nat.≤-trans s b))
+        (aligned C y (≤ℕˢ-trans q a) (≤ℕˢ-trans s b))
         (raise-< C {x} {y} p q a r))
       (raise-< C {y} {z} s t b u)
     where
-    a = Nat.m≤m⊔n k l
-    b = Nat.m≤n⊔m k l
-    Q = Chain.stage C (k ⊔ l)
+    a = ≤ℕˢ-⊔ˡ k l
+    b = ≤ℕˢ-⊔ʳ k l
+    Q = Chain.stage C (k ⊔ℕ l)
 
   respˡ : (C : Chain ℓ) {x x′ y : Occurrence C}
     → Equivalent C x x′ → Strict C x y → Strict C x′ y
   respˡ C {x} {x′} {y} (k , p , q , r) (l , s , t , u) =
-    (k ⊔ l) , Nat.≤-trans q a , Nat.≤-trans t b ,
+    (k ⊔ℕ l) , ≤ℕˢ-trans q a , ≤ℕˢ-trans t b ,
     𝒫.<-respˡ-≈ Q
       (𝒫.≈-trans Q
-        (aligned C x (Nat.≤-trans s b) (Nat.≤-trans p a))
+        (aligned C x (≤ℕˢ-trans s b) (≤ℕˢ-trans p a))
         (raise-≈ C {x} {x′} p q a r))
       (raise-< C {x} {y} s t b u)
     where
-    a = Nat.m≤m⊔n k l
-    b = Nat.m≤n⊔m k l
-    Q = Chain.stage C (k ⊔ l)
+    a = ≤ℕˢ-⊔ˡ k l
+    b = ≤ℕˢ-⊔ʳ k l
+    Q = Chain.stage C (k ⊔ℕ l)
 
   respʳ : (C : Chain ℓ) {x y y′ : Occurrence C}
     → Equivalent C y y′ → Strict C x y → Strict C x y′
   respʳ C {x} {y} {y′} (k , p , q , r) (l , s , t , u) =
-    (k ⊔ l) , Nat.≤-trans s b , Nat.≤-trans q a ,
+    (k ⊔ℕ l) , ≤ℕˢ-trans s b , ≤ℕˢ-trans q a ,
     𝒫.<-respʳ-≈ Q
       (𝒫.≈-trans Q
-        (aligned C y (Nat.≤-trans t b) (Nat.≤-trans p a))
+        (aligned C y (≤ℕˢ-trans t b) (≤ℕˢ-trans p a))
         (raise-≈ C {y} {y′} p q a r))
       (raise-< C {x} {y} s t b u)
     where
-    a = Nat.m≤m⊔n k l
-    b = Nat.m≤n⊔m k l
-    Q = Chain.stage C (k ⊔ l)
+    a = ≤ℕˢ-⊔ˡ k l
+    b = ≤ℕˢ-⊔ʳ k l
+    Q = Chain.stage C (k ⊔ℕ l)
 
   preserve-≈ : (C : Chain ℓ) (n : ℕ) {x y : 𝒫.X (Chain.stage C n)}
     → 𝒫._≈_ (Chain.stage C n) x y → Equivalent C (n , x) (n , y)
-  preserve-≈ C n p = n , Nat.≤-refl , Nat.≤-refl ,
-    Maps.Initial.resp (advance C Nat.≤-refl) p
+  preserve-≈ C n p = n , ≤ℕˢ-refl n , ≤ℕˢ-refl n ,
+    Maps.Initial.resp (advance C (≤ℕˢ-refl n)) p
 
   preserve-< : (C : Chain ℓ) (n : ℕ) {x y : 𝒫.X (Chain.stage C n)}
     → 𝒫._<_ (Chain.stage C n) x y → Strict C (n , x) (n , y)
-  preserve-< C n p = n , Nat.≤-refl , Nat.≤-refl ,
-    Maps.Initial.strict (advance C Nat.≤-refl) p
+  preserve-< C n p = n , ≤ℕˢ-refl n , ≤ℕˢ-refl n ,
+    Maps.Initial.strict (advance C (≤ℕˢ-refl n)) p
 
   reflect : (C : Chain ℓ) (n : ℕ) {x y : 𝒫.X (Chain.stage C n)}
     → Strict C (n , x) (n , y) → 𝒫._<_ (Chain.stage C n) x y
@@ -199,8 +190,8 @@ private
   ... | z , h = z , k , q , p , h
 
   accessible : (C : Chain ℓ) (n : ℕ) (x : 𝒫.X (Chain.stage C n))
-    → Acc (𝒫._<_ (Chain.stage C n)) x
-    → (y : Occurrence C) → Equivalent C y (n , x) → Acc (Strict C) y
+    → is-accessible (𝒫._<_ (Chain.stage C n)) x
+    → (y : Occurrence C) → Equivalent C y (n , x) → is-accessible (Strict C) y
   accessible C n x (acc smaller) y q = acc λ z p →
     let
       r = respʳ C q p
@@ -210,15 +201,15 @@ private
 
   compare : (C : Chain ℓ) (x y : Occurrence C)
     → Strict C x y ⊎ (Equivalent C x y ⊎ Strict C y x)
-  compare C x y with 𝒫.compare (Chain.stage C (proj₁ x ⊔ proj₁ y))
-    (image C x (Nat.m≤m⊔n (proj₁ x) (proj₁ y)))
-    (image C y (Nat.m≤n⊔m (proj₁ x) (proj₁ y)))
-  ... | inj₁ p = inj₁ ((proj₁ x ⊔ proj₁ y) ,
-    Nat.m≤m⊔n (proj₁ x) (proj₁ y) , Nat.m≤n⊔m (proj₁ x) (proj₁ y) , p)
-  ... | inj₂ (inj₁ p) = inj₂ (inj₁ ((proj₁ x ⊔ proj₁ y) ,
-    Nat.m≤m⊔n (proj₁ x) (proj₁ y) , Nat.m≤n⊔m (proj₁ x) (proj₁ y) , p))
-  ... | inj₂ (inj₂ p) = inj₂ (inj₂ ((proj₁ x ⊔ proj₁ y) ,
-    Nat.m≤n⊔m (proj₁ x) (proj₁ y) , Nat.m≤m⊔n (proj₁ x) (proj₁ y) , p))
+  compare C x y with 𝒫.compare (Chain.stage C (pr₁ x ⊔ℕ pr₁ y))
+    (image C x (≤ℕˢ-⊔ˡ (pr₁ x) (pr₁ y)))
+    (image C y (≤ℕˢ-⊔ʳ (pr₁ x) (pr₁ y)))
+  ... | inl p = inl ((pr₁ x ⊔ℕ pr₁ y) ,
+    ≤ℕˢ-⊔ˡ (pr₁ x) (pr₁ y) , ≤ℕˢ-⊔ʳ (pr₁ x) (pr₁ y) , p)
+  ... | inr (inl p) = inr (inl ((pr₁ x ⊔ℕ pr₁ y) ,
+    ≤ℕˢ-⊔ˡ (pr₁ x) (pr₁ y) , ≤ℕˢ-⊔ʳ (pr₁ x) (pr₁ y) , p))
+  ... | inr (inr p) = inr (inr ((pr₁ x ⊔ℕ pr₁ y) ,
+    ≤ℕˢ-⊔ʳ (pr₁ x) (pr₁ y) , ≤ℕˢ-⊔ˡ (pr₁ x) (pr₁ y) , p))
 
   strip : (C : Chain ℓ) → Maybe (Presented.Diagonal.X (Chain.stage C))
     → Maybe (Occurrence C)
@@ -231,15 +222,15 @@ private
 
   enumerated : (C : Chain ℓ) (x : Occurrence C)
     → Σ ℕ (λ n → Σ (Occurrence C)
-        (λ y → (enumeration C n ≡ just y) × Equivalent C y x))
+        (λ y → (enumeration C n ＝ just y) × Equivalent C y x))
   enumerated C (n , x) with Presented.Diagonal.covers (Chain.stage C)
     (n , Presented.Diagonal.Successor.point x)
   ... | m , (.n , Presented.Diagonal.Successor.point y) , p ,
       Presented.Diagonal.same (Presented.Diagonal.Successor.point≈ q) =
-    m , (n , y) , cong (strip C) p , preserve-≈ C n q
+    m , (n , y) , ap (strip C) p , preserve-≈ C n q
 
   abstract
-    well-founded : (C : Chain ℓ) (x : Occurrence C) → Acc (Strict C) x
+    well-founded : (C : Chain ℓ) (x : Occurrence C) → is-accessible (Strict C) x
     well-founded C (n , x) = accessible C n x
       (𝒫.<-wf (Chain.stage C n) x) (n , x) (reflexive C (n , x))
 
@@ -270,12 +261,12 @@ abstract
   completion C = Exact.normalized (raw C)
 
   equal : (C : Chain ℓ) {x y : 𝒫.X (completion C)}
-    → 𝒫._≈_ (completion C) x y → x ≡ y
-  equal C p = cong lift (lower p)
+    → 𝒫._≈_ (completion C) x y → x ＝ y
+  equal C p = ap lift (lower p)
 
   strict-unique : (C : Chain ℓ) {x y : 𝒫.X (completion C)}
-    → (p q : 𝒫._<_ (completion C) x y) → p ≡ q
-  strict-unique C {x} {y} p q = cong lift
+    → (p q : 𝒫._<_ (completion C) x y) → p ＝ q
+  strict-unique C {x} {y} p q = ap lift
     (Normal.strict-unique (raw C) {a = lower x} {b = lower y}
       (lower p) (lower q))
 
@@ -285,21 +276,21 @@ abstract
 
   coverage : (C : Chain ℓ) (y : 𝒫.X (completion C))
     → Σ ℕ (λ n → Σ (𝒫.X (Chain.stage C n))
-        (λ x → Maps.Initial.map (stage C n) x ≡ y))
+        (λ x → Maps.Initial.map (stage C n) x ＝ y))
   coverage C y with Normal.representative (raw C) (lower y)
     | Normal.class-representative (raw C) (lower y)
-  ... | n , x | p = n , x , cong lift p
+  ... | n , x | p = n , x , ap lift p
 
   compatible : (C : Chain ℓ) (n : ℕ) (x : 𝒫.X (Chain.stage C n))
     → Maps.Initial.map (stage C (suc n)) (Maps.Initial.map (Chain.edge C n) x)
-      ≡ Maps.Initial.map (stage C n) x
+      ＝ Maps.Initial.map (stage C n) x
   compatible C n x = equal C (Maps.Uniqueness.pointwise
     (Maps.compose (Chain.edge C n) (stage C (suc n))) (stage C n) x)
 
   private
     coherent : (C : Chain ℓ) (Q : 𝒫 ℓ)
       → (f : (n : ℕ) → Maps.Initial (Chain.stage C n) Q)
-      → {m n : ℕ} (p : m ≤ n) (x : 𝒫.X (Chain.stage C m))
+      → {m n : ℕ} (p : m ≤ℕˢ n) (x : 𝒫.X (Chain.stage C m))
       → 𝒫._≈_ Q (Maps.Initial.map (f n) (Maps.Initial.map (advance C p) x))
           (Maps.Initial.map (f m) x)
     coherent C Q f {m} {n} p =
@@ -354,12 +345,12 @@ abstract
     steady : (C : Chain ℓ) (Q : 𝒫 ℓ)
       → (f : (n : ℕ) → Maps.Embedding (Chain.stage C n) Q)
       → Compatible C Q f
-      → {m n : ℕ} (p : m ≤′ n) (x : 𝒫.X (Chain.stage C m))
+      → {m n : ℕ} (p : m ≤ℕ′ n) (x : 𝒫.X (Chain.stage C m))
       → 𝒫._≈_ Q
           (Maps.Embedding.map (f n) (Maps.Initial.map (iterate C p) x))
           (Maps.Embedding.map (f m) x)
-    steady C Q f h ≤′-refl x = 𝒫.≈-refl Q _
-    steady C Q f h (≤′-step {n = n} p) x = 𝒫.≈-trans Q
+    steady C Q f h ≤ℕ′-refl x = 𝒫.≈-refl Q _
+    steady C Q f h (≤ℕ′-step {n = n} p) x = 𝒫.≈-trans Q
       (h n (Maps.Initial.map (iterate C p) x)) (steady C Q f h p x)
 
     -- The stage embeddings on the raw union of all stages.
@@ -369,12 +360,12 @@ abstract
     gather C Q f h = record
       { map = λ { (n , x) → Maps.Embedding.map (f n) x }
       ; resp = λ { {n , x} {m , y} (k , p , q , r) →
-          𝒫.≈-trans Q (𝒫.≈-sym Q (steady C Q f h (Nat.≤⇒≤′ p) x))
+          𝒫.≈-trans Q (𝒫.≈-sym Q (steady C Q f h (≤ℕˢ-to-≤ℕ′ p) x))
             (𝒫.≈-trans Q (Maps.Embedding.resp (f k) r)
-              (steady C Q f h (Nat.≤⇒≤′ q) y)) }
+              (steady C Q f h (≤ℕˢ-to-≤ℕ′ q) y)) }
       ; strict = λ { {n , x} {m , y} (k , p , q , r) →
-          𝒫.<-respˡ-≈ Q (steady C Q f h (Nat.≤⇒≤′ p) x)
-            (𝒫.<-respʳ-≈ Q (steady C Q f h (Nat.≤⇒≤′ q) y)
+          𝒫.<-respˡ-≈ Q (steady C Q f h (≤ℕˢ-to-≤ℕ′ p) x)
+            (𝒫.<-respʳ-≈ Q (steady C Q f h (≤ℕˢ-to-≤ℕ′ q) y)
               (Maps.Embedding.strict (f k) r)) }
       }
 
@@ -422,15 +413,15 @@ equivalence C D e = Maps.antisymmetry
     Maps.compose (Maps.equivalence (Presented.≃𝒫-sym (e n))) (stage C n)))
 
 subsequence : (C : Chain ℓ) (σ : ℕ → ℕ)
-  → ((n : ℕ) → σ n ≤ σ (suc n)) → Chain ℓ
+  → ((n : ℕ) → σ n ≤ℕˢ σ (suc n)) → Chain ℓ
 subsequence C σ ascending = record
   { stage = λ n → Chain.stage C (σ n)
   ; edge = λ n → advance C (ascending n)
   }
 
 cofinal : (C : Chain ℓ) (σ : ℕ → ℕ)
-  → (ascending : (n : ℕ) → σ n ≤ σ (suc n))
-  → ((n : ℕ) → Σ ℕ (λ m → n ≤ σ m))
+  → (ascending : (n : ℕ) → σ n ≤ℕˢ σ (suc n))
+  → ((n : ℕ) → Σ ℕ (λ m → n ≤ℕˢ σ m))
   → completion (subsequence C σ ascending) Presented.≃𝒫 completion C
 cofinal C σ ascending covers =
   Maps.antisymmetry {P = completion D} {Q = completion C} forward backward

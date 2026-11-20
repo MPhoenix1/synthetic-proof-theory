@@ -10,9 +10,7 @@ module SPT.Cubical.OrdinalGeometry.Operation.Normal where
 -- least among prefixed points with Q as a proper segment. Completions of
 -- chains of fixed points are fixed.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Nat using (ℕ)
-open import Data.Product using (_,_)
+open import SPT.Cubical.Base
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)

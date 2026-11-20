@@ -13,14 +13,9 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Division where
 -- below P. Hence (x, c) lands at (x′, c) for an x′ with ∂x ≃ ∂x′; landing
 -- in the other remainder would put P strictly below itself.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
-open import Data.Sum using (inj₁; inj₂)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; refl; cong; sym; trans; subst; subst₂)
+open import SPT.Cubical.Base hiding (_+_; lower)
+open import SPT.Cubical.Foundation.Accessibility using (acc; is-accessible)
 
-open import SPT.Cubical.Core.WellFounded using (Acc; acc)
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
 import SPT.Cubical.OrdinalGeometry.Presentation.Map as Maps
@@ -139,7 +134,7 @@ private
     → ((D · W) + V) Presented.≃𝒫 P
     → W Presented.≃𝒫 Cone.domain X x
     → Maps.Segment V D
-    → ⊥
+    → 𝟘
   shorter {D = D} {P = P} {X = X} {Y = Y} {W = W} {V = V} x e e′ h s =
     Presented.Embedding.irrefl P (Maps.Segment.bound loop)
     where
@@ -187,8 +182,8 @@ private
     (x : Normal.Point (Division.quotient a))
     → Σ (Normal.Point (Division.quotient b)) (λ x′ →
         (Presented._≃𝒫_.to (across a b)
-          (inj₁ (point D (Division.quotient a) x (ceiling a)))
-          ≡ inj₁ (point D (Division.quotient b) x′ (ceiling a)))
+          (inl (point D (Division.quotient a) x (ceiling a)))
+          ＝ inl (point D (Division.quotient b) x′ (ceiling a)))
         × (Cone.domain (Division.quotient a) x
             Presented.≃𝒫 Cone.domain (Division.quotient b) x′))
   block {ℓ} {P} {D} smaller
@@ -203,7 +198,7 @@ private
     c = ceiling a
 
     u₀ : 𝒫.X ((D · X) + Y)
-    u₀ = inj₁ (point D X x c)
+    u₀ = inl (point D X x c)
 
     -- The domain of (x, c), strictly below P.
     P₀ : 𝒫 ℓ
@@ -222,23 +217,23 @@ private
       ; below = Cone.inside D c
       }
 
-    moved : (w : 𝒫.X ((D · X′) + Y′)) → Φ.to u₀ ≡ w
+    moved : (w : 𝒫.X ((D · X′) + Y′)) → Φ.to u₀ ＝ w
       → P₀ Presented.≃𝒫 ∂ ((D · X′) + Y′) w
-    moved w r = subst (λ v → P₀ Presented.≃𝒫 ∂ ((D · X′) + Y′) v) r
-      (Cone.transport (across a b) u₀)
+    moved w r = transport (λ v → P₀ Presented.≃𝒫 ∂ ((D · X′) + Y′) v) r
+      (Cone.carried (across a b) u₀)
 
     Result : Set ℓ
     Result = Σ (Normal.Point X′) (λ x′ →
-      (Φ.to u₀ ≡ inj₁ (point D X′ x′ c))
+      (Φ.to u₀ ＝ inl (point D X′ x′ c))
       × (Cone.domain X x Presented.≃𝒫 Cone.domain X′ x′))
 
     -- Landing in a block: the domains are two divisions of P₀.
     landed : (v : 𝒫.X (D · X′))
       → Σ (Normal.Point X′) (λ x′ → Σ (Normal.Point D) (λ d′ →
-          v ≡ point D X′ x′ d′))
-      → Φ.to u₀ ≡ inj₁ v → Result
+          v ＝ point D X′ x′ d′))
+      → Φ.to u₀ ＝ inl v → Result
     landed .(point D X′ x′ d′) (x′ , d′ , refl) r =
-      x′ , trans r (cong (λ d → inj₁ (point D X′ x′ d)) same) ,
+      x′ , r ∙ ap (λ d → inl (point D X′ x′ d)) same ,
       quotients
       where
       second : Division P₀ D
@@ -248,20 +243,20 @@ private
         ; equation = Presented.≃𝒫-trans (Cone.product D X′ x′ d′)
             (Presented.≃𝒫-trans
               (Presented.≃𝒫-sym (Cone.left (D · X′) Y′ (point D X′ x′ d′)))
-              (Presented.≃𝒫-sym (moved (inj₁ (point D X′ x′ d′)) r)))
+              (Presented.≃𝒫-sym (moved (inl (point D X′ x′ d′)) r)))
         ; below = Cone.inside D d′
         }
 
       quotients : Cone.domain X x Presented.≃𝒫 Cone.domain X′ x′
       quotients = smaller P₀ strictly first second
 
-      same : d′ ≡ c
-      same = sym (Cone.points D (remainders first second quotients))
+      same : d′ ＝ c
+      same = Cone.points D (remainders first second quotients) ⁻¹
 
-    answer : (w : 𝒫.X ((D · X′) + Y′)) → Φ.to u₀ ≡ w → Result
-    answer (inj₁ v) r = landed v (Multiplication.view D X′ v) r
-    answer (inj₂ y′) r =
-      ⊥-elim (shorter x e e′ (Presented.≃𝒫-sym quotients) s′)
+    answer : (w : 𝒫.X ((D · X′) + Y′)) → Φ.to u₀ ＝ w → Result
+    answer (inl v) r = landed v (Multiplication.view D X′ v) r
+    answer (inr y′) r =
+      𝟘-elim (shorter x e e′ (Presented.≃𝒫-sym quotients) s′)
       where
       -- Landing in the other remainder: its quotient is ∂x.
       second : Division P₀ D
@@ -270,14 +265,14 @@ private
         ; remainder = ∂ Y′ y′
         ; equation = Presented.≃𝒫-trans
             (Presented.≃𝒫-sym (Cone.right (D · X′) Y′ y′))
-            (Presented.≃𝒫-sym (moved (inj₂ y′) r))
+            (Presented.≃𝒫-sym (moved (inr y′) r))
         ; below = Maps.along (cone Y′ y′) (Maps.inclusion s′)
         }
 
       quotients : Cone.domain X x Presented.≃𝒫 X′
       quotients = smaller P₀ strictly first second
 
-  quotients : (P : 𝒫 ℓ) → Acc Presented._≺𝒫_ P → (a b : Division P D)
+  quotients : (P : 𝒫 ℓ) → is-accessible Presented._≺𝒫_ P → (a b : Division P D)
     → Division.quotient a Presented.≃𝒫 Division.quotient b
   quotients {D = D} P (acc smaller)
     a@(record { quotient = X ; remainder = Y ; equation = e ; below = s })
@@ -289,34 +284,34 @@ private
     recursion P₀ p = quotients P₀ (smaller P₀ p)
 
     ψ : Normal.Point X → Normal.Point X′
-    ψ x = proj₁ (block recursion a b x)
+    ψ x = pr₁ (block recursion a b x)
 
     ψ′ : Normal.Point X′ → Normal.Point X
-    ψ′ x′ = proj₁ (block recursion b a x′)
+    ψ′ x′ = pr₁ (block recursion b a x′)
 
     -- The points (x, c) ascend with x, and so do their images (ψ x, c).
     ψ-strict : {x₁ x₂ : Normal.Point X} → Normal.Strict X x₁ x₂
       → Normal.Strict X′ (ψ x₁) (ψ x₂)
     ψ-strict {x₁} {x₂} p =
       Multiplication.reflect D X′ {ψ x₁} {ψ x₂} (ceiling a)
-        (subst₂ (𝒫._<_ ((D · X′) + Y′))
-          (proj₁ (proj₂ (block recursion a b x₁)))
-          (proj₁ (proj₂ (block recursion a b x₂)))
+        (transport₂ (𝒫._<_ ((D · X′) + Y′))
+          (pr₁ (pr₂ (block recursion a b x₁)))
+          (pr₁ (pr₂ (block recursion a b x₂)))
           (Presented._≃𝒫_.to-< (across a b)
-            {inj₁ (point D X x₁ (ceiling a))}
-            {inj₁ (point D X x₂ (ceiling a))}
+            {inl (point D X x₁ (ceiling a))}
+            {inl (point D X x₂ (ceiling a))}
             (Multiplication.earlier D X {x₁} {x₂}
               (ceiling a) (ceiling a) p)))
 
-    onto : (x′ : Normal.Point X′) → ψ (ψ′ x′) ≡ x′
-    onto x′ = sym (Cone.points X′ (Presented.≃𝒫-trans
-      (proj₂ (proj₂ (block recursion b a x′)))
-      (proj₂ (proj₂ (block recursion a b (ψ′ x′))))))
+    onto : (x′ : Normal.Point X′) → ψ (ψ′ x′) ＝ x′
+    onto x′ = (Cone.points X′ (Presented.≃𝒫-trans
+      (pr₂ (pr₂ (block recursion b a x′)))
+      (pr₂ (pr₂ (block recursion a b (ψ′ x′)))))) ⁻¹
 
     embedding : Maps.Embedding X X′
     embedding = record
       { map = λ x → Normal.representative X′ (ψ (Normal.class X x))
-      ; resp = λ {x} {y} p → subst
+      ; resp = λ {x} {y} p → transport
           (λ c → 𝒫._≈_ X′ (Normal.representative X′ (ψ (Normal.class X x)))
             (Normal.representative X′ (ψ c)))
           (Normal.class-resp X p) (𝒫.≈-refl X′ _)
@@ -329,10 +324,10 @@ private
     covers : (x′ : 𝒫.X X′) → Σ (𝒫.X X) (λ x →
       𝒫._≈_ X′ (Maps.Embedding.map embedding x) x′)
     covers x′ = Normal.representative X (ψ′ (Normal.class X′ x′)) ,
-      subst (λ c → 𝒫._≈_ X′ (Normal.representative X′ c) x′)
-        (sym (trans
-          (cong ψ (Normal.class-representative X (ψ′ (Normal.class X′ x′))))
-          (onto (Normal.class X′ x′))))
+      transport (λ c → 𝒫._≈_ X′ (Normal.representative X′ c) x′)
+        ((
+          ap ψ (Normal.class-representative X (ψ′ (Normal.class X′ x′)))
+          ∙ onto (Normal.class X′ x′)) ⁻¹)
         (Normal.representative-class X′ x′)
 
 -- Quotient and remainder of a division are unique up to ≃𝒫.

@@ -17,10 +17,7 @@ module SPT.Cubical.OrdinalGeometry.Presentation.Sum.Indexed where
 -- - An order embedding of the normalized points of P into I, with a chosen
 --   point in every block, embeds P into the sum.
 
-open import Agda.Primitive using (Level; lzero)
-open import Data.Product using (Σ; _,_; proj₂)
-open import Level using (lift)
-open import Relation.Binary.PropositionalEquality using (cong)
+open import SPT.Cubical.Base
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -54,7 +51,7 @@ block : (I : Ordinal lzero) (F : Carrier I → 𝒫 ℓ) (i : Carrier I)
   → Maps.Embedding (F i) (sum I F)
 block I F i = record
   { map = λ x → lift (i , Normal.class (F i) x)
-  ; resp = λ p → lift (cong (i ,_) (Normal.class-resp (F i) p))
+  ; resp = λ p → lift (ap (i ,_) (Normal.class-resp (F i) p))
   ; strict = λ p → lift (Blocks.within i (Normal.class-strict (F i) p))
   }
   where
@@ -115,12 +112,12 @@ choice : {P : 𝒫 ℓ} {I : Ordinal lzero} {F : Carrier I → 𝒫 ℓ}
   → ((i : Carrier I) → 𝒫.X (F i)) → Maps.Embedding P (sum I F)
 choice {P = P} {I} {F} e t = record
   { map = λ x → lift (point (Normal.class P x))
-  ; resp = λ p → lift (cong point (Normal.class-resp P p))
+  ; resp = λ p → lift (ap point (Normal.class-resp P p))
   ; strict = λ {x} {y} p → lift (Blocks.earlier
       {a = Orders.Embedding.map e (Normal.class P x)}
       {a′ = Orders.Embedding.map e (Normal.class P y)}
-      {x = proj₂ (point (Normal.class P x))}
-      {y = proj₂ (point (Normal.class P y))}
+      {x = pr₂ (point (Normal.class P x))}
+      {y = pr₂ (point (Normal.class P y))}
       (Orders.Embedding.strict e {Normal.class P x} {Normal.class P y}
         (Normal.class-strict P p)))
   }

@@ -8,20 +8,13 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Classification.Pointwise where
 -- Initial maps carry domains, so pointwise classification passes along
 -- equivalences, to the domain of an initial map, and from the stages of a
 -- chain to its completion. With the cone lemmas it is closed under the
--- formers: ∅; P + 1, whose top has the domain P; P + Q, where ∂(inj₂ y) ≃
+-- formers: ∅; P + 1, whose top has the domain P; P + Q, where ∂(inr y) ≃
 -- P + ∂y; and D · V, where ∂(v, d) ≃ D · ∂v + ∂d. ω is pointwise
 -- classified: ∂0 is zero, and ∂(n + 1) is the strong successor of ∂n,
 -- since n is the greatest point below n + 1.
 
-open import Agda.Primitive using (Level; lsuc)
-open import Data.Empty using (⊥-elim)
-open import Data.Nat using (ℕ; zero; suc)
-import Data.Nat.Properties as NatProperties
-open import Data.Product using (Σ; _,_; proj₁; proj₂)
-open import Data.Sum using (inj₁; inj₂)
-open import Level using (lift; lower)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; refl; subst)
+open import SPT.Cubical.Base hiding (_+_)
+open import SPT.Cubical.Foundation.Nat.Arithmetic using (≤ℕˢ-pred; ≤ℕˢ-split)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -65,13 +58,13 @@ carried {P = P} {Q = Q} f x = bijection embedding covers
 
   embedding : Maps.Embedding (∂ P x) (∂ Q (F.map x))
   embedding = record
-    { map = λ u → F.map (proj₁ u) , F.strict (proj₂ u)
+    { map = λ u → F.map (pr₁ u) , F.strict (pr₂ u)
     ; resp = F.resp
     ; strict = F.strict
     }
 
   covers : (v : 𝒫.X (∂ Q (F.map x))) → Σ (𝒫.X (∂ P x)) (λ u →
-    𝒫._≈_ Q (F.map (proj₁ u)) (proj₁ v))
+    𝒫._≈_ Q (F.map (pr₁ u)) (pr₁ v))
   covers (z , q) with F.lower x z q
   ... | y , e = (y , F.reflect (𝒫.<-respˡ-≈ Q (𝒫.≈-sym Q e) q)) , e
 
@@ -81,8 +74,8 @@ pullback f pQ x = respect (Presented.≃𝒫-sym (carried f x))
   (pQ (Maps.Initial.map f x))
 
 -- … and along an equivalence.
-transport : P Presented.≃𝒫 Q → Pointwise P → Pointwise Q
-transport e = pullback (Maps.equivalence (Presented.≃𝒫-sym e))
+transfer : P Presented.≃𝒫 Q → Pointwise P → Pointwise Q
+transfer e = pullback (Maps.equivalence (Presented.≃𝒫-sym e))
 
 -- A completion is pointwise classified when its stages are: every point
 -- of the completion is the image of a point of a stage.
@@ -90,7 +83,7 @@ completion : (C : Limit.Chain ℓ)
   → ((n : ℕ) → Pointwise (Limit.Chain.stage C n))
   → Pointwise (Limit.completion C)
 completion C pC y with Limit.coverage C y
-... | k , x , p = subst (λ w → Classified (∂ (Limit.completion C) w)) p
+... | k , x , p = transport (λ w → Classified (∂ (Limit.completion C) w)) p
   (respect (carried (Limit.stage C k) x) (pC k x))
 
 -- In particular the limit of an increasing sequence.
@@ -103,7 +96,7 @@ limit s = completion (Increasing.chain s)
 -- The formers
 
 vacant : Pointwise (Operation.empty {ℓ})
-vacant x = ⊥-elim (lower x)
+vacant x = 𝟘-elim (lower x)
 
 -- P + 1: an old point keeps its domain, and the top has the domain P.
 successor : Classified P → Pointwise P
@@ -116,9 +109,9 @@ successor {P = P} cP pP Presented.Diagonal.Successor.top =
 -- P + Q: below a left point lies its domain in P, below a right point y
 -- lies P + ∂y.
 plus : Classified P → Pointwise P → Pointwise Q → Pointwise (P + Q)
-plus {P = P} {Q = Q} cP pP pQ (inj₁ x) =
+plus {P = P} {Q = Q} cP pP pQ (inl x) =
   respect (Presented.≃𝒫-sym (Cone.left P Q x)) (pP x)
-plus {P = P} {Q = Q} cP pP pQ (inj₂ y) =
+plus {P = P} {Q = Q} cP pP pQ (inr y) =
   respect (Presented.≃𝒫-sym (Cone.right P Q y)) (sum P (pQ y) (λ _ → cP))
 
 -- D · V: below the point (v, d) lies D · ∂v + ∂d.
@@ -128,7 +121,7 @@ times {D = D} {V = V} cD pD pV u = at u (Multiplication.view D V u)
   where
   at : (u : 𝒫.X (D · V))
     → Σ (Normal.Point V) (λ v → Σ (Normal.Point D) (λ d →
-        u ≡ point D V v d))
+        u ＝ point D V v d))
     → Classified (∂ (D · V) u)
   at .(point D V v d) (v , d , refl) = respect (Cone.product D V v d)
     (sum (D · Cone.domain V v) (pD (Normal.representative D d))
@@ -149,8 +142,8 @@ private
 
     map : Entry.Entry → 𝒫.X (∂ omega (lift (suc n)))
     map (Entry.point (m , p)) =
-      m , lift (NatProperties.<-trans (lower p) (NatProperties.n<1+n n))
-    map Entry.top = lift n , lift (NatProperties.n<1+n n)
+      m , lift (<ℕˢ-trans (lower p) (≤ℕˢ-refl (suc n)))
+    map Entry.top = lift n , lift (≤ℕˢ-refl (suc n))
 
     resp : ∀ {u v} → u Entry.≈ v
       → 𝒫._≈_ (∂ omega (lift (suc n))) (map u) (map v)
@@ -174,9 +167,9 @@ private
     covers : (w : 𝒫.X (∂ omega (lift (suc n))))
       → Σ Entry.Entry (λ u → 𝒫._≈_ (∂ omega (lift (suc n))) (map u) w)
     covers (lift m , lift q)
-      with NatProperties.m≤n⇒m<n∨m≡n (NatProperties.≤-pred q)
-    ... | inj₁ r = Entry.point (lift m , lift r) , lift refl
-    ... | inj₂ refl = Entry.top , lift refl
+      with ≤ℕˢ-split m n (≤ℕˢ-pred q)
+    ... | inl r = Entry.point (lift m , lift r) , lift refl
+    ... | inr refl = Entry.top , lift refl
 
 -- ω is pointwise classified.
 naturals : Pointwise (omega {ℓ})

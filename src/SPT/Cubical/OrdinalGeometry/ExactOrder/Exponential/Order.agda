@@ -8,13 +8,7 @@ module SPT.Cubical.OrdinalGeometry.ExactOrder.Exponential.Order where
 -- and an index into exponent–coefficient pairs, admits exactly the valid
 -- supports, and covers every support.
 
-open import Data.Empty using (⊥-elim)
-open import Data.List using ([]; _∷_; length)
-open import Data.Maybe using (Maybe; nothing; just)
-open import Data.Nat using (ℕ; zero; suc)
-open import Data.Product using (Σ; _×_; _,_)
-open import Relation.Nullary using (yes; no)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import SPT.Cubical.Base
 
 import SPT.Cubical.OrdinalGeometry.ExactOrder.Base as Order
 import SPT.Cubical.OrdinalGeometry.ExactOrder.Exponential.WellFounded
@@ -45,11 +39,11 @@ module Power {A : Set} (P : Order.Order A) where
     ...   | just _ | nothing = nothing
 
     hit : (k n i j : ℕ) (x : A × ℕ) (xs : Supports.Raw)
-      → I.enum n ≡ just (i , j) → Pair.enum i ≡ just x → run k j ≡ just xs
-      → run (suc k) n ≡ just (x ∷ xs)
+      → I.enum n ＝ just (i , j) → Pair.enum i ＝ just x → run k j ＝ just xs
+      → run (suc k) n ＝ just (x ∷ xs)
     hit k n i j x xs p q r rewrite p | q | r = refl
 
-    runs : (xs : Supports.Raw) → Σ ℕ (λ n → run (length xs) n ≡ just xs)
+    runs : (xs : Supports.Raw) → Σ ℕ (λ n → run (length xs) n ＝ just xs)
     runs [] = zero , refl
     runs (x ∷ xs) with Pair.covers x | runs xs
     ... | i , p | j , q with I.covers (i , j)
@@ -60,35 +54,35 @@ module Power {A : Set} (P : Order.Order A) where
   ... | nothing = nothing
   ... | just (k , c) = run k c
 
-  raw-covers : (xs : Supports.Raw) → Σ ℕ (λ n → raw-enum n ≡ just xs)
+  raw-covers : (xs : Supports.Raw) → Σ ℕ (λ n → raw-enum n ＝ just xs)
   raw-covers xs with runs xs
   ... | c , q with I.covers (length xs , c)
   ...   | n , p = n , found
     where
-    found : raw-enum n ≡ just xs
+    found : raw-enum n ＝ just xs
     found rewrite p = q
 
   private
     admit : (xs : Supports.Raw) → Maybe Supports.Term
     admit xs with Supports.check xs
-    ... | yes q = just (xs , q)
-    ... | no _ = nothing
+    ... | inl q = just (xs , q)
+    ... | inr _ = nothing
 
-    admitted : (x : Supports.Term) → admit (Supports.raw x) ≡ just x
+    admitted : (x : Supports.Term) → admit (Supports.raw x) ＝ just x
     admitted (xs , p) with Supports.check xs
-    ... | yes q = cong just (Supports.equal refl)
-    ... | no q = ⊥-elim (q p)
+    ... | inl q = ap just (Supports.equal refl)
+    ... | inr q = 𝟘-elim (q p)
 
   enum : ℕ → Maybe Supports.Term
   enum n with raw-enum n
   ... | nothing = nothing
   ... | just xs = admit xs
 
-  covers : (x : Supports.Term) → Σ ℕ (λ n → enum n ≡ just x)
+  covers : (x : Supports.Term) → Σ ℕ (λ n → enum n ＝ just x)
   covers x with raw-covers (Supports.raw x)
   ... | n , p = n , found
     where
-    found : enum n ≡ just x
+    found : enum n ＝ just x
     found rewrite p = admitted x
 
   order : Order.Order Supports.Term

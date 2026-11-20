@@ -6,24 +6,20 @@ module SPT.Cubical.OrdinalGeometry.Presentation.Enumeration where
 -- Partial ℕ-enumerations up to equality, and the successful entries of a
 -- partial sequence, which are themselves enumerated up to equality.
 
-open import Agda.Primitive using (Level)
-open import Data.Maybe using (Maybe; just; nothing)
-open import Data.Nat using (ℕ)
-open import Data.Product using (Σ; _,_; proj₁)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import SPT.Cubical.Base
 
 ------------------------------------------------------------------------
 -- Enumerations and successful entries
 
 -- An enumeration of A up to equality:
 --
---   Exactℕ𝒫(A) = Σ(e : ℕ → Maybe A). Π a. Σ n. e(n) ≡ just(a).
+--   Exactℕ𝒫(A) = Σ(e : ℕ → Maybe A). Π a. Σ n. e(n) ＝ just(a).
 
 record Exactℕ𝒫 {ℓ : Level} (A : Set ℓ) : Set ℓ where
   field
     enum : ℕ → Maybe A
     covers :
-      (x : A) → Σ ℕ λ n → enum n ≡ just x
+      (x : A) → Σ ℕ λ n → enum n ＝ just x
 
 -- `Entry.T e` has one constructor, exactly when e is `just`, so an
 -- occurrence (an index with an entry) records its value without an
@@ -43,7 +39,7 @@ module Entry where
   selects :
       ∀ {ℓ} {A : Set ℓ} {entry : Maybe A}
     → (selected : T entry)
-    → entry ≡ just (value selected)
+    → entry ＝ just (value selected)
   selects present = refl
 
   maybe :
@@ -56,22 +52,22 @@ module Entry where
   maybe-covers :
       ∀ {ℓ} {A : Set ℓ} {entry : Maybe A}
     → (selected : T entry)
-    → maybe entry ≡ just selected
+    → maybe entry ＝ just selected
   maybe-covers present = refl
 
-  -- Conversely to `selects`, an equation entry ≡ just x gives an entry,
+  -- Conversely to `selects`, an equation entry ＝ just x gives an entry,
   -- whose value is x.
 
   fromSelection :
       ∀ {ℓ} {A : Set ℓ} {entry : Maybe A} {x : A}
-    → entry ≡ just x
+    → entry ＝ just x
     → T entry
   fromSelection refl = present
 
   value-fromSelection :
       ∀ {ℓ} {A : Set ℓ} {entry : Maybe A} {x : A}
-    → (selected : entry ≡ just x)
-    → value (fromSelection selected) ≡ x
+    → (selected : entry ＝ just x)
+    → value (fromSelection selected) ＝ x
   value-fromSelection refl = refl
 
 module Occurrence where
@@ -101,7 +97,7 @@ module Occurrence where
   selects :
       ∀ {ℓ} {A : Set ℓ} {sequence : ℕ → Maybe A}
     → (occurrence : T sequence)
-    → sequence (proj₁ occurrence) ≡ just (value occurrence)
+    → sequence (pr₁ occurrence) ＝ just (value occurrence)
   selects (n , selected) = Entry.selects selected
 
   enum :
@@ -115,10 +111,10 @@ module Occurrence where
       ∀ {ℓ} {A : Set ℓ}
         (sequence : ℕ → Maybe A)
         (occurrence : T sequence)
-    → Σ ℕ λ n → enum sequence n ≡ just occurrence
+    → Σ ℕ λ n → enum sequence n ＝ just occurrence
   covers sequence (n , selected) =
     n
-    , cong (fromEntry n)
+    , ap (fromEntry n)
         (Entry.maybe-covers selected)
 
   𝒫 :

@@ -9,13 +9,10 @@ module SPT.Cubical.OrdinalGeometry.Presentation.LowerCone where
 -- the ambient presentation.  LowerCone.Comparison shows it equivalent to
 -- the cone Σ y. y < b of CountablyPresented.LowerCone.
 
-open import Agda.Primitive using (Level)
-open import Data.Maybe using (Maybe; just)
-open import Data.Nat using (ℕ)
-open import Data.Product using (_×_; Σ; _,_)
-open import Relation.Binary.PropositionalEquality using (_≡_; subst; sym)
+open import SPT.Cubical.Base
+open import SPT.Cubical.Foundation.WellFounded.Pullback using
+  ( pullback-is-well-founded )
 
-open import SPT.Cubical.Core.WellFounded.Pullback using (pullback-wf)
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 import SPT.Cubical.OrdinalGeometry.Presentation.CountablyPresented
   as CountablyPresented
@@ -80,10 +77,10 @@ represent
       presentation bound predecessor predecessor<bound
 ... | index , representative , selected , representative≈predecessor =
   (index , Entries.fromSelection selected)
-  , subst
+  , transport
       (λ point →
         Presented.CountableOrdinal𝒫._≈_ presentation point predecessor)
-      (sym (Entries.value-fromSelection selected))
+      (Entries.value-fromSelection selected ⁻¹)
       representative≈predecessor
 
 Equivalent :
@@ -125,7 +122,7 @@ enumeration-covers :
       Σ (Carrier presentation bound)
         (λ representative →
           (enumeration presentation bound index
-            ≡ just representative)
+            ＝ just representative)
           × Equivalent
               presentation bound representative predecessor))
 enumeration-covers
@@ -165,7 +162,9 @@ cone presentation bound = record
   ; <-respʳ-≈ =
       Presented.CountableOrdinal𝒫.<-respʳ-≈ presentation
   ; <-wf =
-      pullback-wf (Presented.CountableOrdinal𝒫.<-wf presentation)
+      pullback-is-well-founded (value presentation bound)
+        (Presented.CountableOrdinal𝒫._<_ presentation)
+        (Presented.CountableOrdinal𝒫.<-wf presentation)
   ; compare =
       λ left right →
         Presented.CountableOrdinal𝒫.compare presentation

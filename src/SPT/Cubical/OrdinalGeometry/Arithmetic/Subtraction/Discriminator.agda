@@ -11,14 +11,7 @@ module SPT.Cubical.OrdinalGeometry.Arithmetic.Subtraction.Discriminator where
 -- decided image that Subtraction asks for cannot be dropped: the
 -- remainders of arbitrary initial maps give LPO.
 
-open import Agda.Primitive using (lzero)
-open import Data.Bool using (Bool; false)
-open import Data.Nat using (ℕ)
-open import Data.Product using (Σ; _,_)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Unit using (tt)
-import Data.Unit.Polymorphic as Polymorphic
-open import Relation.Binary.PropositionalEquality using (_≡_)
+open import SPT.Cubical.Base hiding (_+_)
 
 import SPT.Cubical.OrdinalGeometry.Presentation.CountableOrdinal as Presented
 open Presented using () renaming (CountableOrdinal𝒫 to 𝒫)
@@ -33,12 +26,12 @@ Remainder P Q = Σ (𝒫 lzero) (λ R → (P + R) Presented.≃𝒫 Q)
 private
   -- The point of one comes from the left summand exactly when s hits: a
   -- right point lies above every left point, and one has a single point.
-  decide : (s : ℕ → Bool) → Remainder (Stream.possible s) Stream.one
-    → Stream.Hit s ⊎ ((n : ℕ) → s n ≡ false)
-  decide s (R , e) with Presented._≃𝒫_.from e tt
-  ... | inj₁ h = inj₁ h
-  ... | inj₂ r = inj₂ (Stream.absent s λ h →
-    Presented._≃𝒫_.to-< e {x = inj₁ h} {y = inj₂ r} Polymorphic.tt)
+  decide : (s : ℕ → 𝟚) → Remainder (Stream.possible s) Stream.one
+    → Stream.Hit s ⊎ ((n : ℕ) → s n ＝ ₀)
+  decide s (R , e) with Presented._≃𝒫_.from e ⋆
+  ... | inl h = inl h
+  ... | inr r = inr (Stream.absent s λ h →
+    Presented._≃𝒫_.to-< e {x = inl h} {y = inr r} (lift ⋆))
 
 -- Mathematical shape: (Π P Q. P ≤ Q → Σ R. P + R ≃ Q) → LPO.
 remainder : ((P Q : 𝒫 lzero) → Maps.Initial P Q → Remainder P Q)

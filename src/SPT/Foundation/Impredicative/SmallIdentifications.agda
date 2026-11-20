@@ -4,13 +4,13 @@ module SPT.Foundation.Impredicative.SmallIdentifications where
 
 -- Small identifications: every identification of two types of level ℓ + 1
 -- is small at ℓ (`Small-Identifications`). No impredicativity at ℓ is
--- assumed, yet under univalence at ℓ + 1 it gives propositional resizing,
--- a proposition P being equivalent to P ＝ 1
--- (`small-identifications-give-resizing`), and a type represented faithfully
--- by automorphisms of a set of level ℓ + 1 is small
--- (`faithfully-represented-types-are-small`). With propositional
--- extensionality at ℓ, every ¬¬-separated set of level ℓ + 1 is so
--- represented, so small
+-- assumed, yet under univalence at ℓ + 1 it gives propositional resizing, a
+-- proposition P being equivalent to P ＝ 1
+-- (`small-identifications-give-resizing`), and a type represented
+-- faithfully by automorphisms of a set of level ℓ + 1 is small
+-- (`faithfully-represented-types-are-small`). With function extensionality
+-- at ℓ and ℓ + 1 and propositional extensionality at ℓ, every ¬¬-separated
+-- set of level ℓ + 1 is so represented, so small
 -- (`separated-sets-are-small`): toggling the ¬¬-stable proposition beside
 -- each x by x ＝ a is an automorphism of A × Ω¬¬ that determines a. So a
 -- large ¬¬-separated set refutes small identifications; that they give one

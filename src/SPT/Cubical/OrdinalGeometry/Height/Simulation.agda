@@ -3,8 +3,8 @@
 
 module SPT.Cubical.OrdinalGeometry.Height.Simulation where
 
--- Closed Core trees and their relations, for any labels and branchings:
--- Core's structural equality ≈ (equal labels and related children), Core
+-- Closed trees of Foundation.Tree and their relations, for any labels and
+-- branchings: structural equality ≈ (equal labels and related children),
 -- ancestry ◃ and < (immediate and proper descendants), and the simulation
 -- order ⊑ and ⊏ with its equivalence ∼. Ancestry describes how a tree is
 -- built; the simulation order compares trees by their branching alone.
@@ -16,44 +16,37 @@ module SPT.Cubical.OrdinalGeometry.Height.Simulation where
 -- in this order; their ranks among Cubical well-orders are in
 -- Cubical.Height.Rank.
 
-open import Agda.Primitive using (Level; lzero; _⊔_)
-open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Unit.Polymorphic using (tt)
-open import Relation.Binary.PropositionalEquality using
-  (_≡_; refl; sym; trans)
-open import Relation.Nullary.Negation using (¬_)
+open import SPT.Cubical.Base
+open import SPT.Cubical.Foundation.Accessibility using
+  ( acc; accessible-points-have-no-loops; is-accessible; is-well-founded )
+open import SPT.Cubical.Foundation.Isomorphisms using (backward; forward)
+  renaming
+    ( _≅_ to Isomorphic; ≅-refl to isomorphic-refl; ≅-sym to isomorphic-sym
+    ; ≅-trans to isomorphic-trans )
+open import SPT.Cubical.Foundation.Tree.Child using
+  ( HistoryChild; HistoryNode; history-child-wf; node-child )
+open import SPT.Cubical.Foundation.Tree.Descendant using
+  ( Descendant; descendant-trans; descendant-wf; immediate; nested )
+open import SPT.Cubical.Foundation.Tree.Relation using
+  ( TreeRel; hole-rel; node-rel; rel-compose; rel-refl; rel-sym )
+open import SPT.Cubical.Foundation.WellFounded.Pullback using
+  ( pullback-is-well-founded; pullback-relation )
 
-open import SPT.Cubical.Core.WellFounded using
-  (Acc; acc; WellFounded; acc↛loop)
-open import SPT.Cubical.Core.Equality.Isomorphism using (forward; backward)
-  renaming (_≅_ to Isomorphic; ≅-refl to isomorphic-refl;
-            ≅-sym to isomorphic-sym; ≅-trans to isomorphic-trans)
-open import SPT.Cubical.Core.WellFounded.Pullback using
-  (PullbackRel; pullback-wf)
-import SPT.Cubical.Core.Generator.Tree as Tree
-import SPT.Cubical.Core.Generator.Tree.W as TreeW
-open import SPT.Cubical.Core.Generator.Tree.Child using
-  (HistoryNode; HistoryChild; node-child; history-child-wf)
-open import SPT.Cubical.Core.Generator.Tree.Descendant using
-  (Descendant; immediate;
-   nested; descendant-trans;
-   descendant-wf)
-open import SPT.Cubical.Core.Generator.Tree.Relation using
-  (TreeRel; hole-rel; node-rel; rel-refl; rel-sym;
-   rel-compose)
+import SPT.Cubical.Foundation.Tree as Tree
+import SPT.Cubical.Foundation.Tree.W as TreeW
 
 ------------------------------------------------------------------------
--- Structural equality of closed Core trees
+-- Structural equality of closed trees
 
--- Core's same-operation relation with identity on the empty hole family:
--- equal operations at every node and related children at every position.
--- It is the identity of trees available without function extensionality.
-infix 4 _≈_
+-- The same-operation relation of Foundation.Tree.Relation with identity on the
+-- empty hole family: equal operations at every node and related children at
+-- every position. It is the identity of trees available without function
+-- extensionality.
+infix 6 _≈_
 
 _≈_ : ∀ {ℓo ℓp} {S : Tree.Signature lzero ℓo ℓp} {j} →
   Tree.History S j → Tree.History S j → Set (ℓo ⊔ ℓp)
-_≈_ = TreeRel _≡_
+_≈_ = TreeRel _＝_
 
 ≈-refl : ∀ {ℓo ℓp} {S : Tree.Signature lzero ℓo ℓp} {j}
   (x : Tree.History S j) → x ≈ x
@@ -61,17 +54,17 @@ _≈_ = TreeRel _≡_
 
 ≈-sym : ∀ {ℓo ℓp} {S : Tree.Signature lzero ℓo ℓp} {j}
   {x y : Tree.History S j} → x ≈ y → y ≈ x
-≈-sym = rel-sym sym
+≈-sym = rel-sym _⁻¹
 
 ≈-trans : ∀ {ℓo ℓp} {S : Tree.Signature lzero ℓo ℓp} {j}
   {x y z : Tree.History S j} → x ≈ y → y ≈ z → x ≈ z
-≈-trans = rel-compose trans
+≈-trans = rel-compose _∙_
 
 ------------------------------------------------------------------------
--- Branching trees: Core ancestry and the simulation order
+-- Branching trees: ancestry and the simulation order
 
--- Closed L R = Tree.W.Branching.Closed L R is the type of closed Core trees
--- whose nodes are labels a : L branching over R a.  Ancestry is Core's
+-- Closed L R = Tree.W.W L R is the type of closed trees whose nodes are
+-- labels a : L branching over R a.  Ancestry is Foundation.Tree's
 -- HistoryChild and Descendant read at the one judgment; it
 -- describes the construction.  Trees are compared by the simulation order
 -- ⊑ and ⊏, which sees only branching and never which label produced a
@@ -90,45 +83,46 @@ private
     Branch : Label → Set ℓb
 
 Closed : (L : Set ℓa) → (L → Set ℓb) → Set (ℓa ⊔ ℓb)
-Closed L R = TreeW.Branching.Closed L R
+Closed L R = TreeW.W L R
 
 total : Closed Label Branch →
   HistoryNode (TreeW.Branching.signature Label Branch)
-total x = tt , x
+total x = ⋆ , x
 
-infix 4 _◃_ _<_ _⊑_ _⊏_ _∼_
+infix 30 _◃_ _<_ _⊑_ _⊏_
+infix 6 _∼_
 
 _◃_ : Closed Label Branch → Closed Label Branch → Set _
-_◃_ = PullbackRel total HistoryChild
+_◃_ = pullback-relation total HistoryChild
 
 _<_ : Closed Label Branch → Closed Label Branch → Set _
-_<_ = PullbackRel total Descendant
+_<_ = pullback-relation total Descendant
 
-◃-wf : WellFounded (_◃_ {Label = Label} {Branch = Branch})
-◃-wf = pullback-wf history-child-wf
+◃-wf : is-well-founded (_◃_ {Label = Label} {Branch = Branch})
+◃-wf = pullback-is-well-founded total HistoryChild history-child-wf
 
-<-wf : WellFounded (_<_ {Label = Label} {Branch = Branch})
-<-wf = pullback-wf descendant-wf
+<-wf : is-well-founded (_<_ {Label = Label} {Branch = Branch})
+<-wf = pullback-is-well-founded total Descendant descendant-wf
 
 <-trans : {x y z : Closed Label Branch} → x < y → y < z → x < z
 <-trans = descendant-trans
 
 <-irrefl : (x : Closed Label Branch) → ¬ x < x
-<-irrefl x = acc↛loop (<-wf x)
+<-irrefl x = accessible-points-have-no-loops (<-wf x)
 
 -- Every immediate predecessor of a node is one of its literal children;
 -- every strict predecessor is a child or lies below one.
 ◃-spectrum : {a : Label} {f : Branch a → Closed Label Branch}
   {x : Closed Label Branch} →
-  x ◃ Tree.node a f → Σ (Branch a) (λ y → x ≡ f y)
+  x ◃ Tree.node a f → Σ (Branch a) (λ y → x ＝ f y)
 ◃-spectrum (node-child y) = y , refl
 
 <-spectrum : {a : Label} {f : Branch a → Closed Label Branch}
   {x : Closed Label Branch} →
-  x < Tree.node a f → Σ (Branch a) (λ y → x ≡ f y ⊎ x < f y)
-<-spectrum (immediate (node-child y)) = y , inj₁ refl
+  x < Tree.node a f → Σ (Branch a) (λ y → (x ＝ f y) ⊎ x < f y)
+<-spectrum (immediate (node-child y)) = y , inl refl
 <-spectrum (nested (node-child y) route) =
-  y , inj₂ route
+  y , inr route
 
 mutual
   data _⊑_ {ℓ₁ ℓ₂ : Level} {L : Set ℓ₁} {R : L → Set ℓ₂}
@@ -167,17 +161,17 @@ mutual
 ⊏-trans : {x y z : Closed Label Branch} → x ⊏ y → y ⊏ z → x ⊏ z
 ⊏-trans x⊏y y⊏z = ⊑-⊏-trans (⊏→⊑ x⊏y) y⊏z
 
-⊏-wf : WellFounded (_⊏_ {L = Label} {R = Branch})
+⊏-wf : is-well-founded (_⊏_ {L = Label} {R = Branch})
 ⊏-wf t = acc (accessible t)
   where
-    accessible : (t x : Closed _ _) → x ⊏ t → Acc _⊏_ x
+    accessible : (t x : Closed _ _) → x ⊏ t → is-accessible _⊏_ x
     accessible (Tree.hole ()) x x⊏t
     accessible (Tree.node b h) x (under v x⊑hv) =
       acc λ y y⊏x → accessible (h v) y (⊏-⊑-trans y⊏x x⊑hv)
 
 -- In particular no tree lies below itself, so ⊏ is not degenerate.
 ⊏-irrefl : (x : Closed Label Branch) → ¬ x ⊏ x
-⊏-irrefl x = acc↛loop (⊏-wf x)
+⊏-irrefl x = accessible-points-have-no-loops (⊏-wf x)
 
 <→⊏ : {x y : Closed Label Branch} → x < y → x ⊏ y
 <→⊏ (immediate step) = ◃→⊏ step
@@ -192,10 +186,10 @@ mutual
 ≈→∼ p = ≈→⊑ p , ≈→⊑ (≈-sym p)
 
 ⊏-respˡ-∼ : {x x′ y : Closed Label Branch} → x ∼ x′ → x ⊏ y → x′ ⊏ y
-⊏-respˡ-∼ x∼x′ x⊏y = ⊑-⊏-trans (proj₂ x∼x′) x⊏y
+⊏-respˡ-∼ x∼x′ x⊏y = ⊑-⊏-trans (pr₂ x∼x′) x⊏y
 
 ⊏-respʳ-∼ : {x y y′ : Closed Label Branch} → y ∼ y′ → x ⊏ y → x ⊏ y′
-⊏-respʳ-∼ y∼y′ x⊏y = ⊏-⊑-trans x⊏y (proj₁ y∼y′)
+⊏-respʳ-∼ y∼y′ x⊏y = ⊏-⊑-trans x⊏y (pr₁ y∼y′)
 
 ∼-refl : (x : Closed Label Branch) → x ∼ x
 ∼-refl x = ⊑-refl x , ⊑-refl x
@@ -222,13 +216,13 @@ node-∼ to from p q =
 fan-∼ : {a : Label} {f h : Branch a → Closed Label Branch} →
   ((y : Branch a) → f y ∼ h y) → Tree.node a f ∼ Tree.node a h
 fan-∼ p =
-  below (λ u → under u (proj₁ (p u))) , below (λ u → under u (proj₂ (p u)))
+  below (λ u → under u (pr₁ (p u))) , below (λ u → under u (pr₂ (p u)))
 
 ------------------------------------------------------------------------
 -- Shape equivalence: exact equivalences of branch types
 
 -- x ≅ y retains, at every node, an exact equivalence E of the two branch
--- types (Core.Equality.Isomorphism) and relates the children along E and
+-- types (Foundation.Isomorphisms) and relates the children along E and
 -- along its inverse, both from left to right.  The second family is stored
 -- rather than transported along the inverse law of E.
 --
@@ -237,10 +231,10 @@ fan-∼ p =
 --                          node a f ≅ node b h
 --
 -- Labels are not compared.  Nonclaim: ∼ does not imply ≅.  A node over
--- Bool and a node over ⊤, all of whose children are the leaf over ⊥, are
+-- 𝟚 and a node over 𝟙, all of whose children are the leaf over 𝟘, are
 -- ∼ but have no exact equivalence of branch types.
 
-infix 4 _≅_
+infix 6 _≅_
 
 data _≅_ {ℓ₁ ℓ₂ : Level} {L : Set ℓ₁} {R : L → Set ℓ₂}
   : Closed L R → Closed L R → Set (ℓ₁ ⊔ ℓ₂) where

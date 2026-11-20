@@ -5,26 +5,24 @@ module SPT.Cubical.OrdinalGeometry.ExactOrder.Exponential.WellFounded where
 
 -- Well-foundedness of the support order of ω^P: supports embed, preserving
 -- and reflecting order, into exponential normal forms over Linear
--- histories (Core.Generator.Linear.Exponential), whose order is well
--- founded.
+-- histories (Foundation.Linear.Exponential), whose order is well founded
+-- (Foundation.Linear.Exponential.Order).
 
-open import Data.List using ([]; _∷_; length)
-open import Data.Nat using (ℕ)
-import Data.Nat.Base as Nat
-open import Data.Product using (_,_)
-open import Data.Unit using (⊤; tt)
-open import Relation.Binary.PropositionalEquality
-  using (_≡_; refl; cong; subst₂)
+open import SPT.Cubical.Base
+open import SPT.Cubical.Foundation.Accessibility using (is-well-founded)
+open import SPT.Cubical.Foundation.Linear.History using
+  ( SequentialHistory; only-child; sequential-next-history
+  ; sequential-seed-history )
+open import SPT.Cubical.Foundation.Linear.Signature using
+  ( sequential-next; sequential-seed; unary-position )
+open import SPT.Cubical.Foundation.Tree using (hole; node)
+open import SPT.Cubical.Foundation.WellFounded.Pullback using
+  ( pullback-is-well-founded )
+open import SPT.Cubical.Foundation.WellFounded.Subrelation using
+  ( subrelations-are-well-founded )
 
-open import SPT.Cubical.Core.WellFounded using (WellFounded)
-open import SPT.Cubical.Core.WellFounded.Pullback using (pullback-wf)
-open import SPT.Cubical.Core.WellFounded.Subrelation using (subrel-wf)
-open import SPT.Cubical.Core.Generator.Linear.History using
-  (SequentialHistory; sequential-seed-history; sequential-next-history)
-open import SPT.Cubical.Core.Generator.Linear.Signature using
-  (sequential-seed; sequential-next; unary-position)
-open import SPT.Cubical.Core.Generator.Tree using (hole; node)
-import SPT.Cubical.Core.Generator.Linear.Exponential.Order as Linear
+import SPT.Cubical.Foundation.Linear.Exponential as Terms
+import SPT.Cubical.Foundation.Linear.Exponential.Order as Linear
 import SPT.Cubical.OrdinalGeometry.ExactOrder.Base as Order
 import SPT.Cubical.OrdinalGeometry.ExactOrder.Exponential.Support as Support
 
@@ -33,46 +31,61 @@ import SPT.Cubical.OrdinalGeometry.ExactOrder.Exponential.Support as Support
 module Power {A : Set} (P : Order.Order A) where
 
   module Supports = Support.Power P
-  module Layer = Linear.Layer A ℕ (λ _ → ⊤) (Order.Order._<_ P) Nat._<_
-  module Terms = Layer.Terms
+
+  -- The layer of ω^P: exponents in P, coefficients in ℕ, every coefficient
+  -- admissible.
+  L : Terms.Layer lzero lzero lzero lzero lzero
+  L = Terms.layer A ℕ (λ _ → 𝟙) (Order.Order._<_ P) _<ℕˢ_
 
   private
-    state : (xs : Supports.Raw) → Terms.State (length xs)
+    state : (xs : Supports.Raw) → Terms.State L (length xs)
     state [] = Terms.empty-state
     state ((a , n) ∷ xs) = Terms.head-state a n
 
-    run : (xs : Supports.Raw) → Supports.Valid xs → SequentialHistory
-      {State = Terms.State} {Step = Terms.Step}
-      Terms.empty-state (length xs) (state xs)
-    run [] tt = sequential-seed-history Terms.empty-state
-    run ((a , n) ∷ []) tt = sequential-next-history
-      (sequential-seed-history Terms.empty-state) (Terms.first-step a n tt)
-    run ((a , n) ∷ ys@((b , m) ∷ xs)) (p , q) = sequential-next-history
-      (run ys q) (Terms.prepend-step a b n m tt (Supports.sound p))
+    run : (xs : Supports.Raw) → Supports.Valid xs →
+      SequentialHistory (Terms.Step L) Terms.empty-state (length xs)
+        (state xs)
+    run [] ⋆ = sequential-seed-history (Terms.Step L) Terms.empty-state
+    run ((a , n) ∷ []) ⋆ = sequential-next-history (Terms.Step L)
+      (sequential-seed-history (Terms.Step L) Terms.empty-state)
+      (Terms.first-step a n ⋆)
+    run ((a , n) ∷ ys@((b , m) ∷ xs)) (p , q) =
+      sequential-next-history (Terms.Step L) (run ys q)
+        (Terms.prepend-step a b n m ⋆ (Supports.sound p))
 
-  history : Supports.Term → Terms.Exponential
+  history : Supports.Term → Terms.Exponential L
   history (xs , q) = Terms.exponential (length xs) (state xs) (run xs q)
 
-  snoc : (a : A) (n : ℕ) (xs : Supports.Raw) (q : Supports.Valid ((a , n) ∷ xs))
-    → Layer.Snoc a n (history (xs , Supports.tail-valid q))
+  snoc : (a : A) (n : ℕ) (xs : Supports.Raw)
+    (q : Supports.Valid ((a , n) ∷ xs))
+    → Linear.Snoc L a n (history (xs , Supports.tail-valid q))
         (history ((a , n) ∷ xs , q))
-  snoc a n [] tt = Layer.first-node a n tt
+  snoc a n [] ⋆ =
+    Linear.first-node a n ⋆
+      (only-child (Terms.Step L) (Terms.first-step a n ⋆)
+        (sequential-seed-history (Terms.Step L) Terms.empty-state))
   snoc a n ((b , m) ∷ xs) (p , q) =
-    Layer.later-node a b n m tt (Supports.sound p)
+    Linear.later-node a b n m ⋆ (Supports.sound p)
+      (only-child (Terms.Step L)
+        (Terms.prepend-step a b n m ⋆ (Supports.sound p))
+        (run ((b , m) ∷ xs) q))
 
-  preserve : ∀ {x y} → x Supports.< y → history x Layer.≺ᴱ history y
-  preserve {[] , tt} {((a , n) ∷ xs) , q} Supports.empty =
-    Layer.proper-prefix (Layer.empty-node _) (snoc a n xs q)
+  preserve : ∀ {x y} → x Supports.< y → history x Linear.≺ᴱ history y
+  preserve {[] , ⋆} {((a , n) ∷ xs) , q} Supports.empty =
+    Linear.proper-prefix
+      (Linear.empty-view L
+        (sequential-seed-history (Terms.Step L) Terms.empty-state))
+      (snoc a n xs q)
   preserve {((a , n) ∷ xs) , p} {((b , m) ∷ ys) , q} (Supports.head r) =
-    Layer.first-difference (snoc a n xs p) (snoc b m ys q) r
+    Linear.first-difference (snoc a n xs p) (snoc b m ys q) r
   preserve {((a , n) ∷ xs) , p} {((.a , .n) ∷ ys) , q} (Supports.tail r) =
-    Layer.common-head (snoc a n xs p) (snoc a n ys q)
+    Linear.common-head (snoc a n xs p) (snoc a n ys q)
       (preserve {xs , Supports.tail-valid p} {ys , Supports.tail-valid q} r)
 
   private
-    trace-run : ∀ {n s} → SequentialHistory
-      {State = Terms.State} {Step = Terms.Step} Terms.empty-state n s
-      → Supports.Raw
+    trace-run : ∀ {n s} →
+      SequentialHistory (Terms.Step L) Terms.empty-state n s →
+      Supports.Raw
     trace-run (hole ())
     trace-run (node sequential-seed children) = []
     trace-run (node (sequential-next (Terms.first-step a n good)) children) =
@@ -81,35 +94,36 @@ module Power {A : Set} (P : Order.Order A) where
         (Terms.prepend-step a b n m good decrease)) children) =
       (a , n) ∷ trace-run (children unary-position)
 
-  trace : Terms.Exponential → Supports.Raw
+  trace : Terms.Exponential L → Supports.Raw
   trace h = trace-run (Terms.support h)
 
-  trace-snoc : ∀ {a n tail whole} → Layer.Snoc a n tail whole
-    → trace whole ≡ (a , n) ∷ trace tail
-  trace-snoc (Layer.first-node a n good) = refl
-  trace-snoc (Layer.later-node a b n m good decrease) = refl
+  trace-snoc : ∀ {a n tail whole} → Linear.Snoc L a n tail whole
+    → trace whole ＝ (a , n) ∷ trace tail
+  trace-snoc (Linear.first-node a n good children) = refl
+  trace-snoc (Linear.later-node a b n m good decrease children) = refl
 
-  trace-history : (x : Supports.Term) → trace (history x) ≡ Supports.raw x
-  trace-history ([] , tt) = refl
-  trace-history (((a , n) ∷ []) , tt) = refl
+  trace-history : (x : Supports.Term) → trace (history x) ＝ Supports.raw x
+  trace-history ([] , ⋆) = refl
+  trace-history (((a , n) ∷ []) , ⋆) = refl
   trace-history (((a , n) ∷ ys@(_ ∷ _)) , (p , q)) =
-    cong ((a , n) ∷_) (trace-history (ys , q))
+    ap ((a , n) ∷_) (trace-history (ys , q))
 
-  trace-preserve : ∀ {x y} → x Layer.≺ᴱ y → trace x Supports.≺ trace y
-  trace-preserve (Layer.proper-prefix (Layer.empty-node children) r)
+  trace-preserve : ∀ {x y} → x Linear.≺ᴱ y → trace x Supports.≺ trace y
+  trace-preserve (Linear.proper-prefix (Linear.empty-node children) r)
     rewrite trace-snoc r = Supports.empty
-  trace-preserve (Layer.first-difference l r p)
+  trace-preserve (Linear.first-difference l r p)
     rewrite trace-snoc l | trace-snoc r = Supports.head p
-  trace-preserve (Layer.common-head l r p)
+  trace-preserve (Linear.common-head l r p)
     rewrite trace-snoc l | trace-snoc r = Supports.tail (trace-preserve p)
 
-  reflect : ∀ {x y} → history x Layer.≺ᴱ history y → x Supports.< y
-  reflect {x} {y} p = subst₂ Supports._≺_ (trace-history x) (trace-history y)
-    (trace-preserve p)
+  reflect : ∀ {x y} → history x Linear.≺ᴱ history y → x Supports.< y
+  reflect {x} {y} p =
+    transport₂ Supports._≺_ (trace-history x) (trace-history y)
+      (trace-preserve p)
 
   abstract
-    well-founded : WellFounded Supports._<_
-    well-founded = subrel-wf preserve
-      (pullback-wf {rank = history} {_<_ = Layer._≺ᴱ_}
-        (Layer.well-founded (Order.Order.wf P)
+    well-founded : is-well-founded Supports._<_
+    well-founded = subrelations-are-well-founded preserve
+      (pullback-is-well-founded history Linear._≺ᴱ_
+        (Linear.well-founded (Order.Order.wf P)
           (λ n _ → Order.Order.wf Order.natural n)))
